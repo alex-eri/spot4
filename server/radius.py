@@ -11,13 +11,14 @@ import argparse
 import sys
 import asyncio
 from asyncio import coroutine
+import time, base64, pyotp
 
 logger = logging.getLogger('radius')
 debug = logger.debug
 
 
 class RadiusProtocol:
-    radhost = None
+    radhost = host.Host(dict=dictionary.Dictionary("dictionary"))
     radsecret = None
 
     def __getitem__(self,y):
@@ -67,14 +68,23 @@ class AuthProtocol(RadiusProtocol):
         reply_attributes=dict(Class=uuid4().bytes)
         self.reply = self.pkt.CreateReply(**reply_attributes)
 
-        if self.check_password(self.defpassw):
-            self.get_user()
+
+        q = {
+            'login':self['User-Name'],
+            'mac':self['Calling-Station-Id'],
+            'checked':True
+             }
+
+        base = base64.b32encode("{login}#{mac}".format(**q).encode('ascii'))
+        otp = pyotp.TOTP(base)
+
+        if self.check_password(otp.now()) or self.check_password(otp.at(time.time(),-1)):
+            self.get_user(q)
         else:
             self.reply.code = packet.AccessReject
         self.respond( self.reply.ReplyPacket() )
 
-    def get_user(self):
-        creds = {'login':self['User-Name'],'mac':self['Calling-Station-Id']}
+    def get_user(self,creds):
         db.db.devices.find_one(creds,callback=self.got_user)
 
     def got_user(self,response,error):
@@ -111,6 +121,9 @@ class AuthProtocol(RadiusProtocol):
 
             return chap_password == m.digest()
 
+        if self['MS-CHAP-Response'] and self['MS-CHAP-Challenge']:
+            #https://github.com/mehulsbhatt/freeIBS/blob/master/radius_server/pyrad/packet.py
+            raise NotImplementedError
 
         if self['MS-CHAP2-Response'] and self['MS-CHAP-Challenge']:
             raise NotImplementedError
@@ -140,8 +153,6 @@ def setup_acct(config):
     HOST = config.get('RADIUS_IP','0.0.0.0')
     PORT = config.get('ACCT_PORT', 1813)
 
-
-    AcctProtocol.radhost = host.Host(dict=dictionary.Dictionary("dictionary"))
     AcctProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
 
     t = asyncio.Task(loop.create_datagram_endpoint(
@@ -166,10 +177,7 @@ def setup_auth(config):
     HOST = config.get('RADIUS_IP','0.0.0.0')
     PORT = config.get('AUTH_PORT', 1812)
 
-
-    AuthProtocol.radhost = host.Host(dict=dictionary.Dictionary("dictionary"))
     AuthProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
-    AuthProtocol.defpassw = config.get('DEFAULT_PASSWORD','checksms') #.encode('ascii')
 
     t = asyncio.Task(loop.create_datagram_endpoint(
         AuthProtocol, local_addr=(HOST,PORT)))

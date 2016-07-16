@@ -17,12 +17,17 @@ async def device_handler(request):
         )
     #request.app.logger.debug(type(request.match_info.get('mac')))
 
+    base = base64.b32encode("{login}#{mac}".format(**q).encode('ascii'))
     device = await request.app['db'].devices.find_one(q)
+
     if device:
+        if device.get('checked'):
+            otp = pyotp.TOTP(base)
+            device['totp'] = otp.now()
         return {'response': device}
     else:
-        base = "{login}#{mac}".format(**q).encode('ascii')
-        otp =  pyotp.HOTP(base64.b32encode(base))
+
+        otp =  pyotp.HOTP(base)
         q['otp'] = otp.at(SMSGET)
         request.app.logger.debug(q['otp'])
         device_id = await request.app['db'].devices.insert(q)
@@ -36,7 +41,7 @@ async def sms_handler(request):
         login = POST.get('login'),
         otp = POST.get('otp')
         )
-    device = await request.app['db'].devices.update(q, {'checked':'true'})
+    device = await request.app['db'].devices.update(q, {'checked':True})
     return {'response': 'OK'}
 
 

@@ -1,0 +1,86 @@
+Запрос
+
+http://192.168.8.1/goform/goform_get_cmd_process?
+multi_data=1&isTest=false&sms_received_flag_flag=0&sts_received_flag_flag=0&
+cmd=
+modem_main_state%2C
+pin_status%2C
+loginfo%2C
+new_version_state%2C
+current_upgrade_state%2C
+is_mandatory%2C
+sms_received_flag%2C
+sts_received_flag%2C
+signalbar%2C
+network_type%2C
+network_provider%2C
+ppp_status%2C
+EX_SSID1%2Cex_wifi_status%2CEX_wifi_profile%2Cm_ssid_enable%2C
+sms_unread_num%2C
+RadioOff%2Csimcard_roam%2Clan_ipaddr%2Cstation_mac%2Cbattery_charging%2C
+battery_vol_percent%2Cbattery_pers%2C
+spn_display_flag%2Cplmn_display_flag%2Cspn_name_data%2Cspn_b1_flag%2C
+spn_b2_flag%2Crealtime_tx_bytes%2C
+realtime_rx_bytes%2Crealtime_time%2C
+realtime_tx_thrpt%2Crealtime_rx_thrpt%2C
+monthly_rx_bytes%2Cmonthly_tx_bytes%2Cmonthly_time%2C
+date_month%2Cdata_volume_limit_switch%2Cdata_volume_limit_size%2C
+data_volume_alert_percent%2Cdata_volume_limit_unit%2C
+roam_setting_option%2Cupg_roam_switch&_=1468400748528
+
+
+ответ как пришла смс
+
+
+sms_dev_unread_num
+:
+"2"
+sms_received_flag
+:
+"2"
+sms_sim_unread_num
+:
+"0"
+sms_unread_num
+:
+"2"
+
+
+потом - непрочитанные
+
+Request URL:
+http://192.168.8.1/goform/goform_get_cmd_process?isTest=false
+&cmd=sms_data_total&page=0&data_per_page=5&mem_store=1
+&tags=1&order_by=order+by+id+desc&_=1468400748687
+
+Хидер -H 'Referer: http://192.168.8.1/index.html' обязательно
+
+
+{"messages":[
+
+{"id":"40","number":"00420061006C0061006E00630065000D",
+"content":"04110430043B0430043D0441003A0030002C003600300440002C041B0438043C04380442003A0030002C0030003104400020041E043F043B0430044704380432043004390442043500200438043D044204350440043D043504420020043D04300020043204410435044500200443044104420440043E043904410442043204300445002004410020043504340438043D043E0433043E002004410447043504420430002004410020043E043F0446043804350439002000AB041504340438043D044B043900200438043D044204350440043D0435044200BB0021002000200418043D0444043E003A0020006F006E0065002E006D00740073002E00720075"
+,"tag":"1",
+"date":"16,07,13,13,05,52,+16",
+"draft_group_id":"","received_all_concat_sms":"1",
+"concat_sms_total":"2","concat_sms_received":"2","sms_class":"4","sms_mem":"nv"},
+
+{"id":"9","number":"0031003200330034","content":"042304320430043604300435043C044B04390020043A043B04380435043D044200210020041D0430044104420440043E0439043A04380020002A002A002A00200431044304340443044200200434043E0441044204300432043B0435043D044B0020043200200441043B043504340443044E04490435043C00200053004D0053002E00200421043E044504400430043D043804420435002004380445002E002004230431043504340438044204350441044C002C002004470442043E002004320020043C0435043D044E002000AB041D0430044104420440043E0439043A043800BB002004120430044804350433043E00200441043C0430044004420444043E043D043000200432044B043104400430043D04300020044104350442044C00200034004700200438043B04380020004C00540045","tag":"1","date":"16,04,21,12,22,46,+12","draft_group_id":"","received_all_concat_sms":"1","concat_sms_total":"3","concat_sms_received":"3","sms_class":"4","sms_mem":"nv"}]}
+
+
+
+Удаление http://192.168.8.1/goform/goform_set_cmd_process POST
+
+isTest=false&goformId=DELETE_SMS&msg_id=40%3B13%3B9%3B&notCallback=true
+
+{"result":"success"}
+
+%3B = ;
+
+
+SET_MSG_READ
+
+____
+
+
+wget -O- --referer="http://192.168.0.1/index.html"  "http://192.168.0.1/goform/goform_get_cmd_process?isTest=false&cmd=sms_data_total&page=0&data_per_page=5&mem_store=1&tags=1&order_by=order+by+id+desc&_=$(date +%s)000" 2>/dev/null

@@ -7,6 +7,12 @@ import api
 logger = logging.getLogger('main')
 debug = logger.debug
 
+def polling_setup(config):
+    ztes = config['SMS_POLLING'].get('ZTE',[])
+    if ztes:
+        import zte
+        return zte.setup(ztes)
+
 def setup():
     config = json.load(open('config.json','r'))
     if config.get('DEBUG'):
@@ -20,6 +26,10 @@ def setup():
     services = []
     services.extend( radius.setup(config))
     services.extend( api.setup(config))
+
+    if config.get('SMS_POLLING'):
+        services.extend(polling_setup(config))
+
 
     return services
 
