@@ -1,0 +1,6 @@
+<form #f1="ngForm">
+  <input [(ngModel)]="CurrentUser.login" type="tel" pattern="+\d{9,13}"  required />
+  <input [(ngModel)]="CurrentUser.mac" type="hidden" required />
+
+  <input type="submit" value="Зарегистрировать" />
+</form>
