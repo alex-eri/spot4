@@ -7,6 +7,7 @@ import json
 logger = logging.getLogger('zte')
 debug = logger.debug
 logger.error
+import sys, traceback
 
 import time
 import re
@@ -18,8 +19,12 @@ class Client(aiohttp.ClientSession):
         self.base_url = kw.pop('url')
         self.sms_unread_num = 0
 
+        headers = {
+            'Referer':self.base_url+"/index.html",
+            'X-Requested-With':'XMLHttpRequest'
+        }
         super(Client,self).__init__(
-            headers = {'referer':self.base_url+"/index.html"},
+            headers = headers,
             *a,**kw)
 
     async def get_count(self,*a,**kw):
@@ -56,8 +61,11 @@ class Client(aiohttp.ClientSession):
 
 async def get_json(fu):
     async with await fu() as c:
+        #c = await fu()
+        debug(c)
         assert c.status == 200
         resp = await c.read()
+        debug(resp)
         data = json.loads(resp.decode('ascii'))
 #        debug(data)
         return data
@@ -112,6 +120,7 @@ async def worker(client):
 
     except aiohttp.errors.ClientError as e:
         logger.error(e.__repr__())
+        traceback.print_exc(file=sys.stdout)
 
     except AssertionError as e:
         logger.warning(e.__repr__())
@@ -127,7 +136,7 @@ async def main_loop(clients):
         loop = asyncio.get_event_loop()
         tasks = [ asyncio.ensure_future(worker(client)) for client in clients ]
         await asyncio.wait(tasks)
-        await asyncio.sleep(2)
+        await asyncio.sleep(5)
 
 
 def setup_loop(ztes):

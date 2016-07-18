@@ -1,0 +1,29 @@
+<div class="animate-switch-container" ng-switch on="stage">
+
+  <div class="animate-switch" ng-switch-when="form">
+    <form name="regform">
+      <input
+        type="tel"
+        ng-model=creds.login
+        required
+        pattern="\+\d{10,12}"
+        placeholder="+79123456789"
+        name='login' />
+      <input type="hidden" name='mac' ng-model=client.mac />
+      <button ng-click="register(regform)" >Войти</button>
+    </form>
+  </div>
+  <div class="animate-switch" ng-switch-when="reg">
+    Регистрация...
+  </div>
+
+  <div class="animate-switch" ng-switch-when="cod">
+    Отправьте смс с текстом
+    <input readonly ng-model=sms.waited type=text />
+    на номер <a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a>
+  </div>
+
+  <div class="animate-switch" ng-switch-default >Загрузка...</div>
+
+
+</div>

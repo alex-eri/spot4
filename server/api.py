@@ -4,7 +4,7 @@ import aiohttp
 import procutil
 from multiprocessing import Process, current_process
 from bson.json_util import dumps
-
+import random
 import base64, pyotp
 
 SMSSEND = 1
@@ -19,17 +19,28 @@ async def device_handler(request):
 
     base = base64.b32encode("{login}#{mac}".format(**q).encode('ascii'))
     device = await request.app['db'].devices.find_one(q)
-
+    request.app.logger.debug(device.__repr__())
     if device:
         if device.get('checked'):
             otp = pyotp.TOTP(base)
             device['password'] = otp.now()
+        else:
+            numbers = request.app['config']['SMS_POLLING'].get('CALLIE')
+            if device.get('sms_callie') in numbers:
+                pass
+            else:
+                device['sms_callie'] = callie = random.choice(numbers)
+                request.app.logger.debug(q)
+                r = await request.app['db'].devices.update(q, {'sms_callie': callie})
+                request.app.logger.debug(r)
         return {'response': device}
-    else:
 
+    else:
         otp =  pyotp.HOTP(base)
         q['sms_waited'] = otp.at(SMSWAIT)
+        q['sms_callie'] = random.choice(request.app['config']['SMS_POLLING'].get('CALLIE'))
         request.app.logger.debug(q['sms_waited'])
+
         device_id = await request.app['db'].devices.insert(q)
         q['_id'] = device_id
         return {'response': q}
@@ -60,17 +71,29 @@ async def json_middleware(app, handler):
         return web.json_response(resp, dumps=dumps)
     return middleware_handler
 
+async def cors(app, handler):
+    "Access-Control-Allow-Origin"
+    async def middleware_handler(request):
+        resp = await handler(request)
+        resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin')
+        return resp
+    return middleware_handler
+
+
+
 def setup_web(config):
     name = current_process().name
     procutil.set_proc_name(name)
 
     db.db.devices.ensure_index( [ ("login",1), ("mac",1) ], unique=True, dropDups=True ,callback=db.index_cb)
 
-    app = web.Application(middlewares=[json_middleware])
+    app = web.Application(middlewares=[cors, json_middleware])
     app['db'] = db.db
+    app['config'] = config
 
-    app.router.add_route('GET', '/device/{login}/{mac}', device_handler)
-    app.router.add_route('POST', '/sms_callback', sms_handler, expect_handler=check_auth)
+    if config.get('SMS_POLLING'):
+        app.router.add_route('GET', '/user/{login}/{mac}', device_handler)
+        app.router.add_route('POST', '/sms_callback', sms_handler, expect_handler=check_auth)
 
     web.run_app(app)
 

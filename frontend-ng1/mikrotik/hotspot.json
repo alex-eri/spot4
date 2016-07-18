@@ -1,0 +1,8 @@
+{
+"link_orig":"$(link-orig)",
+"hostname":"$(hostname)",
+"link_login_only":"$(link-login-only)",
+"mac":"$(mac)",
+"chap_id":"$(chap-id)",
+"chap_challenge":"$(chap-challenge)"
+}
