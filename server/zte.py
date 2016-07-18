@@ -84,7 +84,7 @@ async def handle_messages(messages):
         if t:
             q = dict(
                 login=phone,
-                otp=t.group()
+                sms_waited=t.group()
             )
             db.db.devices.update(q, {'checked':True, 'check_date':date}, callback = handle_cb)
             delete.append(m.get('id',0))

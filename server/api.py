@@ -8,7 +8,7 @@ from bson.json_util import dumps
 import base64, pyotp
 
 SMSSEND = 1
-SMSGET = 2
+SMSWAIT = 2
 
 async def device_handler(request):
     q = dict(
@@ -23,13 +23,13 @@ async def device_handler(request):
     if device:
         if device.get('checked'):
             otp = pyotp.TOTP(base)
-            device['totp'] = otp.now()
+            device['password'] = otp.now()
         return {'response': device}
     else:
 
         otp =  pyotp.HOTP(base)
-        q['otp'] = otp.at(SMSGET)
-        request.app.logger.debug(q['otp'])
+        q['sms_waited'] = otp.at(SMSWAIT)
+        request.app.logger.debug(q['sms_waited'])
         device_id = await request.app['db'].devices.insert(q)
         q['_id'] = device_id
         return {'response': q}
@@ -39,7 +39,7 @@ async def sms_handler(request):
     POST = await request.post()
     q = dict(
         login = POST.get('login'),
-        otp = POST.get('otp')
+        sms_waited = POST.get('sms_waited')
         )
     device = await request.app['db'].devices.update(q, {'checked':True})
     return {'response': 'OK'}
