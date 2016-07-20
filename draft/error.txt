@@ -1,0 +1,14 @@
+Traceback (most recent call last):
+  File "zte.py", line 45, in <module>
+    loop.run_until_complete(simple())
+  File "/usr/lib/python3.5/asyncio/base_events.py", line 387, in run_until_complete
+    return future.result()
+  File "/usr/lib/python3.5/asyncio/futures.py", line 274, in result
+    raise self._exception
+  File "/usr/lib/python3.5/asyncio/tasks.py", line 239, in _step
+    result = coro.send(None)
+  File "zte.py", line 37, in simple
+    async with await client.get_count() as c:
+AttributeError: 'Client' object has no attribute 'get_count'
+Unclosed client session
+client_session: <__main__.Client object at 0x7f397da47550>

@@ -12,6 +12,7 @@ import sys
 import asyncio
 from asyncio import coroutine
 import time, base64, pyotp
+import struct
 
 logger = logging.getLogger('radius')
 debug = logger.debug
@@ -37,22 +38,31 @@ class RadiusProtocol:
         debug('From {} data received: '.format(addr))
 
         self.caller = addr
-        self.pkt = self.radhost.CreateAuthPacket(
-            packet=data,
-            secret=self.radsecret
+
+        code = data[0]
+        debug(code)
+        if code == packet.AccessRequest:
+            self.pkt = self.radhost.CreateAuthPacket(
+                packet=data,
+                secret=self.radsecret
+                )
+            self.handle_auth()
+        elif code == packet.AccountingRequest:
+            self.pkt = self.radhost.CreateAcctPacket(
+                packet=data,
+                secret=self.radsecret
             )
+            self.handle_acct()
+        else:
+            raise packet.PacketError('Packet is not request')
 
         for attr in self.pkt.keys():
             debug('{} :\t{}'.format(attr,self.pkt[attr]))
 
-        self.handle()
+
 
     def respond(self,resp):
-
         self.transport.sendto(resp, self.caller)
-
-    def handle(self,data):
-        raise NotImplementedError
 
     def error_received(self, exc):
         debug('Error received:', exc)
@@ -61,13 +71,10 @@ class RadiusProtocol:
         debug('stop', exc)
 
 
-class AuthProtocol(RadiusProtocol):
-
-    def handle(self):
+    def handle_auth(self):
 
         reply_attributes=dict(Class=uuid4().bytes)
         self.reply = self.pkt.CreateReply(**reply_attributes)
-
 
         q = {
             'login':self['User-Name'],
@@ -81,6 +88,7 @@ class AuthProtocol(RadiusProtocol):
         if self.check_password(otp.now()) or self.check_password(otp.at(time.time(),-1)):
             self.get_user(q)
         else:
+            debug("otp is {}".format(otp.now()))
             self.reply.code = packet.AccessReject
         self.respond( self.reply.ReplyPacket() )
 
@@ -91,6 +99,7 @@ class AuthProtocol(RadiusProtocol):
         if error:
             logger.error(error.__repr__())
         if response:
+            debug(response)
             self.reply.code = packet.AccessAccept
             self.respond( self.reply.ReplyPacket())
         else:
@@ -128,11 +137,7 @@ class AuthProtocol(RadiusProtocol):
         if self['MS-CHAP2-Response'] and self['MS-CHAP-Challenge']:
             raise NotImplementedError
 
-
-
-class AcctProtocol(RadiusProtocol):
-
-    def handle(self):
+    def handle_acct(self):
         if self['Acct-Status-Type'] == 1 : #start
             account = {
                 'auth_id': self['Class'],
@@ -143,30 +148,7 @@ class AcctProtocol(RadiusProtocol):
 
         self.respond( self.pkt.CreateReply().ReplyPacket() )
 
-def setup_acct(config):
-    name = current_process().name
-    procutil.set_proc_name(name)
-    debug("{}`s pid is {}".format(name, os.getpid()))
-
-    loop = asyncio.get_event_loop()
-
-    HOST = config.get('RADIUS_IP','0.0.0.0')
-    PORT = config.get('ACCT_PORT', 1813)
-
-    AcctProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
-
-    t = asyncio.Task(loop.create_datagram_endpoint(
-        AcctProtocol, local_addr=(HOST,PORT)))
-
-    transport, server = loop.run_until_complete(t)
-    try:
-        loop.run_forever()
-    finally:
-        transport.close()
-        loop.close()
-
-
-def setup_auth(config):
+def setup_radius(config,PORT):
 
     name = current_process().name
     procutil.set_proc_name(name)
@@ -175,12 +157,11 @@ def setup_auth(config):
     loop = asyncio.get_event_loop()
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
-    PORT = config.get('AUTH_PORT', 1812)
 
-    AuthProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
+    RadiusProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
 
     t = asyncio.Task(loop.create_datagram_endpoint(
-        AuthProtocol, local_addr=(HOST,PORT)))
+        RadiusProtocol, local_addr=(HOST,PORT)))
 
     transport, server = loop.run_until_complete(t)
     try:
@@ -192,10 +173,10 @@ def setup_auth(config):
 
 def setup(config):
 
-    acct = Process(target=setup_acct, args=(config,))
+    acct = Process(target=setup_radius, args=(config, config.get('ACCT_PORT', 1813)))
     acct.name = 'radius.acct'
 
-    auth = Process(target=setup_auth, args=(config,))
+    auth = Process(target=setup_radius, args=(config, config.get('AUTH_PORT', 1812)))
     auth.name = 'radius.auth'
 
     return acct,auth
@@ -203,7 +184,13 @@ def setup(config):
 
 
 def main():
+    import json
     config = json.load(open('config.json','r'))
+
+    db.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
 
     servers = setup(config)
 

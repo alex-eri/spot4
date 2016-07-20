@@ -6,7 +6,7 @@ import aiohttp
 import json
 logger = logging.getLogger('zte')
 debug = logger.debug
-logger.error
+
 import sys, traceback
 
 import time
@@ -23,8 +23,14 @@ class Client(aiohttp.ClientSession):
             'Referer':self.base_url+"/index.html",
             'X-Requested-With':'XMLHttpRequest'
         }
+
+        connector = aiohttp.TCPConnector(force_close=False, keepalive_timeout=10)
+
+
         super(Client,self).__init__(
             headers = headers,
+            version=aiohttp.HttpVersion10,
+            connector=connector,
             *a,**kw)
 
     async def get_count(self,*a,**kw):
@@ -136,7 +142,7 @@ async def main_loop(clients):
         loop = asyncio.get_event_loop()
         tasks = [ asyncio.ensure_future(worker(client)) for client in clients ]
         await asyncio.wait(tasks)
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
 
 
 def setup_loop(ztes):
@@ -168,5 +174,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()

@@ -7,6 +7,9 @@ from bson.json_util import dumps
 import random
 import base64, pyotp
 
+logger = logging.getLogger('http')
+debug = logger.debug
+
 SMSSEND = 1
 SMSWAIT = 2
 
@@ -39,7 +42,7 @@ async def device_handler(request):
         otp =  pyotp.HOTP(base)
         q['sms_waited'] = otp.at(SMSWAIT)
         q['sms_callie'] = random.choice(request.app['config']['SMS_POLLING'].get('CALLIE'))
-        request.app.logger.debug(q['sms_waited'])
+        debug(q['sms_waited'])
 
         device_id = await request.app['db'].devices.insert(q)
         q['_id'] = device_id
@@ -82,6 +85,7 @@ async def cors(app, handler):
 
 
 def setup_web(config):
+    global logger
     name = current_process().name
     procutil.set_proc_name(name)
 
@@ -90,6 +94,8 @@ def setup_web(config):
     app = web.Application(middlewares=[cors, json_middleware])
     app['db'] = db.db
     app['config'] = config
+
+    app.logger = logger
 
     if config.get('SMS_POLLING'):
         app.router.add_route('GET', '/user/{login}/{mac}', device_handler)
