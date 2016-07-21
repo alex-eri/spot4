@@ -6,7 +6,7 @@ logger = logging.getLogger('zte')
 debug = logger.debug
 import time
 
-class Client(aiohttp.ClientSession):
+class Client:
     def __init__(self,*a,**kw):
         self.base_url = kw.pop('url')
         self.sms_unread_num = 0
@@ -16,13 +16,13 @@ class Client(aiohttp.ClientSession):
             'X-Requested-With':'XMLHttpRequest'
         }
 
-        connector = aiohttp.TCPConnector(force_close=True, conn_timeout=10)
+#        connector = aiohttp.TCPConnector(force_close=True, conn_timeout=10)
 
-        super().__init__(
-            headers = headers,
-            version=aiohttp.HttpVersion11,
-            connector=connector,
-            *a,**kw)
+#        super().__init__(
+#            headers = headers,
+#            version=aiohttp.HttpVersion11,
+#            connector=connector,
+#            *a,**kw)
 
     async def get_count(self,*a,**kw):
 
@@ -54,6 +54,9 @@ class Client(aiohttp.ClientSession):
             )
         return self.post(uri,data=post)
 
+    async def get(self,url):
+
+
 
 async def simple():
     client = Client(url='http://192.168.8.1')
@@ -69,7 +72,7 @@ async def simple():
    #     assert c.status == 200
    #     resp = await c.read()
    #     print(resp[:30])
-    with aiohttp.Timeout(10):
+   # with aiohttp.Timeout(10):
         async with await client.get_count() as c:
             assert c.status == 200
             resp = await c.read()

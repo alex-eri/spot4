@@ -6,7 +6,7 @@ from multiprocessing import Process, current_process
 from bson.json_util import dumps
 import random
 import base64, pyotp
-
+import logging
 logger = logging.getLogger('http')
 debug = logger.debug
 
@@ -34,7 +34,7 @@ async def device_handler(request):
             else:
                 device['sms_callie'] = callie = random.choice(numbers)
                 request.app.logger.debug(q)
-                r = await request.app['db'].devices.update(q, {'sms_callie': callie})
+                r = await request.app['db'].devices.update(q, {'$set':{'sms_callie': callie}})
                 request.app.logger.debug(r)
         return {'response': device}
 
@@ -42,8 +42,7 @@ async def device_handler(request):
         otp =  pyotp.HOTP(base)
         q['sms_waited'] = otp.at(SMSWAIT)
         q['sms_callie'] = random.choice(request.app['config']['SMS_POLLING'].get('CALLIE'))
-        debug(q['sms_waited'])
-
+        debug(q)
         device_id = await request.app['db'].devices.insert(q)
         q['_id'] = device_id
         return {'response': q}
@@ -55,7 +54,7 @@ async def sms_handler(request):
         login = POST.get('login'),
         sms_waited = POST.get('sms_waited')
         )
-    device = await request.app['db'].devices.update(q, {'checked':True})
+    device = await request.app['db'].devices.update(q, {'$set':{'checked':True}})
     return {'response': 'OK'}
 
 

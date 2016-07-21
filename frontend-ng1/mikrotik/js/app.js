@@ -30,8 +30,8 @@ app.factory('Client', ['$resource',
     }]);
 
 
-app.controller('login',  ['User','Client','$scope',
-    function (User,Client,$scope){
+app.controller('login',  ['User','Client','$scope','$http',
+    function (User,Client,$scope,$http){
         var self = this;
         $scope.forms = 'partials/login.html'
         $scope.stage = 'mac';
@@ -46,6 +46,26 @@ app.controller('login',  ['User','Client','$scope',
             }
         )
 
+
+        function user_wait(){
+
+        }
+
+
+        function hotspot_login(){
+            $http.get('login.json').then( function(response) {
+                console.log(response)
+                var data = response.data
+                if (data.logged_in == 'yes') {
+                    $scope.stage = 'ok';
+                } else {
+                    $scope.error = data.error
+                    $scope.stage = 'error';
+                }
+            })
+        }
+
+
         $scope.register = function(form){
             console.log(form);
             if (form.$valid) {
@@ -55,14 +75,20 @@ app.controller('login',  ['User','Client','$scope',
                 User(app.APIURL).get(
                     {login:$scope.creds.login, mac:$scope.client.mac},
                     function(data){
+                        if (data.response.password) {
+                        $scope.stage = 'login';
+                        hotspot_login()
 
+                        } else {
                         $scope.stage = 'cod';
                         $scope.sms.waited = data.response.sms_waited;
                         $scope.sms.callie = data.response.sms_callie;
+                        }
                         console.log(data);
                     });
             }
         }
+
 
     } ]
 

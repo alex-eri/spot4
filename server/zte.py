@@ -8,32 +8,33 @@ logger = logging.getLogger('zte')
 debug = logger.debug
 
 import sys, traceback
-
+import urllib.request
 import time
 import re
 from datetime import datetime
 from utils.codecs import decodeHexUcs2
 
-class Client(aiohttp.ClientSession):
+class Client(object):
     def __init__(self,*a,**kw):
         self.base_url = kw.pop('url')
         self.sms_unread_num = 0
 
-        headers = {
+        self.headers = {
             'Referer':self.base_url+"/index.html",
             'X-Requested-With':'XMLHttpRequest'
         }
 
-        connector = aiohttp.TCPConnector(force_close=False, keepalive_timeout=10)
+    def get(self,uri):
+        req = urllib.request.Request(uri, headers=self.headers, method="GET")
+        return urllib.request.urlopen(req)
 
+    def post(self,uri,data):
+        data = urllib.parse.urlencode(data)
+        data = data.encode('ascii')
+        req = urllib.request.Request(uri, data=data, headers=self.headers, method='POST')
+        return urllib.request.urlopen(req)
 
-        super(Client,self).__init__(
-            headers = headers,
-            version=aiohttp.HttpVersion10,
-            connector=connector,
-            *a,**kw)
-
-    async def get_count(self,*a,**kw):
+    def get_count(self,*a,**kw):
 
         uri = "{base}/goform/goform_get_cmd_process?"\
             "multi_data=1&isTest=false&sms_received_flag_flag=0&sts_received_flag_flag=0&"\
@@ -44,7 +45,7 @@ class Client(aiohttp.ClientSession):
 
         return self.get(uri,*a,**kw)
 
-    async def get_messages(self,*a,**kw):
+    def get_messages(self,*a,**kw):
         uri = "{base}/goform/goform_get_cmd_process?"\
             "isTest=false&cmd=sms_data_total&page=0&data_per_page=100&mem_store=1&tags=1&"\
             "order_by=order+by+id+desc&_={date}".format(
@@ -53,9 +54,11 @@ class Client(aiohttp.ClientSession):
             )
         return self.get(uri,*a,**kw)
 
-    async def set_msg_read(self,msg_id,*a,**kw):
+    def set_msg_read(self,msg_id,*a,**kw):
         to_mark = '%3B'.join(msg_id)
-        uri = "{base}/goform/goform_set_cmd_process"
+        uri = "{base}/goform/goform_set_cmd_process".format(
+                base=self.base_url
+            )
         post = dict(isTest="false",
                     goformId="SET_MSG_READ",
                     msg_id=to_mark,
@@ -64,43 +67,59 @@ class Client(aiohttp.ClientSession):
         return self.post(uri,data=post)
 
 
+    def delete_sms(self,msg_id,*a,**kw):
+        to_mark = '%3B'.join(msg_id)
+        uri = "{base}/goform/goform_set_cmd_process".format(
+                base=self.base_url
+            )
+        post = dict(isTest="false",
+                    goformId="DELETE_SMS",
+                    msg_id=to_mark,
+                    notCallback="true"
+            )
+        return self.post(uri,data=post)
 
-async def get_json(fu):
-    async with await fu() as c:
+
+
+def get_json(fu):
+    with fu() as c:
         #c = await fu()
         debug(c)
         assert c.status == 200
-        resp = await c.read()
+        resp = c.read()
         debug(resp)
         data = json.loads(resp.decode('ascii'))
-#        debug(data)
+        debug(data)
         return data
 
 retoken = re.compile('([0-9]{6})')
 
 
-def handle_cb(*a,**kw):
-    debug(*a)
-    debug(**kw)
-
-
 async def handle_messages(messages):
     read = []
     delete = []
+    debug(messages)
     for m in messages:
-        phone = m.get('number')
+        phone = decodeHexUcs2(m.get('number'))
+        debug(phone)
         text = decodeHexUcs2(m.get('content'))
+        debug(text)
         d = [int(i) for i in m.get('date').split(',')]
         d[0] = d[0]+2000
         tz = d.pop(-1)
         date = datetime(*d)
         t = retoken.match(text)
+        debug(t.group())
         if t:
             q = dict(
                 login=phone,
                 sms_waited=t.group()
             )
-            db.db.devices.update(q, {'checked':True, 'check_date':date}, callback = handle_cb)
+            r = await db.db.devices.update(q, {
+                '$set':{'checked':True},
+                '$currentDate':{'check_date':True}
+                                          })
+            debug(r)
             delete.append(m.get('id',0))
         else:
             read.append(m.get('id',0))
@@ -113,16 +132,13 @@ async def handle_messages(messages):
 
 
 async def worker(client):
-    read = []
     try:
-        data = await get_json(client.get_count)
-        num = int(data.get('sms_unread_num'))
-        if num:
-            data = await get_json(client.get_messages)
-            assert data.get("messages")
+        data = get_json(client.get_messages)
+        if data.get("messages"):
             read,delete = await handle_messages(data.get("messages"))
-        debug('readed {}'.format(read))
-        pass
+            if delete: client.delete_sms(delete)
+            if read: client.set_msg_read(read)
+
 
     except aiohttp.errors.ClientError as e:
         logger.error(e.__repr__())
@@ -133,6 +149,7 @@ async def worker(client):
 
     except Exception as e:
         logger.error(e.__repr__())
+        raise e
 
 
 

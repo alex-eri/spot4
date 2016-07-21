@@ -23,6 +23,18 @@
     на номер <a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a>
   </div>
 
+  <div class="animate-switch" ng-switch-when="login">
+    Подключение...
+  </div>
+
+  <div class="animate-switch" ng-switch-when="ok">
+    Подключен!
+  </div>
+
+  <div class="animate-switch" ng-switch-when="error">
+    Ошибка: {{error}} <a href='#' ng-click='stage="form"'>Назад</a>
+  </div>
+
   <div class="animate-switch" ng-switch-default >Загрузка...</div>
 
 
