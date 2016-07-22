@@ -1,0 +1,10 @@
+aiohttp==0.22.1
+cchardet==1.0.0
+chardet==2.3.0
+cstruct==1.0
+cx-Freeze==4.3.4
+motor==0.6.2
+multidict==1.2.0
+pymongo==2.8
+pyotp==2.1.1
+pyrad==2.0
