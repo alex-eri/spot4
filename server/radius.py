@@ -17,6 +17,11 @@ import struct
 logger = logging.getLogger('radius')
 debug = logger.debug
 
+STATUS_TYPE_START   = 'Start' #1
+STATUS_TYPE_STOP    = 'Stop'  #2
+STATUS_TYPE_UPDATE  = 'Alive' #3
+STATUS_TYPE_NAS_ON  = 'Accounting-On'  #7
+STATUS_TYPE_NAS_OFF = 'Accounting-Off' #8
 
 class RadiusProtocol:
     radhost = host.Host(dict=dictionary.Dictionary("dictionary"))
@@ -56,8 +61,9 @@ class RadiusProtocol:
         else:
             raise packet.PacketError('Packet is not request')
 
-        for attr in self.pkt.keys():
-            debug('{} :\t{}'.format(attr,self.pkt[attr]))
+        if logger.isEnabledFor(logging.DEBUG):
+            for attr in self.pkt.keys():
+                debug('{} :\t{}'.format(attr,self.pkt[attr]))
 
 
 
@@ -106,8 +112,6 @@ class RadiusProtocol:
             self.reply.code = packet.AccessReject
             self.respond( self.reply.ReplyPacket() )
 
-
-
     def check_password(self, cleartext=""):
         pkt = self.pkt
 
@@ -138,15 +142,60 @@ class RadiusProtocol:
             raise NotImplementedError
 
     def handle_acct(self):
-        if self['Acct-Status-Type'] == 1 : #start
-            account = {
-                'auth_id': self['Class'],
-                'session_id': self['Acct-Session-Id']
-
+        q = {
+                'auth_class': self['Class'],
+                'session_id': self['Acct-Session-Id'],
             }
-            #db.db.accounting.insert(account)
 
+        debug(self['Acct-Status-Type'])
+        if self['Acct-Status-Type'] == STATUS_TYPE_START:
+            upd = {
+                '$currentDate':{'start_date':True},
+                '$set':{
+                    'ip': self['Framed-IP-Address'],
+                    'nas': self['NAS-Identifier'],
+                    'mac': self['Calling-Station-Id'],
+                    'login': self['User-Name'],
+                    'start_time': self['Event-Timestamp']
+                }
+            }
+            db.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
+        else:
+            account = {
+                'uptime': self['Acct-Session-Time'],
+                'input_bytes': self['Acct-Input-Gigawords'] or 0 << 32 | self['Acct-Input-Octets'],
+                'input_packets': self['Acct-Input-Packets'],
+                'output_bytes': self['Acct-Output-Gigawords'] or 0 << 32 | self['Acct-Output-Octets'],
+                'output_packets': self['Acct-Output-Packets'],
+                'delay':self['Acct-Delay-Time'],
+                'event_time': self['Event-Timestamp']
+            }
+            if self['Acct-Status-Type'] == STATUS_TYPE_UPDATE:
+                db.db.accounting.update(q,
+                    {
+                        '$set': account,
+                        '$currentDate':{'date':True}
+                    },
+                    upsert=True,callback=self.accounting_cb)
+
+            elif self['Acct-Status-Type'] == STATUS_TYPE_STOP:
+                account['termination_cause'] =  self['Acct-Terminate-Cause']
+                db.db.accounting.update(
+                    q,
+                    {
+                        '$set': account,
+                        '$currentDate':{'stop_date':True,'date':True}
+                    },
+                    upsert=True,callback=self.accounting_cb)
+
+        debug('accounting respond')
         self.respond( self.pkt.CreateReply().ReplyPacket() )
+
+    def accounting_cb(self,r,e,*a,**kw):
+        if e:
+            logger.error('accounting callback')
+            logger.error(e.__repr__())
+
 
 def setup_radius(config,PORT):
 

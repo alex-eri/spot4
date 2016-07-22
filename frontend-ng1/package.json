@@ -9,7 +9,7 @@
   },
   "scripts": {
     "postinstall": "bower install",
-    "prestart": "npm install",
-    "start": "http-server ./mikrotik -a localhost -p 8000 -c-1"
+    "prestart": "npm install; make",
+    "start": "http-server ./build/mikrotik -a localhost -p 8000 -c-1"
   }
 }

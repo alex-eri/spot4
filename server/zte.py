@@ -1,12 +1,10 @@
-from multiprocessing import Process
+from multiprocessing import Process, current_process
 import logging
 import db
 import asyncio
 import aiohttp
 import json
-logger = logging.getLogger('zte')
-debug = logger.debug
-
+import procutil
 import sys, traceback
 import urllib.request
 import urllib.parse
@@ -14,6 +12,9 @@ import time
 import re
 from datetime import datetime
 from utils.codecs import decodeHexUcs2
+
+logger = logging.getLogger('zte')
+debug = logger.debug
 
 class Client(object):
     def __init__(self,*a,**kw):
@@ -171,6 +172,9 @@ async def main_loop(clients):
 
 
 def setup_loop(ztes):
+    name = current_process().name
+    procutil.set_proc_name(name)
+
     clients = []
     for url in ztes:
         clients.append( Client(url=url))
@@ -188,6 +192,7 @@ def setup_loop(ztes):
 
 def setup(ztes):
     proc = Process(target=setup_loop, args=(ztes,))
+    proc.name = 'zte'
     return [proc]
 
 

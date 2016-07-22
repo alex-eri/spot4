@@ -27,6 +27,11 @@ app.factory('Client', ['$resource',
       return $resource('login.html');
     }]);
 
+app.factory('Status', ['$resource',
+    function($resource) {
+      return $resource('status.html');
+    }]);
+
 
 app.controller('login',  ['User','Client','$scope','$http',
     function (User,Client,$scope,$http){
@@ -40,7 +45,11 @@ app.controller('login',  ['User','Client','$scope','$http',
         Client.get(
             function (data) {
                 $scope.client = data;
-                $scope.stage = 'form';
+                if (data.logged_in == 'yes') {
+                    $scope.stage = 'status';
+                } else {
+                    $scope.stage = 'form';
+                }
                 console.log(data);
             }
         )
@@ -67,6 +76,10 @@ app.controller('login',  ['User','Client','$scope','$http',
                     });
         }
 
+        function to_status(){
+            $scope.stage = 'status'; //не пашет, но вызывается
+        }
+
         function hotspot_login(){
             $http.post($scope.client.link_login_only,jQuery.param($scope.creds)).then( function(response) {
                 console.log(response)
@@ -74,6 +87,7 @@ app.controller('login',  ['User','Client','$scope','$http',
                 $scope.client = data;
                 if (data.logged_in == 'yes') {
                     $scope.stage = 'ok';
+                    setTimeout(to_status,5000);
                 } else {
                     $scope.error = data.error
                     $scope.stage = 'error';
@@ -91,7 +105,7 @@ app.controller('login',  ['User','Client','$scope','$http',
                 console.log($scope.creds);
                 $scope.stage = 'reg';
                 user_wait();
-                setTimeout(function(){$scope.waiting},5000);
+                setTimeout(function(){$scope.waiting=true},5000);
             }
         }
 
@@ -100,4 +114,25 @@ app.controller('login',  ['User','Client','$scope','$http',
 
 );
 
+app.controller('status',  ['Status','$scope','$http',
+    function (Status,$scope,$http) {
 
+        $scope.client = {};
+        function update(){
+        Status.get(
+            function (data) {
+                $scope.client = data;
+                if (data.logged_in == 'yes') {
+                    $scope.stage = 'status';
+                } else {
+                    $scope.stage = 'form';
+                }
+                console.log(data);
+            }
+        );
+         setTimeout(update,3000);
+        }
+        update();
+
+    }
+    ]);

@@ -1,6 +1,7 @@
 <div class="animate-switch-container" ng-switch on="stage">
 
   <div class="animate-switch" ng-switch-when="form">
+    <p>
     <form name="regform">
       <input
         type="tel"
@@ -11,33 +12,57 @@
         name='login' />
       <input type="hidden" name='mac' ng-model=client.mac />
       <button ng-click="register(regform)" >Войти</button>
+
     </form>
+    </p>
   </div>
   <div class="animate-switch" ng-switch-when="reg">
-    Регистрация Вашего устройства...
+    <p>Регистрация Вашего устройства...</p>
   </div>
 
   <div class="animate-switch" ng-switch-when="cod">
-    Отправьте смс с текстом
-    <input readonly ng-model=sms.waited type=text />
-    на номер <a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a>
-    <p>Интернет включится через мгновение, как оно будет доставленно</p>
+    <p>Отправьте смс с текстом
+    <input readonly ng-model=sms.waited type=text  class="token" />
+    на номер <!--a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a-->
+    <input readonly ng-model=sms.callie type=text  class="phone" />
+    </p>
+    <p class="animate-switch-container">
+       <span class="animate-switch" ng-show="waiting" >
+          Интернет включится через мгновение после того, как оно будет доставленно
+       </span>
+    </p>
   </div>
 
   <div class="animate-switch" ng-switch-when="login">
-    Подключение...
+    <p>Подключение...</p>
   </div>
 
   <div class="animate-switch" ng-switch-when="ok">
-    <h3>Подключен!</h3>
-    <p>Перейти на <a href={{client.link_orig}} target=_blank>{{client.link_orig | limitTo : 20 }}</a> </p>
+    <h3>Подключен!<span></span></h3>
+    <p ng-if=client.link_orig >Перейти на <a href={{client.link_orig}} target=_blank>{{client.link_orig | limitTo : 30 }}</a> </p>
+    <p ng-if=client.link_redirect >Перейти на <a href={{client.link_redirect}} target=_blank>{{client.link_redirect | limitTo : 30 }}</a> </p>
+    <p> или в <a href='http://yandex.com/' target=_blank>Yandex</a></p>
   </div>
 
   <div class="animate-switch" ng-switch-when="error">
-    Ошибка: {{error}} <button ng-click="back_to('form')">Назад</button>
+    <p>
+      Ошибка: {{error}} <button ng-click="back_to('form')">Назад</button>
+    </p>
   </div>
 
-  <div class="animate-switch" ng-switch-default >Загрузка...</div>
+  <div class="animate-switch" ng-switch-when="status">
+    <div ng-controller="status">
+      <h4>В сети {{client.uptime}}</h4>
+    </div>
+  </div>
+
+
+  <div class="animate-switch" ng-switch-default >
+    <p>
+      Загрузка...
+    </p>
+  </div>
 
 
 </div>
+
