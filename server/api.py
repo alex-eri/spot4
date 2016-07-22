@@ -100,7 +100,9 @@ def setup_web(config):
         app.router.add_route('GET', '/user/{login}/{mac}', device_handler)
         app.router.add_route('POST', '/sms_callback', sms_handler, expect_handler=check_auth)
 
-    web.run_app(app)
+    port = config.get('API_PORT',8080)
+
+    web.run_app(app,port=port)
 
 def setup(config):
     web = Process(target=setup_web, args=(config,))

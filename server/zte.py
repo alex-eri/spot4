@@ -9,6 +9,7 @@ debug = logger.debug
 
 import sys, traceback
 import urllib.request
+import urllib.parse
 import time
 import re
 from datetime import datetime
@@ -55,29 +56,32 @@ class Client(object):
         return self.get(uri,*a,**kw)
 
     def set_msg_read(self,msg_id,*a,**kw):
-        to_mark = '%3B'.join(msg_id)
+        to_mark = ';'.join(msg_id)+';'
         uri = "{base}/goform/goform_set_cmd_process".format(
                 base=self.base_url
             )
-        post = dict(isTest="false",
+        postdata = dict(isTest="false",
                     goformId="SET_MSG_READ",
                     msg_id=to_mark,
-                    notCallback="true"
+                    notCallback="true",
+                    tag=0
             )
-        return self.post(uri,data=post)
+        debug(uri)
+        debug(postdata)
+        return self.post(uri,data=postdata)
 
 
     def delete_sms(self,msg_id,*a,**kw):
-        to_mark = '%3B'.join(msg_id)
+        to_mark = ';'.join(msg_id)
         uri = "{base}/goform/goform_set_cmd_process".format(
                 base=self.base_url
             )
-        post = dict(isTest="false",
+        postdata = dict(isTest="false",
                     goformId="DELETE_SMS",
                     msg_id=to_mark,
                     notCallback="true"
             )
-        return self.post(uri,data=post)
+        return self.post(uri,data=postdata)
 
 
 
@@ -109,8 +113,9 @@ async def handle_messages(messages):
         tz = d.pop(-1)
         date = datetime(*d)
         t = retoken.match(text)
-        debug(t.group())
+
         if t:
+            debug(t.group())
             q = dict(
                 login=phone,
                 sms_waited=t.group()
@@ -137,7 +142,10 @@ async def worker(client):
         if data.get("messages"):
             read,delete = await handle_messages(data.get("messages"))
             if delete: client.delete_sms(delete)
-            if read: client.set_msg_read(read)
+            if read:
+                r = client.set_msg_read(read)
+                debug(r.read())
+
 
 
     except aiohttp.errors.ClientError as e:

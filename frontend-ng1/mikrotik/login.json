@@ -1,6 +1,0 @@
-{
-"mac":"$(mac)",
-"username":"$(username)",
-"logged_in":"$(logged-in)",
-"error":"$(error)"
-}

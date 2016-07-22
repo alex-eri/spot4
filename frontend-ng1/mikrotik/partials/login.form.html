@@ -4,7 +4,7 @@
     <form name="regform">
       <input
         type="tel"
-        ng-model=creds.login
+        ng-model=creds.username
         required
         pattern="\+\d{10,12}"
         placeholder="+79123456789"
@@ -14,13 +14,14 @@
     </form>
   </div>
   <div class="animate-switch" ng-switch-when="reg">
-    Регистрация...
+    Регистрация Вашего устройства...
   </div>
 
   <div class="animate-switch" ng-switch-when="cod">
     Отправьте смс с текстом
     <input readonly ng-model=sms.waited type=text />
     на номер <a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a>
+    <p>Интернет включится через мгновение, как оно будет доставленно</p>
   </div>
 
   <div class="animate-switch" ng-switch-when="login">
@@ -28,11 +29,12 @@
   </div>
 
   <div class="animate-switch" ng-switch-when="ok">
-    Подключен!
+    <h3>Подключен!</h3>
+    <p>Перейти на <a href={{client.link_orig}} target=_blank>{{client.link_orig | limitTo : 20 }}</a> </p>
   </div>
 
   <div class="animate-switch" ng-switch-when="error">
-    Ошибка: {{error}} <a href='#' ng-click='stage="form"'>Назад</a>
+    Ошибка: {{error}} <button ng-click="back_to('form')">Назад</button>
   </div>
 
   <div class="animate-switch" ng-switch-default >Загрузка...</div>

@@ -3,6 +3,7 @@
 "RADIUS_IP" :"0.0.0.0",
 "ACCT_PORT":1813,
 "AUTH_PORT":1812,
+"API_PORT":8080,
 "DEBUG": true,
 "DB": {
 	"SERVER": "mongodb://localhost:27017",

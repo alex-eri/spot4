@@ -17,8 +17,6 @@ var app = angular.module('hotspot',['ngResource','ngAnimate'])
 window.app = app;
 
 
-
-
 app.factory('User', ['$resource','$http',
     function($resource,$http) {
       return function (api_url) { return $resource( api_url + '/user/:login/:mac', {login:'@login',mac:'@mac'}); }
@@ -26,17 +24,18 @@ app.factory('User', ['$resource','$http',
 
 app.factory('Client', ['$resource',
     function($resource) {
-      return $resource('hotspot.json');
+      return $resource('login.html');
     }]);
 
 
 app.controller('login',  ['User','Client','$scope','$http',
     function (User,Client,$scope,$http){
         var self = this;
-        $scope.forms = 'partials/login.html'
+        $scope.forms = 'partials/login.form.html'
         $scope.stage = 'mac';
         $scope.creds = {};
         $scope.sms = {};
+        $scope.client = {};
 
         Client.get(
             function (data) {
@@ -48,14 +47,31 @@ app.controller('login',  ['User','Client','$scope','$http',
 
 
         function user_wait(){
+                User(app.APIURL).get(
+                    {login:$scope.creds.username, mac:$scope.client.mac},
+                    function(data){
+                        if (data.response.password) {
+                        $scope.stage = 'login';
+                        $scope.creds.password = data.response.password;
+                        hotspot_login()
 
+                        } else {
+                        $scope.stage = 'cod';
+                        $scope.sms.waited = data.response.sms_waited;
+                        $scope.sms.callie = data.response.sms_callie;
+                        setTimeout(user_wait,1000);
+                        }
+                        console.log(data);
+                    },function(error){
+                        setTimeout(user_wait,1000);
+                    });
         }
 
-
         function hotspot_login(){
-            $http.get('login.json').then( function(response) {
+            $http.post($scope.client.link_login_only,jQuery.param($scope.creds)).then( function(response) {
                 console.log(response)
                 var data = response.data
+                $scope.client = data;
                 if (data.logged_in == 'yes') {
                     $scope.stage = 'ok';
                 } else {
@@ -65,27 +81,17 @@ app.controller('login',  ['User','Client','$scope','$http',
             })
         }
 
-
+        $scope.back_to = function(stage){
+            $scope.stage = stage;
+        }
         $scope.register = function(form){
             console.log(form);
             if (form.$valid) {
                 console.log(app.APIURL);
                 console.log($scope.creds);
                 $scope.stage = 'reg';
-                User(app.APIURL).get(
-                    {login:$scope.creds.login, mac:$scope.client.mac},
-                    function(data){
-                        if (data.response.password) {
-                        $scope.stage = 'login';
-                        hotspot_login()
-
-                        } else {
-                        $scope.stage = 'cod';
-                        $scope.sms.waited = data.response.sms_waited;
-                        $scope.sms.callie = data.response.sms_callie;
-                        }
-                        console.log(data);
-                    });
+                user_wait();
+                setTimeout(function(){$scope.waiting},5000);
             }
         }
 
