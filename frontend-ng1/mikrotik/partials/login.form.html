@@ -41,7 +41,6 @@
     <h3>Подключен!<span></span></h3>
     <p ng-if=client.link_orig >Перейти на <a href={{client.link_orig}} target=_blank>{{client.link_orig | limitTo : 30 }}</a> </p>
     <p ng-if=client.link_redirect >Перейти на <a href={{client.link_redirect}} target=_blank>{{client.link_redirect | limitTo : 30 }}</a> </p>
-    <p> или в <a href='http://yandex.com/' target=_blank>Yandex</a></p>
   </div>
 
   <div class="animate-switch" ng-switch-when="error">
@@ -53,16 +52,9 @@
   <div class="animate-switch" ng-switch-when="status">
     <div ng-controller="status">
       <h4>В сети {{client.uptime}}</h4>
+      <p ng-show="client.time_left">Осталось {{client.time_left}} </p>
     </div>
   </div>
-
-
-  <div class="animate-switch" ng-switch-default >
-    <p>
-      Загрузка...
-    </p>
-  </div>
-
 
 </div>
 

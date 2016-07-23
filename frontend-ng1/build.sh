@@ -6,10 +6,20 @@ install -d ${TARGET}/style/css
 install -d ${TARGET}/style/fonts
 install -d ${TARGET}/partials
 install -d ${TARGET}/templates
+install -d ${TARGET}/json
 pushd mikrotik/
 install *.html ${TARGET}
-install login.html ${TARGET}/alogin.html
-install login.html ${TARGET}/status.html
+
+install index.html ${TARGET}/login.html
+install index.html ${TARGET}/alogin.html
+install index.html ${TARGET}/status.html
+install index.html ${TARGET}/logout.html
+
+install json/login.html ${TARGET}/json/
+install json/login.html ${TARGET}/json/alogin.html
+install json/login.html ${TARGET}/json/status.html
+install json/login.html ${TARGET}/json/logout.html
+
 install config.json ${TARGET}
 install js/app.js ${TARGET}/js/
 install js/jquery/dist/jquery.min.js ${TARGET}/js/

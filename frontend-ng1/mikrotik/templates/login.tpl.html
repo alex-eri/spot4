@@ -1,3 +1,9 @@
 <h1>{{config.title}}</h1>
-<p>{{config.text}}</p>
+<div ng-switch on="client.logged_in">
+  <p ng-switch-when="no" >{{config.hello}}</p>
+  <p ng-switch-when="yes">{{config.wellcome}}</p>
+</div>
+
 <div ng-include="forms">Загрузка...</div>
+
+<p ng-if="client.logged_in == 'yes'" >Продолжить в <a href='http://yandex.com/' target=_blank>Yandex</a></p>

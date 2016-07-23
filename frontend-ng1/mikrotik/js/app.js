@@ -10,7 +10,7 @@ var app = angular.module('hotspot',['ngResource','ngAnimate'])
             document.title = response.data.title || 'Spot 4 hotspot';
             $rootScope.config = response.data ;
             }
-         ,function(error) { alert('не найду локальный кофиг') });
+         ,function(error) { alert('Не найду локальный кофиг/ Хотспот сломался') });
     }
 ]);
 
@@ -24,12 +24,12 @@ app.factory('User', ['$resource','$http',
 
 app.factory('Client', ['$resource',
     function($resource) {
-      return $resource('login.html');
+      return $resource('/json/login.html');
     }]);
 
 app.factory('Status', ['$resource',
     function($resource) {
-      return $resource('status.html');
+      return $resource('/json/status.html');
     }]);
 
 
@@ -78,6 +78,7 @@ app.controller('login',  ['User','Client','$scope','$http',
 
         function to_status(){
             $scope.stage = 'status'; //не пашет, но вызывается
+            $scope.$apply();
         }
 
         function hotspot_login(){
@@ -87,7 +88,8 @@ app.controller('login',  ['User','Client','$scope','$http',
                 $scope.client = data;
                 if (data.logged_in == 'yes') {
                     $scope.stage = 'ok';
-                    setTimeout(to_status,5000);
+                    data.link_redirect = data.link_redirect.replace('/json/','/')
+                    setTimeout(to_status, 10000);
                 } else {
                     $scope.error = data.error
                     $scope.stage = 'error';
