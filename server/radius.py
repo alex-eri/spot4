@@ -79,7 +79,7 @@ class RadiusProtocol:
 
     def handle_auth(self):
 
-        reply_attributes=dict(Class=uuid4().bytes)
+        reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
         self.reply = self.pkt.CreateReply(**reply_attributes)
 
         q = {

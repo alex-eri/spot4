@@ -87,8 +87,8 @@ class Client(object):
 
 
 def get_json(fu):
-    with fu() as c:
-        #c = await fu()
+    try:
+        c = fu()
         debug(c)
         assert c.status == 200
         resp = c.read()
@@ -96,6 +96,9 @@ def get_json(fu):
         data = json.loads(resp.decode('ascii'))
         debug(data)
         return data
+    except urllib.error.URLError as e:
+        logger.error(e.__repr__())
+        return {}
 
 retoken = re.compile('([0-9]{6})')
 
