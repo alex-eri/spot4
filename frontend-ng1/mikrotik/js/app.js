@@ -33,23 +33,25 @@ app.factory('Status', ['$resource',
     }]);
 
 
-app.controller('login',  ['User','Client','$scope','$http',
-    function (User,Client,$scope,$http){
+app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
+    function (User, Client, $rootScope, $http, $timeout ){
         var self = this;
-        $scope.forms = 'partials/login.form.html'
-        $scope.stage = 'mac';
-        $scope.creds = {};
-        $scope.sms = {};
-        $scope.client = {};
+        $rootScope.forms = 'partials/login.form.html'
+        $rootScope.stage = 'mac';
+        $rootScope.creds = {};
+        $rootScope.sms = {};
+        $rootScope.client = {};
 
         Client.get(
             function (data) {
-                $scope.client = data;
-                if (data.logged_in == 'yes') {
-                    $scope.stage = 'status';
-                } else {
-                    $scope.stage = 'form';
-                }
+              //  $rootScope.$apply( function() {
+                    $rootScope.client = data;
+                    if (data.logged_in == 'yes') {
+                        $rootScope.stage = 'status';
+                    } else {
+                        $rootScope.stage = 'form';
+                    }
+               // })
                 console.log(data);
             }
         )
@@ -57,57 +59,57 @@ app.controller('login',  ['User','Client','$scope','$http',
 
         function user_wait(){
                 User(app.APIURL).get(
-                    {login:$scope.creds.username, mac:$scope.client.mac},
+                    {login:$rootScope.creds.username, mac:$rootScope.client.mac},
                     function(data){
                         if (data.response.password) {
-                        $scope.stage = 'login';
-                        $scope.creds.password = data.response.password;
+                        $rootScope.stage = 'login';
+                        $rootScope.creds.password = data.response.password;
                         hotspot_login()
 
                         } else {
-                        $scope.stage = 'cod';
-                        $scope.sms.waited = data.response.sms_waited;
-                        $scope.sms.callie = data.response.sms_callie;
-                        setTimeout(user_wait,1000);
+                        $rootScope.stage = 'cod';
+                        $rootScope.sms.waited = data.response.sms_waited;
+                        $rootScope.sms.callie = data.response.sms_callie;
+                        $timeout(user_wait,1000);//TODO port to $interval
                         }
                         console.log(data);
                     },function(error){
-                        setTimeout(user_wait,1000);
+                        $timeout(user_wait,1000);//TODO port to $interval
                     });
         }
 
         function to_status(){
-            $scope.stage = 'status'; //не пашет, но вызывается
-            $scope.$apply();
+            $rootScope.stage = 'status'; //не пашет, но вызывается
+            $rootScope.$apply();
         }
 
         function hotspot_login(){
-            $http.post($scope.client.link_login_only,jQuery.param($scope.creds)).then( function(response) {
+            $http.post($rootScope.client.link_login_only,jQuery.param($rootScope.creds)).then( function(response) {
                 console.log(response)
                 var data = response.data
-                $scope.client = data;
+                $rootScope.client = data;
                 if (data.logged_in == 'yes') {
-                    $scope.stage = 'ok';
+                    $rootScope.stage = 'ok';
                     data.link_redirect = data.link_redirect.replace('/json/','/')
-                    setTimeout(to_status, 10000);
+                    $timeout(to_status, 7000);
                 } else {
-                    $scope.error = data.error
-                    $scope.stage = 'error';
+                    $rootScope.error = data.error
+                    $rootScope.stage = 'error';
                 }
             })
         }
 
-        $scope.back_to = function(stage){
-            $scope.stage = stage;
+        $rootScope.back_to = function(stage){
+            $rootScope.stage = stage;
         }
-        $scope.register = function(form){
+        $rootScope.register = function(form){
             console.log(form);
             if (form.$valid) {
                 console.log(app.APIURL);
-                console.log($scope.creds);
-                $scope.stage = 'reg';
+                console.log($rootScope.creds);
+                $rootScope.stage = 'reg';
                 user_wait();
-                setTimeout(function(){$scope.waiting=true},5000);
+                $timeout(function(){$rootScope.waiting=true},5000);
             }
         }
 
@@ -116,24 +118,29 @@ app.controller('login',  ['User','Client','$scope','$http',
 
 );
 
-app.controller('status',  ['Status','$scope','$http',
-    function (Status,$scope,$http) {
+app.controller('status',  ['Status','$rootScope','$timeout',
+    function (Status, $rootScope, $timeout) {
 
-        $scope.client = {};
+        $rootScope.client = {};
         function update(){
         Status.get(
             function (data) {
-                $scope.client = data;
+                console.log($rootScope);
+                $rootScope.client = data;
                 if (data.logged_in == 'yes') {
-                    $scope.stage = 'status';
+                    $timeout(update, 3000);//TODO port to $interval
                 } else {
-                    $scope.stage = 'form';
+                    $rootScope.stage = 'form';
                 }
+
                 console.log(data);
-            }
+            },
+            function(error){ $timeout(update, 3000); } //TODO port to $interval
         );
-         setTimeout(update,3000);
+
         }
+
+
         update();
 
     }
