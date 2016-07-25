@@ -4,6 +4,7 @@ import db
 import asyncio
 import aiohttp
 import json
+
 import procutil
 import sys, traceback
 import urllib.request
@@ -28,13 +29,13 @@ class Client(object):
 
     def get(self,uri):
         req = urllib.request.Request(uri, headers=self.headers, method="GET")
-        return urllib.request.urlopen(req)
+        return urllib.request.urlopen(req,timeout=5)
 
     def post(self,uri,data):
         data = urllib.parse.urlencode(data)
         data = data.encode('ascii')
         req = urllib.request.Request(uri, data=data, headers=self.headers, method='POST')
-        return urllib.request.urlopen(req)
+        return urllib.request.urlopen(req,timeout=5)
 
     def get_count(self,*a,**kw):
 
@@ -87,18 +88,15 @@ class Client(object):
 
 
 def get_json(fu):
-    try:
-        c = fu()
-        debug(c)
-        assert c.status == 200
-        resp = c.read()
-        debug(resp)
-        data = json.loads(resp.decode('ascii'))
-        debug(data)
-        return data
-    except urllib.error.URLError as e:
-        logger.error(e.__repr__())
-        return {}
+    c = fu()
+    debug(c)
+    assert c.status == 200
+    resp = c.read()
+    debug(resp)
+    data = json.loads(resp.decode('ascii'))
+    debug(data)
+    return data
+
 
 retoken = re.compile('([0-9]{6})')
 
@@ -109,13 +107,14 @@ async def handle_messages(messages):
     debug(messages)
     for m in messages:
         phone = decodeHexUcs2(m.get('number'))
-        debug(phone)
+        logger.info(phone)
         text = decodeHexUcs2(m.get('content'))
-        debug(text)
-        d = [int(i) for i in m.get('date').split(',')]
-        d[0] = d[0]+2000
-        tz = d.pop(-1)
-        date = datetime(*d)
+        logger.info(text)
+        #d = [int(i) for i in m.get('date').split(',')]
+        #d[0] = d[0]+2000
+        #tz = d.pop(-1)
+        #date = datetime(*d)
+
         t = retoken.match(text)
 
         if t:
@@ -132,10 +131,6 @@ async def handle_messages(messages):
             delete.append(m.get('id',0))
         else:
             read.append(m.get('id',0))
-            logger.info("Непонятная SMS от {}: {}".format(phone,text))
-        debug(phone)
-        debug(date)
-        debug(text)
 
     return read,delete
 
@@ -150,16 +145,19 @@ async def worker(client):
                 r = client.set_msg_read(read)
                 debug(r.read())
 
-
-
-    except aiohttp.errors.ClientError as e:
+    except json.decoder.JSONDecodeError as e:
+        logger.error(client.base_url)
         logger.error(e.__repr__())
-        traceback.print_exc(file=sys.stdout)
+
+    except urllib.error.URLError as e:
+        logger.error(client.base_url)
+        logger.error(e.__repr__())
 
     except AssertionError as e:
         logger.warning(e.__repr__())
 
     except Exception as e:
+        logger.error(client.base_url)
         logger.error(e.__repr__())
         raise e
 
@@ -168,7 +166,6 @@ async def worker(client):
 
 async def main_loop(clients):
     while True:
-        loop = asyncio.get_event_loop()
         tasks = [ asyncio.ensure_future(worker(client)) for client in clients ]
         await asyncio.wait(tasks)
         await asyncio.sleep(3)

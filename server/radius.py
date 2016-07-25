@@ -160,7 +160,12 @@ class RadiusProtocol:
                 }
             }
             db.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
-        else:
+        elif self['Acct-Status-Type'] == STATUS_TYPE_UPDATE or \
+             self['Acct-Status-Type'] == STATUS_TYPE_STOP:
+
+            debug(self['Acct-Input-Octets'])
+            debug(self['Acct-Input-Gigawords'])
+
             account = {
                 'uptime': self['Acct-Session-Time'],
                 'input_bytes': self['Acct-Input-Gigawords'] or 0 << 32 | self['Acct-Input-Octets'],
