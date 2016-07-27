@@ -1,7 +1,6 @@
 import radius
 import json
 import logging
-import db
 import api
 
 logger = logging.getLogger('main')
@@ -12,7 +11,7 @@ def polling_setup(config):
     procs = []
     if ztes:
         import zte
-        return zte.setup(ztes)
+        return zte.setup(config)
     return procs
 
 def setup():
@@ -20,18 +19,12 @@ def setup():
     if config.get('DEBUG'):
         logging.basicConfig(level=logging.DEBUG)
 
-    db.setup(
-        config['DB']['SERVER'],
-        config['DB']['NAME']
-    )
-
     services = []
     services.extend( radius.setup(config))
     services.extend( api.setup(config))
 
     if config.get('SMS_POLLING'):
         services.extend(polling_setup(config))
-
 
     return services
 

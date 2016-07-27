@@ -1,11 +1,10 @@
 from multiprocessing import Process, current_process
 import logging
-import db
 import asyncio
 import aiohttp
 import json
 
-import procutil
+from utils import procutil
 import sys, traceback
 import urllib.request
 import urllib.parse
@@ -19,6 +18,7 @@ debug = logger.debug
 
 class Client(object):
     def __init__(self,*a,**kw):
+        self.db = kw.pop('db')
         self.base_url = kw.pop('url')
         self.sms_unread_num = 0
 
@@ -123,7 +123,7 @@ async def handle_messages(messages):
                 login=phone,
                 sms_waited=t.group()
             )
-            r = await db.db.devices.update(q, {
+            r = await self.db.devices.update(q, {
                 '$set':{'checked':True},
                 '$currentDate':{'check_date':True}
                                           })
@@ -165,19 +165,31 @@ async def worker(client):
 
 
 async def main_loop(clients):
+
     while True:
         tasks = [ asyncio.ensure_future(worker(client)) for client in clients ]
         await asyncio.wait(tasks)
         await asyncio.sleep(3)
 
 
-def setup_loop(ztes):
+def setup_loop(config):
     name = current_process().name
     procutil.set_proc_name(name)
 
+    ztes = config['SMS_POLLING'].get('ZTE',[])
+
+    import storage
+
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
+
+    debug(id(db))
+
     clients = []
     for url in ztes:
-        clients.append( Client(url=url))
+        clients.append( Client(url=url,db=db))
 
     loop = asyncio.get_event_loop()
 
@@ -190,8 +202,8 @@ def setup_loop(ztes):
         loop.close()
 
 
-def setup(ztes):
-    proc = Process(target=setup_loop, args=(ztes,))
+def setup(config):
+    proc = Process(target=setup_loop, args=(config,))
     proc.name = 'zte'
     return [proc]
 

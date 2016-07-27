@@ -1,7 +1,6 @@
-import db
 from aiohttp import web
 import aiohttp
-import procutil
+from utils import procutil
 from multiprocessing import Process, current_process
 from bson.json_util import dumps
 import random
@@ -87,13 +86,20 @@ def setup_web(config):
     global logger
     name = current_process().name
     procutil.set_proc_name(name)
+    import storage
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
 
-    db.db.devices.ensure_index( [ ("login",1), ("mac",1) ], unique=True, dropDups=True ,callback=db.index_cb)
+    debug(id(db))
+
+    db.devices.ensure_index( [ ("login",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
+    db.devices.ensure_index( [ ("login",1) ], unique=False, callback=storage.index_cb)
 
     app = web.Application(middlewares=[cors, json_middleware])
-    app['db'] = db.db
+    app['db'] = db
     app['config'] = config
-
     app.logger = logger
 
     if config.get('SMS_POLLING'):

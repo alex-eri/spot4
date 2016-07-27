@@ -4,9 +4,8 @@ from multiprocessing import Process, current_process
 from uuid import uuid4
 import hashlib
 import logging
-import db
 import os
-import procutil
+from utils import procutil
 import argparse
 import sys
 import asyncio
@@ -26,6 +25,7 @@ STATUS_TYPE_NAS_OFF = 'Accounting-Off' #8
 class RadiusProtocol:
     radhost = host.Host(dict=dictionary.Dictionary("dictionary"))
     radsecret = None
+    db = None
 
     def __getitem__(self,y):
         try:
@@ -99,7 +99,7 @@ class RadiusProtocol:
         self.respond( self.reply.ReplyPacket() )
 
     def get_user(self,creds):
-        db.db.devices.find_one(creds,callback=self.got_user)
+        self.db.devices.find_one(creds,callback=self.got_user)
 
     def got_user(self,response,error):
         if error:
@@ -159,7 +159,7 @@ class RadiusProtocol:
                     'start_time': self['Event-Timestamp']
                 }
             }
-            db.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
+            self.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
         elif self['Acct-Status-Type'] == STATUS_TYPE_UPDATE or \
              self['Acct-Status-Type'] == STATUS_TYPE_STOP:
 
@@ -176,7 +176,7 @@ class RadiusProtocol:
                 'event_time': self['Event-Timestamp']
             }
             if self['Acct-Status-Type'] == STATUS_TYPE_UPDATE:
-                db.db.accounting.update(q,
+                self.db.accounting.update(q,
                     {
                         '$set': account,
                         '$currentDate':{'date':True}
@@ -185,7 +185,7 @@ class RadiusProtocol:
 
             elif self['Acct-Status-Type'] == STATUS_TYPE_STOP:
                 account['termination_cause'] =  self['Acct-Terminate-Cause']
-                db.db.accounting.update(
+                self.db.accounting.update(
                     q,
                     {
                         '$set': account,
@@ -202,7 +202,7 @@ class RadiusProtocol:
             logger.error(e.__repr__())
 
 
-def setup_radius(config,PORT):
+def setup_radius(db, config,PORT):
 
     name = current_process().name
     procutil.set_proc_name(name)
@@ -213,6 +213,7 @@ def setup_radius(config,PORT):
     HOST = config.get('RADIUS_IP','0.0.0.0')
 
     RadiusProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
+    RadiusProtocol.db = db
 
     t = asyncio.Task(loop.create_datagram_endpoint(
         RadiusProtocol, local_addr=(HOST,PORT)))
@@ -226,11 +227,15 @@ def setup_radius(config,PORT):
 
 
 def setup(config):
-
-    acct = Process(target=setup_radius, args=(config, config.get('ACCT_PORT', 1813)))
+    import storage
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
+    acct = Process(target=setup_radius, args=(db, config, config.get('ACCT_PORT', 1813)))
     acct.name = 'radius.acct'
 
-    auth = Process(target=setup_radius, args=(config, config.get('AUTH_PORT', 1812)))
+    auth = Process(target=setup_radius, args=(db, config, config.get('AUTH_PORT', 1812)))
     auth.name = 'radius.auth'
 
     return acct,auth
@@ -240,11 +245,6 @@ def setup(config):
 def main():
     import json
     config = json.load(open('config.json','r'))
-
-    db.setup(
-        config['DB']['SERVER'],
-        config['DB']['NAME']
-    )
 
     servers = setup(config)
 
