@@ -91,7 +91,7 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
                 if (data.logged_in == 'yes') {
                     $rootScope.stage = 'ok';
                     data.link_redirect = data.link_redirect.replace('/json/','/')
-                    $timeout(to_status, 7000);
+                    $timeout(to_status, 10000);
                 } else {
                     $rootScope.error = data.error
                     $rootScope.stage = 'error';
