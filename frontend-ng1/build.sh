@@ -47,4 +47,5 @@ node_modules/uglify-js/bin/uglifyjs \
     bower_components/angular/angular.min.js \
     bower_components/angular-resource/angular-resource.min.js \
     bower_components/angular-animate/angular-animate.min.js \
+    mikrotik/js/md5.js \
     > ${TARGET}/js/library.js
