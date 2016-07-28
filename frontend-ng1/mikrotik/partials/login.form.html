@@ -5,13 +5,14 @@
     <form name="regform">
       <input
         type="tel"
-        ng-model=creds.username
+        ng-model="$root.phone"
         required
         pattern="\+\d{10,12}"
         placeholder="+79123456789"
-        name='login' />
-      <input type="hidden" name='mac' ng-model=client.mac />
-      <button ng-click="register(regform)" >Войти</button>
+        name='login'
+        phone-validation
+        />
+      <input type="submit" ng-click="register(regform)" value="Войти" />
 
     </form>
     </p>

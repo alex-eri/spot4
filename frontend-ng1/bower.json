@@ -10,6 +10,7 @@
     "angular-resource": "1.5.x",
     "angular-route": "1.5.x",
     "bootstrap": "3.3.x",
-    "jquery": "2.2.x"
+    "jquery": "2.2.x",
+    "forge": "0.6.x"
   }
 }

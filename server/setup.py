@@ -15,7 +15,13 @@ executables = [Executable(
     "main.py",
     base=base,
     targetName='spot4.exe'
-    )]
+    ),
+    Executable(
+    "migrate.py",
+    base=base,
+    targetName='migrate.exe'
+    ),
+    ]
 
 
 setup(  name = "spot4",

@@ -4,13 +4,27 @@ var app = angular.module('hotspot',['ngResource','ngAnimate'])
 
 .run(['$http','$rootScope',
     function ($http,$rootScope) {
+
+        function onAPI(APIURL){
+            $http.get(APIURL+'/salt').then(
+                function(response) {
+                    app.SALT = response.data.salt;
+                }, function(error){
+                    $rootScope.error = "Сервер не отвечает, попробуйте позже";
+                    $rootScope.stage = 'error';
+                });
+        };
+
+
         $http.get('config.json').then( function(response) {
             console.log(response.data);
             app.APIURL = response.data.api;
             document.title = response.data.title || 'Spot 4 hotspot';
             $rootScope.config = response.data ;
+            onAPI(app.APIURL)
             }
          ,function(error) { alert('Не найду локальный кофиг/ Хотспот сломался') });
+
     }
 ]);
 
@@ -19,8 +33,10 @@ window.app = app;
 
 app.factory('User', ['$resource','$http',
     function($resource,$http) {
-      return function (api_url) { return $resource( api_url + '/user/:login/:mac', {login:'@login',mac:'@mac'}); }
+      return function (api_url) { return $resource( api_url + '/device/:phonehash/:mac', {phonehash:'@phonehash',mac:'@mac'}); }
     }]);
+
+
 
 app.factory('Client', ['$resource',
     function($resource) {
@@ -33,37 +49,69 @@ app.factory('Status', ['$resource',
     }]);
 
 
+app.directive('phoneValidation', function(){
+   return {
+     require: 'ngModel',
+     link: function(scope, element, attrs, modelCtrl) {
+
+       modelCtrl.$parsers.push(function (inputValue) {
+
+         var transformedInput = inputValue.replace(/[^\d+]/g,'').replace(/^89/g,'+79');
+
+         if (transformedInput!=inputValue) {
+           modelCtrl.$setViewValue(transformedInput);
+           modelCtrl.$render();
+         }
+
+         return transformedInput;
+       });
+     }
+   };
+});
+
+
+
+function hash(salt,data) {
+    return hexMD5(salt+data);
+}
+
+
 app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
     function (User, Client, $rootScope, $http, $timeout ){
         var self = this;
         $rootScope.forms = 'partials/login.form.html'
         $rootScope.stage = 'mac';
-        $rootScope.creds = {};
+        var creds = {};
         $rootScope.sms = {};
         $rootScope.client = {};
+        $rootScope.phone = "";
+        var phonehash = "";
 
         Client.get(
             function (data) {
-              //  $rootScope.$apply( function() {
                     $rootScope.client = data;
                     if (data.logged_in == 'yes') {
                         $rootScope.stage = 'status';
                     } else {
                         $rootScope.stage = 'form';
                     }
-               // })
                 console.log(data);
             }
         )
 
 
         function user_wait(){
+
                 User(app.APIURL).get(
-                    {login:$rootScope.creds.username, mac:$rootScope.client.mac},
+                    {
+                        phonehash: phonehash ,
+                        mac:$rootScope.client.mac
+                    },
                     function(data){
                         if (data.response.password) {
                         $rootScope.stage = 'login';
-                        $rootScope.creds.password = data.response.password;
+                        creds.username = data.response.username;
+                        creds.password = data.response.password;
                         hotspot_login()
 
                         } else {
@@ -84,7 +132,7 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
         }
 
         function hotspot_login(){
-            $http.post($rootScope.client.link_login_only,jQuery.param($rootScope.creds)).then( function(response) {
+            $http.post($rootScope.client.link_login_only,jQuery.param(creds)).then( function(response) {
                 console.log(response)
                 var data = response.data
                 $rootScope.client = data;
@@ -93,7 +141,7 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
                     data.link_redirect = data.link_redirect.replace('/json/','/')
                     $timeout(to_status, 10000);
                 } else {
-                    $rootScope.error = data.error
+                    $rootScope.error = data.error;
                     $rootScope.stage = 'error';
                 }
             })
@@ -106,8 +154,12 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
             console.log(form);
             if (form.$valid) {
                 console.log(app.APIURL);
-                console.log($rootScope.creds);
+                console.log(app.SALT);
+                console.log($rootScope.phone);
                 $rootScope.stage = 'reg';
+
+                phonehash = hash(app.SALT,$rootScope.phone);
+                console.log(phonehash)
                 user_wait();
                 $timeout(function(){$rootScope.waiting=true},5000);
             }
