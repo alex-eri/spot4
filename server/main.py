@@ -60,7 +60,7 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()
 
     import argparse
-    from utils import procutil
+
     parser = argparse.ArgumentParser(description='Hotspot.')
     parser.add_argument('--config-dir', nargs='?', help='config dir')
     if os.name == 'nt':
@@ -69,11 +69,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.config_dir:
-        procutil.chdir(args.config_dir)
+        import utils.procutil
+        utils.procutil.chdir(args.config_dir)
 
     if os.name == 'nt':
+        import utils.win32
         if args.service :
-            import utils.win32
             utils.win32.ServiceLauncher.main = classmethod(main)
             utils.win32.startservice()
         else:
