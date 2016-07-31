@@ -76,8 +76,10 @@ async def db_handler(request):
     collection = request.match_info.get('collection')
     skip = int(request.match_info.get('skip',0))
     limit = int(request.match_info.get('limit',100))
-    r = await request.app['db'][collection].find().skip(skip).limit(limit).to_list(limit)
-    return r
+    cursor = request.app['db'][collection].find()
+    c = await cursor.count()
+    r = await cursor.skip(skip).limit(limit).to_list(limit)
+    return {'response': r, 'total':c}
 
 
 def check_auth(fu):
@@ -113,6 +115,7 @@ def setup_web(config):
     global logger
     name = current_process().name
     procutil.set_proc_name(name)
+
     import storage
     db = storage.setup(
         config['DB']['SERVER'],

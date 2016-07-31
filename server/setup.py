@@ -3,11 +3,18 @@ from cx_Freeze import setup, Executable
 build_exe_options = {
     "packages": ["os","utils"],
     "excludes": ["tkinter","tornado","zope","twisted","xmlrpc","xml"],
-    'include_files': ['/usr/lib/libssl.so.1.0.0','/usr/lib/libcrypto.so.1.0.0','config.json','dictionary'],
+    'include_files': ['config.json','dictionary'],
     'create_shared_zip': True, #не запускается если отключить library.zip
     'append_script_to_exe':True,
     #'include_in_shared_zip': True
 }
+
+import os
+if os.name = 'posix':
+    build_exe_options['include_files'].extend(
+
+        ['/usr/lib/libssl.so.1.0.0','/usr/lib/libcrypto.so.1.0.0','spot4.service']
+    )
 
 base = None
 

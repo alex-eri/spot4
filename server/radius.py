@@ -202,13 +202,19 @@ class RadiusProtocol:
             logger.error(e.__repr__())
 
 
-def setup_radius(db, config,PORT):
+def setup_radius(config,PORT):
 
     name = current_process().name
     procutil.set_proc_name(name)
     debug("{}`s pid is {}".format(name, os.getpid()))
 
     loop = asyncio.get_event_loop()
+
+    import storage
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 
@@ -227,15 +233,10 @@ def setup_radius(db, config,PORT):
 
 
 def setup(config):
-    import storage
-    db = storage.setup(
-        config['DB']['SERVER'],
-        config['DB']['NAME']
-    )
-    acct = Process(target=setup_radius, args=(db, config, config.get('ACCT_PORT', 1813)))
+    acct = Process(target=setup_radius, args=(config, config.get('ACCT_PORT', 1813)))
     acct.name = 'radius.acct'
 
-    auth = Process(target=setup_radius, args=(db, config, config.get('AUTH_PORT', 1812)))
+    auth = Process(target=setup_radius, args=(config, config.get('AUTH_PORT', 1812)))
     auth.name = 'radius.auth'
 
     return acct,auth
