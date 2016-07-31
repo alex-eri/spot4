@@ -25,10 +25,10 @@ class ServiceLauncher(win32serviceutil.ServiceFramework):
         self.main()
 
 
-def start():
-    if len(sys.argv) == 1:
+def startservice():
         servicemanager.Initialize()
         servicemanager.PrepareToHostSingle(ServiceLauncher)
         servicemanager.StartServiceCtrlDispatcher()
-    else:
+
+def start():
         win32serviceutil.HandleCommandLine(ServiceLauncher)
