@@ -1,6 +1,4 @@
-import radius
 import logging
-import api
 
 logger = logging.getLogger('main')
 debug = logger.debug
@@ -15,8 +13,12 @@ def polling_setup(config):
         return zte.setup(config)
     return procs
 
+
 def setup():
+    import api
+    import radius
     import json
+
     config = json.load(open('config.json','r'))
     if config.get('DEBUG'):
         logging.basicConfig(level=logging.DEBUG)
@@ -35,8 +37,16 @@ def setup():
 
 
 if __name__ == "__main__":
-    import multiprocessing
+    import multiprocessing,os,sys
     multiprocessing.freeze_support()
+
+    import argparse
+    from utils import procutil
+    parser = argparse.ArgumentParser(description='Hotspot.')
+    parser.add_argument('--config-dir', nargs='?', help='config dir')
+    args = parser.parse_args()
+
+    procutil.chdir(args.config_dir)
 
     services = setup()
 

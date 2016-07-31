@@ -1,7 +1,7 @@
 from cx_Freeze import setup, Executable
 
 build_exe_options = {
-    "packages": ["os","utils"],
+    "packages": ["os","utils","struct"],
     "excludes": ["tkinter","tornado","zope","twisted","xmlrpc","xml"],
     'include_files': ['config.json','dictionary'],
     'create_shared_zip': True, #не запускается если отключить library.zip
@@ -10,17 +10,21 @@ build_exe_options = {
 }
 
 import os
-if os.name = 'posix':
+if os.name == 'posix':
     build_exe_options['include_files'].extend(
 
         ['/usr/lib/libssl.so.1.0.0','/usr/lib/libcrypto.so.1.0.0','spot4.service']
     )
 
 base = None
+base_service = base
+
+#if os.name == 'nt':
+#    base_service = 'Win32Service'
 
 executables = [Executable(
     "main.py",
-    base=base,
+    base=base_service,
     targetName='spot4.exe'
     ),
     Executable(

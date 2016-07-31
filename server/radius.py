@@ -11,7 +11,7 @@ import sys
 import asyncio
 from asyncio import coroutine
 import time, base64, pyotp
-import struct
+#import struct
 
 logger = logging.getLogger('radius')
 debug = logger.debug
@@ -22,8 +22,11 @@ STATUS_TYPE_UPDATE  = 'Alive' #3
 STATUS_TYPE_NAS_ON  = 'Accounting-On'  #7
 STATUS_TYPE_NAS_OFF = 'Accounting-Off' #8
 
+#DICTIONARY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),"dictionary")
+DICTIONARY_PATH = "dictionary"
+
 class RadiusProtocol:
-    radhost = host.Host(dict=dictionary.Dictionary("dictionary"))
+    radhost = host.Host(dict=dictionary.Dictionary(DICTIONARY_PATH))
     radsecret = None
     db = None
 

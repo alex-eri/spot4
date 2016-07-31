@@ -18,3 +18,10 @@ if os.name == "posix":
 else:
     def set_proc_name(name): return
     def get_proc_name(): return "spot_process"
+
+def chdir(f):
+    try:
+        os.chdir(os.path.abspath(f))
+    except FileNotFoundError as e:
+        raise e
+        exit(1)
