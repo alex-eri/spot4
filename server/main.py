@@ -1,4 +1,4 @@
-import logging
+import logging,sys
 
 logger = logging.getLogger('main')
 debug = logger.debug
@@ -35,25 +35,56 @@ def setup():
 
     return services
 
+def main():
+    services = setup()
+
+    for proc in services:
+        proc.start()
+
+    sys.running = True
+    while sys.running:
+        try:
+            for proc in services:
+                proc.join(1)
+        except:
+            sys.running = False
+            break
+
+    for proc in services:
+        proc.terminate()
+
+
 
 if __name__ == "__main__":
-    import multiprocessing,os,sys
+    import multiprocessing,os
     multiprocessing.freeze_support()
 
     import argparse
     from utils import procutil
     parser = argparse.ArgumentParser(description='Hotspot.')
     parser.add_argument('--config-dir', nargs='?', help='config dir')
+    if os.name == 'nt':
+        parser.add_argument('--service',
+                             dest='service', action='store_true', help='Windows service')
     args = parser.parse_args()
 
-    procutil.chdir(args.config_dir)
+    if args.config_dir:
+        procutil.chdir(args.config_dir)
 
-    services = setup()
+    if os.name == 'nt':
+        if args.service :
+            import utils.win32
+            utils.win32.ServiceLauncher.main = classmethod(main)
+            utils.win32.startservice()
+        else:
+            utils.win32.start()
+    else:
+        main()
 
-    for proc in services:
-        proc.start()
 
-    for proc in services:
-        proc.join()
+
+
+
+
 
     
