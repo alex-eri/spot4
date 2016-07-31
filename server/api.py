@@ -72,14 +72,26 @@ async def sms_handler(request):
     return {'response': 'OK'}
 
 
-async def check_auth(request):
-    if request.version != aiohttp.HttpVersion11:
-        return
-    if request.headers.get('EXPECT') != '100-continue':
-        raise web.HTTPExpectationFailed(text="Unknown Expect: %s" % expect)
-    if request.headers.get('AUTHORIZATION') is None:
-        raise web.HTTPForbidden()
-    request.transport.write(b"HTTP/1.1 100 Continue\r\n\r\n")
+async def db_handler(request):
+    collection = request.match_info.get('collection')
+    skip = int(request.match_info.get('skip',0))
+    limit = int(request.match_info.get('limit',100))
+    r = await request.app['db'][collection].find().skip(skip).limit(limit).to_list(limit)
+    return r
+
+
+def check_auth(fu):
+    async def handler(request):
+        if request.headers.get('AUTHORIZATION') is None:
+            raise web.HTTPUnauthorized(headers={'WWW-Authenticate':'Basic realm="Spot4 API"'})
+        else:
+            method, secret = request.headers.get('AUTHORIZATION').split()
+            login, password = base64.b64decode(secret).decode('ascii').split(':')
+            if request.app['config']['API_SECRET'].get(login) != password:
+                raise web.HTTPForbidden()
+        return await fu(request)
+    return handler
+
 
 async def json_middleware(app, handler):
     async def middleware_handler(request):
@@ -91,7 +103,7 @@ async def cors(app, handler):
     "Access-Control-Allow-Origin"
     async def middleware_handler(request):
         resp = await handler(request)
-        resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin')
+        resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','')
         return resp
     return middleware_handler
 
@@ -122,9 +134,10 @@ def setup_web(config):
 
     if config.get('SMS_POLLING'):
         app.router.add_route('GET', '/device/{phonehash}/{mac}', device_handler)
-        app.router.add_route('POST', '/sms_callback', sms_handler, expect_handler=check_auth)
+        app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 
     app.router.add_route('GET', '/salt', salt_handler)
+    app.router.add_route('GET', '/db/{collection}/{skip}::{limit}', check_auth(db_handler))
 
     port = config.get('API_PORT',8080)
 

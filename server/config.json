@@ -4,6 +4,7 @@
 "ACCT_PORT":1813,
 "AUTH_PORT":1812,
 "API_PORT":8080,
+"API_SECRET": {"admin":"testing123"},
 "DEBUG": true,
 "DB": {
 	"SERVER": "mongodb://localhost:27017",
