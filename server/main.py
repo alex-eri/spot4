@@ -13,15 +13,18 @@ def polling_setup(config):
         return zte.setup(config)
     return procs
 
-
 def setup():
     import api
     import radius
     import json
 
     config = json.load(open('config.json','r'))
+    FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
+
     if config.get('DEBUG'):
-        logging.basicConfig(level=logging.DEBUG)
+        level = logging.DEBUG
+
+    logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
     config['SALT'] = SALT
     config['SALT_ASCII'] = SALT.decode()
@@ -32,6 +35,10 @@ def setup():
 
     if config.get('SMS_POLLING'):
         services.extend(polling_setup(config))
+
+    if config.get('NETFLOW'):
+        import netflow
+        services.extend(netflow.setup(config))
 
     return services
 
@@ -59,7 +66,7 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()
     import argparse
 
-    parser = argparse.ArgumentParser(description='Hotspot')
+    parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
     parser.add_argument('--config-dir', nargs='?', help='config dir')
     if os.name == 'nt':
         parser.add_argument('--service',

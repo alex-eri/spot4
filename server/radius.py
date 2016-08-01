@@ -1,15 +1,15 @@
 from pyrad import dictionary, packet, host
-import socketserver
+#import socketserver
 from multiprocessing import Process, current_process
 from uuid import uuid4
 import hashlib
 import logging
 import os
 from utils import procutil
-import argparse
-import sys
+#import argparse
+#import sys
 import asyncio
-from asyncio import coroutine
+#from asyncio import coroutine
 import time, base64, pyotp
 #import struct
 
@@ -163,6 +163,7 @@ class RadiusProtocol:
                 }
             }
             self.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
+
         elif self['Acct-Status-Type'] == STATUS_TYPE_UPDATE or \
              self['Acct-Status-Type'] == STATUS_TYPE_STOP:
 
@@ -170,7 +171,7 @@ class RadiusProtocol:
             debug(self['Acct-Input-Gigawords'])
 
             account = {
-                'uptime': self['Acct-Session-Time'],
+                'session_time': self['Acct-Session-Time'],
                 'input_bytes': self['Acct-Input-Gigawords'] or 0 << 32 | self['Acct-Input-Octets'],
                 'input_packets': self['Acct-Input-Packets'],
                 'output_bytes': self['Acct-Output-Gigawords'] or 0 << 32 | self['Acct-Output-Octets'],
@@ -182,7 +183,6 @@ class RadiusProtocol:
                 self.db.accounting.update(q,
                     {
                         '$set': account,
-                        '$currentDate':{'date':True}
                     },
                     upsert=True,callback=self.accounting_cb)
 
@@ -192,7 +192,7 @@ class RadiusProtocol:
                     q,
                     {
                         '$set': account,
-                        '$currentDate':{'stop_date':True,'date':True}
+                        '$currentDate':{'stop_date':True}
                     },
                     upsert=True,callback=self.accounting_cb)
 
@@ -242,7 +242,7 @@ def setup(config):
     auth = Process(target=setup_radius, args=(config, config.get('AUTH_PORT', 1812)))
     auth.name = 'radius.auth'
 
-    return acct,auth
+    return [acct,auth]
 
 
 
