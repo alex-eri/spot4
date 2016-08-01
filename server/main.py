@@ -54,19 +54,17 @@ def main():
         proc.terminate()
 
 
-
 if __name__ == "__main__":
     import multiprocessing,os
     multiprocessing.freeze_support()
-
     import argparse
 
-    parser = argparse.ArgumentParser(description='Hotspot.')
+    parser = argparse.ArgumentParser(description='Hotspot')
     parser.add_argument('--config-dir', nargs='?', help='config dir')
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
-    args = parser.parse_args()
+    args,argv = parser.parse_known_args()
 
     if args.config_dir:
         import utils.procutil
@@ -74,11 +72,19 @@ if __name__ == "__main__":
 
     if os.name == 'nt':
         import utils.win32
-        if args.service :
-            utils.win32.ServiceLauncher.main = classmethod(main)
-            utils.win32.startservice()
+        if args.service:
+            utils.win32.startservice(sys.modules[__name__])
         else:
-            utils.win32.start()
+
+            exeargs = sys.argv[1:]
+            for i in argv:
+                exeargs.remove(i)
+
+            argv.insert(0,sys.argv[0])
+            print(argv)
+            print(exeargs)
+
+            utils.win32.start(sys.modules[__name__],  argv, exeargs)
     else:
         main()
 

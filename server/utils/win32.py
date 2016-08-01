@@ -8,7 +8,8 @@ import servicemanager
 
 class ServiceLauncher(win32serviceutil.ServiceFramework):
     _svc_name_ = 'Spot4'
-    _scv_display_name_ ='hotspot controller'
+    _svc_display_name_ ='Spot4 Hotspot controller'
+    _exe_args_ = '--service '
 
     main = None
 
@@ -22,13 +23,17 @@ class ServiceLauncher(win32serviceutil.ServiceFramework):
         win32event.SetEvent(self.hWaitStop)
 
     def SvcDoRun(self):
-        self.main()
+        self.main.main()
 
 
-def startservice():
-        servicemanager.Initialize()
-        servicemanager.PrepareToHostSingle(ServiceLauncher)
-        servicemanager.StartServiceCtrlDispatcher()
+def startservice(main,exeargs=[]):
+    ServiceLauncher.main = main
+    ServiceLauncher._exe_args_ += " ".join(exeargs)
+    servicemanager.Initialize()
+    servicemanager.PrepareToHostSingle(ServiceLauncher)
+    servicemanager.StartServiceCtrlDispatcher()
 
-def start():
-        win32serviceutil.HandleCommandLine(ServiceLauncher)
+def start(main,argv,exeargs):
+    ServiceLauncher.main = main
+    ServiceLauncher._exe_args_ += " ".join(exeargs)
+    win32serviceutil.HandleCommandLine(ServiceLauncher,argv=argv)
