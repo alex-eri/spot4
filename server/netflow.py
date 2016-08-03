@@ -1,6 +1,7 @@
 import asyncio
 import struct
 import logging
+from multiprocessing import Process, current_process
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
@@ -84,7 +85,7 @@ def run5(config):
         loop.close()
 
 def setup5(config):
-    proc = Process(target=run5, args=(config))
+    proc = Process(target=run5, args=(config,))
     proc.name = 'netflow.5'
     return [proc]
 

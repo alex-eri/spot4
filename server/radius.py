@@ -157,6 +157,7 @@ class RadiusProtocol:
                 '$set':{
                     'ip': self['Framed-IP-Address'],
                     'nas': self['NAS-Identifier'],
+                    'called': self['Called-Station-Id'],
                     'mac': self['Calling-Station-Id'],
                     'login': self['User-Name'],
                     'start_time': self['Event-Timestamp']

@@ -2,7 +2,7 @@ from aiohttp import web
 import aiohttp
 from utils import procutil
 from multiprocessing import Process, current_process
-from bson.json_util import dumps
+from bson.json_util import dumps, loads
 import random
 import base64, pyotp
 import logging
@@ -72,11 +72,38 @@ async def sms_handler(request):
     return {'response': 'OK'}
 
 
+
+def add_cmd(pipe,command,args):
+    if type(args) == dict:
+        kw = args
+        a = []
+    elif type(args) == list:
+        a = args
+        kw = dict()
+    try:
+        r = getattr(pipe, command)
+    except AttributeError as e:
+        logger.error(e)
+    return r(*a,**kw)
+
+
 async def db_handler(request):
     collection = request.match_info.get('collection')
     skip = int(request.match_info.get('skip',0))
-    limit = int(request.match_info.get('limit',100))
-    cursor = request.app['db'][collection].find()
+    limit = int(request.match_info.get('limit',500))
+
+    data = await request.json(loads=loads)
+    debug(data)
+
+    cursor = request.app['db'][collection]
+
+    for cmd in data:
+        for c,a in cmd.items():
+            cursor = add_cmd(cursor,c,a)
+
+    if type(cursor) == storage.motor_asyncio.MotorCollection:
+        cursor = cursor.find()
+
     c = await cursor.count()
     r = await cursor.skip(skip).limit(limit).to_list(limit)
     return {'response': r, 'total':c}
@@ -128,8 +155,6 @@ def setup_web(config):
     db.devices.ensure_index( [ ("phonehash",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
     db.devices.ensure_index( [ ("username",1) ], unique=False, callback=storage.index_cb)
 
-
-
     app = web.Application(middlewares=[cors, json_middleware])
     app['db'] = db
     app['config'] = config
@@ -140,7 +165,8 @@ def setup_web(config):
         app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 
     app.router.add_route('GET', '/salt', salt_handler)
-    app.router.add_route('GET', '/db/{collection}/{skip}::{limit}', check_auth(db_handler))
+    app.router.add_route('POST', '/db/{collection}/{skip}::{limit}', check_auth(db_handler))
+    app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))
 
     port = config.get('API_PORT',8080)
 
