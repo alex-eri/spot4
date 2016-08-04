@@ -12,6 +12,7 @@ import asyncio
 #from asyncio import coroutine
 import time, base64, pyotp
 #import struct
+import netflow
 
 logger = logging.getLogger('radius')
 debug = logger.debug
@@ -188,13 +189,17 @@ class RadiusProtocol:
                         '$currentDate':{'stop_date':True}
                     }
 
-        self.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
+        self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
         debug('accounting respond')
         self.respond( self.pkt.CreateReply().ReplyPacket() )
 
     def accounting_cb(self,r,e,*a,**kw):
-        if r:
-            pass
+        debug(r)
+        if r and r.get('termination_cause'):
+            loop = asyncio.get_event_loop()
+            asyncio.run_coroutine_threadsafe(
+                netflow.aggregate(self.db, self.caller[0], r),
+                loop)
 
         if e:
             logger.error('accounting callback')
@@ -214,6 +219,10 @@ def setup_radius(config,PORT):
         config['DB']['SERVER'],
         config['DB']['NAME']
     )
+
+    db.accounting.ensure_index(
+        [ ("auth_class",1), ("session_id",1) ],
+        unique=True, dropDups=True ,callback=storage.index_cb)
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 

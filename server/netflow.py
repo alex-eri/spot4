@@ -12,6 +12,15 @@ FLOW5 = "!IIIHHIIIIHHxBBBHHBBxx"
 
 insert_cb = None
 
+async def aggregate(db, nasip, account):
+    debug(nasip)
+    debug(account)
+    debug("!"*100)
+
+    db.collector.group({'sensor':nasip,'flow.0':178488283})
+    #c = await db.collector.aggregate()
+
+
 class Netflow5:
     def connection_made(self, transport):
         #self.transport = transport
@@ -35,9 +44,9 @@ class Netflow5:
             flow[7] += delta #start
             flow[8] += delta #stop
             debug(flow)
-            flows.append({'flow':flow, 'sensor': addr , 'sequence': sequence + i })
+            flows.append({'flow':flow, 'sensor': addr[0] , 'sequence': sequence + i })
 
-        self.collector.insert(flows,callback=insert_cb)
+        self.collector.insert(flows, callback=insert_cb)
 
 
     def respond(self,resp):
