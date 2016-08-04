@@ -8,6 +8,8 @@ debug = logger.debug
 FLOW5HEADER = "!HHIIII"
 FLOW5 = "!IIIHHIIIIHHxBBBHHBBxx"
 
+#srcaddr,dstaddr,nexthop,input,output,dPkts,dOctets,first,last,srcport,dstport,tcp_flags,prot,tos,as[4]
+
 insert_cb = None
 
 class Netflow5:

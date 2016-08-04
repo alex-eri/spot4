@@ -150,7 +150,6 @@ class RadiusProtocol:
                 'session_id': self['Acct-Session-Id'],
             }
 
-        debug(self['Acct-Status-Type'])
         if self['Acct-Status-Type'] == STATUS_TYPE_START:
             upd = {
                 '$currentDate':{'start_date':True},
@@ -163,7 +162,6 @@ class RadiusProtocol:
                     'start_time': self['Event-Timestamp']
                 }
             }
-            self.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
 
         elif self['Acct-Status-Type'] == STATUS_TYPE_UPDATE or \
              self['Acct-Status-Type'] == STATUS_TYPE_STOP:
@@ -181,26 +179,23 @@ class RadiusProtocol:
                 'event_time': self['Event-Timestamp']
             }
             if self['Acct-Status-Type'] == STATUS_TYPE_UPDATE:
-                self.db.accounting.update(q,
-                    {
-                        '$set': account,
-                    },
-                    upsert=True,callback=self.accounting_cb)
+                upd={ '$set': account }
 
             elif self['Acct-Status-Type'] == STATUS_TYPE_STOP:
                 account['termination_cause'] =  self['Acct-Terminate-Cause']
-                self.db.accounting.update(
-                    q,
-                    {
+                upd = {
                         '$set': account,
                         '$currentDate':{'stop_date':True}
-                    },
-                    upsert=True,callback=self.accounting_cb)
+                    }
 
+        self.db.accounting.update(q,upd,upsert=True,callback=self.accounting_cb)
         debug('accounting respond')
         self.respond( self.pkt.CreateReply().ReplyPacket() )
 
     def accounting_cb(self,r,e,*a,**kw):
+        if r:
+            pass
+
         if e:
             logger.error('accounting callback')
             logger.error(e.__repr__())
