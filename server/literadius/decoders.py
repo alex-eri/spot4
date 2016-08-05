@@ -1,5 +1,5 @@
-import struct, constants
-from constants import *
+import struct
+from .constants import *
 
 def ipaddr(datas):
     return [struct.unpack("!L",data)[0] for data in datas]

@@ -1,7 +1,7 @@
 import struct
-from decoders import decoders
+from .decoders import decoders
 from collections import defaultdict
-from constants import *
+from .constants import *
 
 import random
 #random_generator = random.SystemRandom()
@@ -11,7 +11,7 @@ class Packet(defaultdict):
     header = bytearray()
     body = bytearray()
 
-    def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None);
+    def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None):
         super(self).__init__(list)
         if data:
             self.header = bytearray(data[:20])
@@ -74,12 +74,10 @@ class Packet(defaultdict):
         elif type(v) == str:
             self[k] = v.encode('utf8')
 
-
-
     @property
     def data(self):
         resp = self.header.copy()
-        body = bytearray()
+
         for k in self.keys():
             for v in self[k]:
                 l = len(v)
@@ -87,11 +85,9 @@ class Packet(defaultdict):
                     key = [k,l]
                 if type(k) == tuple:
                     key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
-                body.extend(key)
+                resp.extend(key)
+                resp.extend(v)
 
-
-
-
-
-
+        struct.pack_into("!H",resp,2,len(resp))
+        return resp
 

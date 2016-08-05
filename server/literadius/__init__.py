@@ -1,2 +1,2 @@
-from packet import Packet
-from constants import *
+from .packet import Packet
+from .constants import *
