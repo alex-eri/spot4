@@ -4,7 +4,7 @@ from collections import defaultdict
 from constants import *
 
 import random
-random_generator = random.SystemRandom()
+#random_generator = random.SystemRandom()
 
 
 class Packet(defaultdict):
@@ -18,7 +18,7 @@ class Packet(defaultdict):
             self.body = data[20:]
             self.parse()
         elif secret:
-            id = id or random_generator.randrange(0, 256)
+            id = id or random.randrange(0, 256)
             size = 0
             authenticator = bytearray(random.getrandbits(8) for _ in range(16))
             self.header = bytearray(struct.pack('!BBH16s', code, id, size, authenticator))
@@ -31,6 +31,10 @@ class Packet(defaultdict):
     @property
     def code(self):
         return self.header[0]
+
+    @code.setter
+    def code(self,value):
+        self.header[0] = value
 
     @property
     def id(self):
@@ -61,4 +65,33 @@ class Packet(defaultdict):
 
     def decode(self,k):
         return decoders[k](self[k])
+
+    def add(self,k,v):
+        if type(v) == bytes:
+            self[k] = v
+        elif type(v) == int:
+            self[k] = struct.pack("!L")
+        elif type(v) == str:
+            self[k] = v.encode('utf8')
+
+
+
+    @property
+    def data(self):
+        resp = self.header.copy()
+        body = bytearray()
+        for k in self.keys():
+            for v in self[k]:
+                l = len(v)
+                if type(k) == int:
+                    key = [k,l]
+                if type(k) == tuple:
+                    key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
+                body.extend(key)
+
+
+
+
+
+
 

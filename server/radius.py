@@ -1,43 +1,27 @@
-from pyrad import dictionary, packet, host
-#import socketserver
+import literadius as rad
 from multiprocessing import Process, current_process
 from uuid import uuid4
 import hashlib
 import logging
 import os
 from utils import procutil
-#import argparse
-#import sys
 import asyncio
-#from asyncio import coroutine
 import time, base64, pyotp
-#import struct
 import netflow
 
 logger = logging.getLogger('radius')
 debug = logger.debug
 
-STATUS_TYPE_START   = 'Start' #1
-STATUS_TYPE_STOP    = 'Stop'  #2
-STATUS_TYPE_UPDATE  = 'Alive' #3
-STATUS_TYPE_NAS_ON  = 'Accounting-On'  #7
-STATUS_TYPE_NAS_OFF = 'Accounting-Off' #8
 
-#DICTIONARY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),"dictionary")
-DICTIONARY_PATH = "dictionary"
 
 class RadiusProtocol:
-    radhost = host.Host(dict=dictionary.Dictionary(DICTIONARY_PATH))
     radsecret = None
     db = None
 
     def __getitem__(self,y):
-        try:
-            r = self.pkt[y]
-            #debug(r)
+        r = self.pkt[y]
+	if r:
             return r[-1]
-        except KeyError:
-            return None
 
     def connection_made(self, transport):
         debug('start'+ transport.__repr__())
@@ -48,26 +32,18 @@ class RadiusProtocol:
 
         self.caller = addr
 
-        code = data[0]
-        debug(code)
-        if code == packet.AccessRequest:
-            self.pkt = self.radhost.CreateAuthPacket(
-                packet=data,
-                secret=self.radsecret
-                )
+        self.pkt = rad.Packet(data, self.radsecret)
+
+        if self.pkt.code == rad.AccessRequest:
             self.handle_auth()
-        elif code == packet.AccountingRequest:
-            self.pkt = self.radhost.CreateAcctPacket(
-                packet=data,
-                secret=self.radsecret
-            )
+        elif self.pkt.code == rad.AccountingRequest:
             self.handle_acct()
         else:
-            raise packet.PacketError('Packet is not request')
+            raise Exception('Packet is not request')
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in self.pkt.keys():
-                debug('{} :\t{}'.format(attr,self.pkt[attr]))
+                debug('{} :\t{}'.format(attr,self.pkt.decode(attr))
 
 
 
