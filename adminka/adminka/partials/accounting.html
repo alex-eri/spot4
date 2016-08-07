@@ -1,0 +1,4 @@
+<h1>Аккаунтинг</h1>
+<div ng-repeat="n in accounting track by n._id.$oid ">
+ {{n.start_date.$date| date:'medium'}} {{n.stop_date.$date | date:'medium'}} {{n.ip}}
+</div>

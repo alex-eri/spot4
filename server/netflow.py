@@ -20,8 +20,6 @@ Flow5Fields =  [
 
 insert_cb = None
 
-
-
 class Netflow5:
     def connection_made(self, transport):
         #self.transport = transport

@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 build_exe_options = {
     "packages": ["os","utils","struct"],
     "excludes": ["tkinter","tornado","zope","twisted","xmlrpc","xml"],
-    'include_files': ['config.json','dictionary'],
+    'include_files': ['config.json'],
     'create_shared_zip': True, #не запускается если отключить library.zip
     'append_script_to_exe':True,
     #'include_in_shared_zip': True

@@ -1,6 +1,7 @@
 [Unit]
 Description=Authenticator Server
 After=mongod.service
+Requires=mongod.service
 
 [Service]
 Type=simple

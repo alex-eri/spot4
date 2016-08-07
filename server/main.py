@@ -21,6 +21,7 @@ def setup():
     config = json.load(open('config.json','r'))
     FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
 
+    level = logging.WARNING
     if config.get('DEBUG'):
         level = logging.DEBUG
 

@@ -24,7 +24,7 @@ def setup(mongo_uri,db_name):
 async def create_capped(db,name,size):
     try:
         if name in await db.collection_names():
-            await db.command({"convertToCapped": name, "size": size})
+            await db.command("convertToCapped", name, size=size)
         else:
             await db.create_collection(name,capped=True,size=size)
     except Exception as error:

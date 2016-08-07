@@ -6,7 +6,7 @@ from bson.json_util import dumps, loads
 import random
 import base64, pyotp
 import logging
-
+import motor.core
 import hashlib
 
 logger = logging.getLogger('http')
@@ -100,8 +100,10 @@ async def db_handler(request):
     for cmd in data:
         for c,a in cmd.items():
             cursor = add_cmd(cursor,c,a)
-
-    if type(cursor) == storage.motor_asyncio.MotorCollection:
+    #debug(help(cursor))
+    #debug(isinstance(cursor, motor.core.AgnosticCollection))
+    #if isinstance(cursor, motor.MotorCollection):
+    if cursor.__motor_class_name__ == "MotorCollection":
         cursor = cursor.find()
 
     c = await cursor.count()
@@ -125,17 +127,36 @@ def check_auth(fu):
 async def json_middleware(app, handler):
     async def middleware_handler(request):
         resp = await handler(request)
+
+        if type(resp) == web.Response:
+            return resp
+
         return web.json_response(resp, dumps=dumps)
     return middleware_handler
 
 async def cors(app, handler):
     "Access-Control-Allow-Origin"
     async def middleware_handler(request):
-        resp = await handler(request)
+        try:
+            resp = await handler(request)
+        except Exception as e:
+            logger.warning(e.__repr__())
+            resp = e
         resp.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin','')
+        resp.headers['Access-Control-Allow-Headers']='Content-Type, Authorization'
+
+        if isinstance(resp, Exception):
+            raise resp
         return resp
+
     return middleware_handler
 
+
+async def db_options(request):
+    resp = web.Response()
+    resp.headers['ALLOW']='POST, GET'
+    resp.headers['WWW-Authenticate'] = 'Basic realm="Spot4 API"'
+    return resp
 
 
 def setup_web(config):
@@ -167,6 +188,8 @@ def setup_web(config):
     app.router.add_route('GET', '/salt', salt_handler)
     app.router.add_route('POST', '/db/{collection}/{skip}::{limit}', check_auth(db_handler))
     app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))
+
+    app.router.add_route('OPTIONS', '/{path:.*}', db_options)
 
     port = config.get('API_PORT',8080)
 
