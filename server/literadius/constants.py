@@ -71,6 +71,8 @@ CHAPChallenge = 60
 NASPortType = 61
 PortLimit = 62
 
+NASPortId	= 87
+
 AccountingStart	=		1
 AccountingStop	=		2
 AccountingUpdate	=	3

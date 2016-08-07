@@ -1,26 +1,29 @@
 import struct
 from .constants import *
+from collections import defaultdict
 
-def ipaddr(datas):
-    return [struct.unpack("!L",data)[0] for data in datas]
+def int32be(data):
+    if len(data) == 4:
+        return struct.unpack("!L",data)[0]
 
-def string(datas):
-    return [data.decode('utf-8') for data in datas]
+ipaddr = int32be
 
-def ascii(datas):
-    return [data.decode('ascii') for data in datas]
+def string(data):
+    return data.decode('utf-8')
 
-def bytes(datas):
-    return datas
+def ascii(data):
+    return data.decode('ascii')
 
-def int(datas):
-    return [struct.unpack("!L",data)[0] for data in datas]
+def bytes(data):
+    return data
 
-def time(datas):
-    return [struct.unpack("!L",data)[0] for data in datas]
+int = int32be
+time = int32be
 
+def default_decoder():
+    return bytes
 
-decoders = {
+decoders = defaultdict(default_decoder, {
     UserName : string,
     UserPassword : bytes,
     CHAPPassword : bytes,
@@ -57,5 +60,6 @@ decoders = {
     EventTimestamp : time,
     CHAPChallenge : bytes,
     NASPortType : int,
-    PortLimit : int
-}
+    PortLimit : int,
+    (14988, 10): ipaddr
+})
