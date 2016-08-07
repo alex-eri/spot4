@@ -1,36 +1,46 @@
 import struct
-from decoders import decoders
+from .decoders import decoders
 from collections import defaultdict
-from constants import *
+from .constants import *
 
 import random
-random_generator = random.SystemRandom()
-
+#random_generator = random.SystemRandom()
+import hashlib
 
 class Packet(defaultdict):
     header = bytearray()
     body = bytearray()
+    secret = b''
 
-    def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None);
-        super(self).__init__(list)
+    def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None, authenticator=None):
+        super().__init__(bytes)
+        self.secret = secret
         if data:
             self.header = bytearray(data[:20])
             self.body = data[20:]
             self.parse()
         elif secret:
-            id = id or random_generator.randrange(0, 256)
-            size = 0
-            authenticator = bytearray(random.getrandbits(8) for _ in range(16))
-            self.header = bytearray(struct.pack('!BBH16s', code, id, size, authenticator))
+
+            self.header = bytearray(struct.pack('!BBH', code, id, 0))
+            id = id or random.randrange(0, 256)
+            authenticator = authenticator or bytearray(random.getrandbits(8) for _ in range(16))
+            self.header = bytearray(struct.pack('!BBH16s', code, id, 20,authenticator))
 
     def reply(self,code):
-        ret = Packet()
-        ret.header = self.header.copy()
-        ret.header[0] = code
+        return Packet(
+            secret=self.secret,
+            id=self.id,
+            code=code,
+            authenticator=self.authenticator)
+
 
     @property
     def code(self):
         return self.header[0]
+
+    @code.setter
+    def code(self,value):
+        self.header[0] = value
 
     @property
     def id(self):
@@ -38,7 +48,7 @@ class Packet(defaultdict):
 
     @property
     def size(self):
-        return struct.unpack('!xxH', self.header)
+        return struct.unpack_from('!H', self.header,2)[0]
 
     @property
     def authenticator(self):
@@ -46,8 +56,10 @@ class Packet(defaultdict):
 
     def parse(self):
         cursor = 0
-        while cursor > len(self.body):
-            k,l = struct.unpack_from('!BB',self.body,cursor)
+
+        while cursor < len(self.body):
+
+            k,l = struct.unpack_from('!BB', self.body, cursor)
             cursor += 2
 
             if k == 26:
@@ -55,10 +67,55 @@ class Packet(defaultdict):
                 k = (v,t)
                 cursor += 6
 
-            v = self.body[cursor:cursor+l]
-            self[k].add(v)
-            cursor += l
+            l2 = l-2
+
+            v = self.body[cursor:cursor+l2]
+            self[k] = v
+            cursor += l2
 
     def decode(self,k):
         return decoders[k](self[k])
+
+    def encode(self,k,v):
+        if type(v) == bytes:
+            self[k] = v
+        elif type(v) == int:
+            self[k] = struct.pack("!L",v)
+        elif type(v) == str:
+            self[k] = v.encode('utf8')
+
+    @property
+    def data(self):
+        resp = self.header.copy()
+
+        for k in self.keys():
+            for v in self[k]:
+                l = len(v)
+                if type(k) == int:
+                    key = [k,l]
+                if type(k) == tuple:
+                    key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
+                resp.extend(key)
+                resp.extend(v)
+
+        struct.pack_into("!H",resp,2,len(resp))
+        authenticator = hashlib.md5(resp+self.secret).digest()
+        struct.pack_into("!16s",resp,4,authenticator)
+        return resp
+
+    def pw_decrypt(self,v):
+        last = self.authenticator
+        buf = v
+        pw = b''
+        while buf:
+            hash = hashlib.md5(self.secret + last).digest()
+            for i in range(16):
+                pw += bytes((hash[i] ^ buf[i],))
+
+            (last, buf) = (buf[:16], buf[16:])
+
+        pw=pw.rstrip(b'\x00')
+
+        return pw.decode('utf-8')
+
 

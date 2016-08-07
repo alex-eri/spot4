@@ -1,43 +1,26 @@
-from pyrad import dictionary, packet, host
-#import socketserver
+import literadius as rad
 from multiprocessing import Process, current_process
 from uuid import uuid4
 import hashlib
 import logging
 import os
 from utils import procutil
-#import argparse
-#import sys
 import asyncio
-#from asyncio import coroutine
 import time, base64, pyotp
-#import struct
 import netflow
 
 logger = logging.getLogger('radius')
 debug = logger.debug
 
-STATUS_TYPE_START   = 'Start' #1
-STATUS_TYPE_STOP    = 'Stop'  #2
-STATUS_TYPE_UPDATE  = 'Alive' #3
-STATUS_TYPE_NAS_ON  = 'Accounting-On'  #7
-STATUS_TYPE_NAS_OFF = 'Accounting-Off' #8
 
-#DICTIONARY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),"dictionary")
-DICTIONARY_PATH = "dictionary"
 
 class RadiusProtocol:
-    radhost = host.Host(dict=dictionary.Dictionary(DICTIONARY_PATH))
     radsecret = None
     db = None
 
     def __getitem__(self,y):
-        try:
-            r = self.pkt[y]
-            #debug(r)
-            return r[-1]
-        except KeyError:
-            return None
+        r = self.pkt.decode(y)
+        return r
 
     def connection_made(self, transport):
         debug('start'+ transport.__repr__())
@@ -45,34 +28,27 @@ class RadiusProtocol:
 
     def datagram_received(self, data, addr):
         debug('From {} data received: '.format(addr))
-
         self.caller = addr
+        self.pkt = rad.Packet(data, self.radsecret)
 
-        code = data[0]
-        debug(code)
-        if code == packet.AccessRequest:
-            self.pkt = self.radhost.CreateAuthPacket(
-                packet=data,
-                secret=self.radsecret
-                )
+        if self.pkt.code == rad.AccessRequest:
             self.handle_auth()
-        elif code == packet.AccountingRequest:
-            self.pkt = self.radhost.CreateAcctPacket(
-                packet=data,
-                secret=self.radsecret
-            )
+        elif self.pkt.code == rad.AccountingRequest:
             self.handle_acct()
         else:
-            raise packet.PacketError('Packet is not request')
-
+            raise Exception('Packet is not request')
         if logger.isEnabledFor(logging.DEBUG):
             for attr in self.pkt.keys():
-                debug('{} :\t{}'.format(attr,self.pkt[attr]))
-
+                debug('{} :\t{}\t{}'.format(attr,self.pkt[attr],self.pkt.decode(attr)))
 
 
     def respond(self,resp):
-        self.transport.sendto(resp, self.caller)
+        self.transport.sendto(resp.data, self.caller)
+        print(resp.data)
+
+        if logger.isEnabledFor(logging.DEBUG):
+            for attr in resp.keys():
+                debug('{} :\t{}'.format(attr,resp.decode(attr)))
 
     def error_received(self, exc):
         debug('Error received:', exc)
@@ -84,49 +60,47 @@ class RadiusProtocol:
     def handle_auth(self):
 
         reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
-        self.reply = self.pkt.CreateReply(**reply_attributes)
+        self.reply = self.pkt.reply(rad.AccessAccept)
 
         q = {
-            'login':self['User-Name'],
-            'mac':self['Calling-Station-Id'],
+            'username':self[rad.UserName],
+            'mac':self[rad.CallingStationId],
             'checked':True
              }
 
-        base = base64.b32encode("{login}#{mac}".format(**q).encode('ascii'))
+        base = base64.b32encode("{username}#{mac}".format(**q).encode('ascii'))
         otp = pyotp.TOTP(base)
 
         if self.check_password(otp.now()) or self.check_password(otp.at(time.time(),-1)):
-            self.get_user(q)
+            self.db.devices.find_one(q,callback=self.got_user)
         else:
-            debug("otp is {}".format(otp.now()))
-            self.reply.code = packet.AccessReject
-        self.respond( self.reply.ReplyPacket() )
+            debug("otp was {}".format(otp.now()))
+            self.reply.code = rad.AccessReject
+            self.respond( self.reply )
 
-    def get_user(self,creds):
-        self.db.devices.find_one(creds,callback=self.got_user)
 
     def got_user(self,response,error):
         if error:
             logger.error(error.__repr__())
         if response:
-            debug(response)
-            self.reply.code = packet.AccessAccept
-            self.respond( self.reply.ReplyPacket())
+            self.reply.code = rad.AccessAccept
         else:
-            self.reply.code = packet.AccessReject
-            self.respond( self.reply.ReplyPacket() )
+            self.reply.code = rad.AccessReject
+        self.respond( self.reply )
 
     def check_password(self, cleartext=""):
         pkt = self.pkt
+        debug(type(cleartext))
+        debug(type(pkt.pw_decrypt(pkt[rad.UserPassword])))
+        debug(pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
 
-        if self['User-Password']:
-            #debug(pkt.PwDecrypt(self['User-Password']))
-            return (pkt.PwDecrypt(self['User-Password']) == cleartext)
+        if pkt[rad.UserPassword]:
+            return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
 
-        if self['CHAP-Password'] and self['CHAP-Challenge']:
+        chap_challenge = pkt[rad.CHAPChallenge]
+        chap_password  = pkt[rad.CHAPPassword]
 
-            chap_challenge = self['CHAP-Challenge']
-            chap_password  = self['CHAP-Password']
+        if chap_challenge and chap_password:
 
             chap_id = bytes([chap_password[0]])
             chap_password = chap_password[1:]
@@ -137,53 +111,50 @@ class RadiusProtocol:
             m.update(chap_challenge)
 
             return chap_password == m.digest()
-
+        """
         if self['MS-CHAP-Response'] and self['MS-CHAP-Challenge']:
             #https://github.com/mehulsbhatt/freeIBS/blob/master/radius_server/pyrad/packet.py
             raise NotImplementedError
 
         if self['MS-CHAP2-Response'] and self['MS-CHAP-Challenge']:
             raise NotImplementedError
+        """
 
     def handle_acct(self):
         q = {
-                'auth_class': self['Class'],
-                'session_id': self['Acct-Session-Id'],
+                'auth_class': self[rad.Class],
+                'session_id': self[rad.AcctSessionId],
             }
 
-        if self['Acct-Status-Type'] == STATUS_TYPE_START:
+        if self[rad.AcctStatusType] == rad.AccountingStart:
             upd = {
                 '$currentDate':{'start_date':True},
                 '$set':{
-                    'ip': self['Framed-IP-Address'],
-                    'nas': self['NAS-Identifier'],
-                    'called': self['Called-Station-Id'],
-                    'mac': self['Calling-Station-Id'],
-                    'login': self['User-Name'],
-                    'start_time': self['Event-Timestamp']
+                    'ip': self[rad.FramedIPAddress],
+                    'nas': self[rad.NASIdentifier],
+                    'callee': self[rad.CalledStationId],
+                    'caller': self[rad.CallingStationId],
+                    'username': self[rad.UserName],
+                    'start_time': self[rad.EventTimestamp]
                 }
             }
 
-        elif self['Acct-Status-Type'] == STATUS_TYPE_UPDATE or \
-             self['Acct-Status-Type'] == STATUS_TYPE_STOP:
-
-            debug(self['Acct-Input-Octets'])
-            debug(self['Acct-Input-Gigawords'])
+        elif self[rad.AcctStatusType] in [rad.AccountingUpdate, rad.AccountingStop] :
 
             account = {
-                'session_time': self['Acct-Session-Time'],
-                'input_bytes': self['Acct-Input-Gigawords'] or 0 << 32 | self['Acct-Input-Octets'],
-                'input_packets': self['Acct-Input-Packets'],
-                'output_bytes': self['Acct-Output-Gigawords'] or 0 << 32 | self['Acct-Output-Octets'],
-                'output_packets': self['Acct-Output-Packets'],
-                'delay':self['Acct-Delay-Time'],
-                'event_time': self['Event-Timestamp']
+                'session_time': self[rad.AcctSessionTime],
+                'input_bytes': self[rad.AcctInputGigawords] or 0 << 32 | self[rad.AcctInputOctets],
+                'input_packets': self[rad.AcctInputPackets],
+                'output_bytes': self[rad.AcctOutputGigawords] or 0 << 32 | self[rad.AcctOutputOctets],
+                'output_packets': self[rad.AcctOutputPackets],
+                'delay':self[rad.AcctDelayTime],
+                'event_time': self[rad.EventTimestamp]
             }
-            if self['Acct-Status-Type'] == STATUS_TYPE_UPDATE:
+            if self[rad.AcctStatusType] == rad.AccountingUpdate:
                 upd={ '$set': account }
 
-            elif self['Acct-Status-Type'] == STATUS_TYPE_STOP:
-                account['termination_cause'] =  self['Acct-Terminate-Cause']
+            elif self[rad.AcctStatusType] == rad.AccountingStop:
+                account['termination_cause'] =  self[rad.AcctTerminateCause]
                 upd = {
                         '$set': account,
                         '$currentDate':{'stop_date':True}
@@ -191,7 +162,7 @@ class RadiusProtocol:
 
         self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
         debug('accounting respond')
-        self.respond( self.pkt.CreateReply().ReplyPacket() )
+        self.respond( self.pkt.reply(rad.AccountingResponse) )
 
     def accounting_cb(self,r,e,*a,**kw):
         debug(r)
