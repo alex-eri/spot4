@@ -2,23 +2,24 @@ import asyncio
 import struct
 import logging
 from multiprocessing import Process, current_process
+from collections import namedtuple
+
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
+
 FLOW5HEADER = "!HHIIII"
-FLOW5 = "!IIIHHIIIIHHxBBBHHBBxx"
+FLOW5DATA = "!IIIHHIIIIHHxBBBHHBBxx"
 
 #srcaddr,dstaddr,nexthop,input,output,dPkts,dOctets,first,last,srcport,dstport,tcp_flags,prot,tos,as[4]
 
+Flow5Fields =  [
+    'srcaddr','dstaddr','nexthop','input','output','dPkts','dOctets','first','last',
+    'srcport','dstport','tcp_flags','prot','tos','src_as','dst_as','src_mask','dst_mask'
+]
+
 insert_cb = None
 
-async def aggregate(db, nasip, account):
-    debug(nasip)
-    debug(account)
-    debug("!"*100)
-
-    db.collector.group({'sensor':nasip,'flow.0':178488283})
-    #c = await db.collector.aggregate()
 
 
 class Netflow5:
@@ -29,7 +30,7 @@ class Netflow5:
     def datagram_received(self, data, addr):
         self.caller = addr
         debug(addr)
-        debug(len(data))
+        assert data[1] == 5
         ver,count,uptime,time,nanosecs,sequence = struct.unpack_from(FLOW5HEADER, data)
         debug([ver,count,uptime,time,sequence])
 
@@ -38,13 +39,12 @@ class Netflow5:
         flows = []
 
         for i in range(count):
-            x = struct.unpack_from(FLOW5, data, i*48 + 24)
-        #for x in struct.iter_unpack(FLOW5, data[24:]):
-            flow = list(x)
-            flow[7] += delta #start
-            flow[8] += delta #stop
-            debug(flow)
-            flows.append({'flow':flow, 'sensor': addr[0] , 'sequence': sequence + i })
+            x = struct.unpack_from(FLOW5DATA, data, i*48 + 24)
+            flow = dict(zip(Flow5Fields,x))
+            flow['first'] += delta
+            flow['last'] += delta
+            flow.update({'sensor': addr[0] , 'sequence': sequence + i })
+            flows.append(flow)
 
         self.collector.insert(flows, callback=insert_cb)
 

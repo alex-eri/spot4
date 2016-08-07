@@ -124,6 +124,7 @@ class RadiusProtocol:
         q = {
                 'auth_class': self[rad.Class],
                 'session_id': self[rad.AcctSessionId],
+                'sensor': self.caller[0]
             }
 
         if self[rad.AcctStatusType] == rad.AccountingStart:
@@ -165,12 +166,12 @@ class RadiusProtocol:
         self.respond( self.pkt.reply(rad.AccountingResponse) )
 
     def accounting_cb(self,r,e,*a,**kw):
-        debug(r)
-        if r and r.get('termination_cause'):
-            loop = asyncio.get_event_loop()
-            asyncio.run_coroutine_threadsafe(
-                netflow.aggregate(self.db, self.caller[0], r),
-                loop)
+        #debug(r)
+        #if r and r.get('termination_cause'):
+        #    loop = asyncio.get_event_loop()
+        #    asyncio.run_coroutine_threadsafe(
+        #        netflow.aggregate(self.db, r),
+        #        loop)
 
         if e:
             logger.error('accounting callback')
