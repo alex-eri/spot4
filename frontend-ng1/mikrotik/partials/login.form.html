@@ -22,13 +22,14 @@
   </div>
 
   <div class="animate-switch" ng-switch-when="cod">
-    <p>Отправьте смс с текстом
+    <p>Отправьте <a href="sms:{{sms.callie}}?body={{sms.waited}}">SMS</a> с текстом
     <input readonly ng-model=sms.waited type=text  class="token" />
-    на номер <!--a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a-->
+    на <a htref="tel:{{sms.callie}}">номер</a>
     <input readonly ng-model=sms.callie type=text  class="phone" />
     </p>
     <p class="animate-switch-container">
        <span class="animate-switch" ng-show="waiting" >
+          Не закрывайте эту страницу.
           Интернет включится через мгновение после того, как оно будет доставленно
        </span>
     </p>
