@@ -25,11 +25,25 @@ var app = angular.module('hotspot',['ngRoute', 'ngResource', 'ngAnimate'])
             $rootScope.config = response.data ;
             onAPI(app.APIURL)
             }
-         ,function(error) { alert('Не найду локальный кофиг/ Хотспот сломался') });
+         ,function(error) { alert('Не найду локальный кофиг/ Хотспот сломался?') });
 
     }
 ]);
 
+app.filter('int2ip', function () {
+        return function (ipl) {
+            return ( (ipl>>>24) +'.' +
+              (ipl>>16 & 255) +'.' +
+              (ipl>>8 & 255) +'.' +
+              (ipl & 255) );;
+        };
+    });
+
+app.filter('dict2date', function () {
+        return function (dict) {
+            return new Date(dict.year, dict.month-1, dict.day)
+        };
+    });
 
 app.config(['$routeProvider',
   function($routeProvider) {
@@ -47,14 +61,28 @@ app.config(['$routeProvider',
       });
   }]);
 
-app.factory('Accounting', ['$resource',
-    function($resource) {
-      return $resource( app.APIURL + '/db/accounting/');
-    }]);
 
 app.controller('AccountingCtrl',['$scope', '$http',
 function($scope, $http) {
-    var pipe = JSON.stringify([]);
+
+    var pipe = JSON.stringify([
+            {aggregate:[[
+                {'$group': {_id: {
+                        year:{'$year':"$start_date"},
+                        month :{'$month': "$start_date"},
+                        day: {'$dayOfMonth': "$start_date"}
+                        },
+                        accts :{'$push':'$$CURRENT'},
+                        session_time: {'$sum':'$session_time'},
+                        output_bytes: {'$sum':'$output_bytes'},
+                        input_bytes: {'$sum':'$input_bytes'}
+                    }
+
+                },
+                {'$sort':{ '_id.year': -1, '_id.month': -1 , '_id.day': -1}}
+                ]]
+            }
+        ]);
      $http.post( app.APIURL + '/db/accounting' ,pipe).success(
         function(data){
             console.log(data);

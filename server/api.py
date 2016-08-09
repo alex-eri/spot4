@@ -106,8 +106,15 @@ async def db_handler(request):
     if cursor.__motor_class_name__ == "MotorCollection":
         cursor = cursor.find()
 
-    c = await cursor.count()
-    r = await cursor.skip(skip).limit(limit).to_list(limit)
+    c = None
+
+    if hasattr(cursor,'count'):
+        c = await cursor.count()
+    if hasattr(cursor,'skip'):
+        cursor = cursor.skip(skip).limit(limit)
+
+    r = await cursor.to_list(limit)
+
     return {'response': r, 'total':c}
 
 
