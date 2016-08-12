@@ -17,6 +17,9 @@ def ascii(data):
 def bytes(data):
     return data
 
+def mac(data):
+    return data.decode('ascii').upper().replace('-',':')
+
 int = int32be
 time = int32be
 
@@ -41,7 +44,7 @@ decoders = defaultdict(default_decoder, {
     IdleTimeout : int,
     TerminationAction : int,
     CalledStationId : string,
-    CallingStationId  : string,
+    CallingStationId  : mac,
     NASIdentifier : string,
     AcctStatusType : int,
     AcctDelayTime : int,

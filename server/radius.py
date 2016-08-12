@@ -126,6 +126,7 @@ class RadiusProtocol:
                 'session_id': self[rad.AcctSessionId],
                 'sensor': self.caller[0]
             }
+        upd = {}
 
         if self[rad.AcctStatusType] == rad.AccountingStart:
             upd = {
@@ -160,8 +161,8 @@ class RadiusProtocol:
                         '$set': account,
                         '$currentDate':{'stop_date':True}
                     }
-
-        self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
+        if upd :
+            self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
         debug('accounting respond')
         self.respond( self.pkt.reply(rad.AccountingResponse) )
 
