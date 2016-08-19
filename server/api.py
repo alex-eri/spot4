@@ -71,6 +71,23 @@ async def sms_handler(request):
     device = await request.app['db'].devices.update(q, {'$set':{'checked':True}})
     return {'response': 'OK'}
 
+async def sms_sender(request):
+    q = dict(
+        phone = request.match_info.get('phone'),
+        mac = request.match_info.get('mac')
+        )
+
+    m = hashlib.md5()
+    m.update(request.app['config'].get("SALT",b""))
+    m.update(q['phone'].encode('ascii'))
+    q['phonehash'] = m.hexdigest()
+
+    base = base64.b32encode("{phonehash}#{mac}".format(**q).encode('ascii'))
+    otp =  pyotp.HOTP(base)
+    sms = otp.at(SMSSEND)
+
+
+
 
 
 def add_cmd(pipe,command,args):
@@ -189,6 +206,10 @@ def setup_web(config):
     app.logger = logger
 
     if config.get('SMS_POLLING'):
+
+        app.router.add_route('GET', '/device/+{phone:\d+}/{mac}', sms_sender)
+        app.router.add_route('GET', '/device/%2B{phone:\d+}/{mac}', sms_sender)
+
         app.router.add_route('GET', '/device/{phonehash}/{mac}', device_handler)
         app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 

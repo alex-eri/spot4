@@ -33,7 +33,8 @@ class Client(object):
         self.db = kw.pop('db')
         self.config = kw.pop('config')
         self.base_url = kw.pop('url')
-        self.sms_unread_num = 0
+        self.callie =  kw.pop('callie')
+        self.sender =  kw.pop('sender')
 
         self.headers = {
             'Referer':self.base_url+"/index.html",
@@ -181,7 +182,7 @@ def setup_loop(config):
     name = current_process().name
     procutil.set_proc_name(name)
 
-    ztes = config['SMS_POLLING'].get('ZTE',[])
+    ztes = config.get('ZTE',[])
 
     import storage
 
@@ -193,8 +194,14 @@ def setup_loop(config):
     debug(id(db))
 
     clients = []
-    for url in ztes:
-        clients.append( Client(url=url,db=db,config=config))
+    for modem in ztes:
+        clients.append( Client(
+            url=modem['url'],
+            db=db,
+            config=config,
+            callie=modem['number'],
+            sender=modem['sender']
+            ))
 
     loop = asyncio.get_event_loop()
 
@@ -217,7 +224,7 @@ def main():
     import json
     config = json.load(open('config.json','r'))
     logging.basicConfig(level=logging.DEBUG)
-    setup_loop(config['SMS_POLLING'].get('ZTE',[]))
+    setup_loop(config.get('ZTE',[]))
 
 
 if __name__ == '__main__':

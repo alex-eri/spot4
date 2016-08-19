@@ -21,6 +21,8 @@ var app = angular.module('hotspot',['ngResource','ngAnimate'])
             app.APIURL = response.data.api;
             document.title = response.data.title || 'Spot 4 hotspot';
             $rootScope.config = response.data ;
+            console.log(app.config);
+            app.config = response.data ;
             onAPI(app.APIURL)
             }
          ,function(error) { alert('Не найду локальный кофиг/ Хотспот сломался') });
@@ -60,6 +62,27 @@ app.directive('phoneValidation', function(){
 
 
 
+app.directive('otpValidation', function(){
+   return {
+     require: 'ngModel',
+     link: function(scope, element, attrs, modelCtrl) {
+
+       modelCtrl.$parsers.push(function (inputValue) {
+
+         var transformedInput = inputValue.replace(/[^\d]/g,'');
+
+         if (transformedInput!=inputValue) {
+           modelCtrl.$setViewValue(transformedInput);
+           modelCtrl.$render();
+         }
+
+         return transformedInput;
+       });
+     }
+   };
+});
+
+
 function hash(salt,data) {
     return hexMD5(salt+data);
 }
@@ -74,6 +97,8 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
         $rootScope.sms = {};
         $rootScope.client = {};
         $rootScope.phone = "";
+        $rootScope.sentsms = "";
+
         var phonehash = "";
 
         Client.get(
@@ -94,20 +119,30 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
                 User(app.APIURL).get(
                     {
                         phonehash: phonehash ,
-                        mac:$rootScope.client.mac
+                        mac: $rootScope.client.mac,
+                        sentsms: $rootScope.sentsms,
+                        smsmode: $rootScope.config.sms
                     },
                     function(data){
                         if (data.response.password) {
-                        $rootScope.stage = 'login';
-                        creds.username = data.response.username;
-                        creds.password = data.response.password;
-                        hotspot_login()
+                            $rootScope.stage = 'login';
+                            creds.username = data.response.username;
+                            creds.password = data.response.password;
+                            hotspot_login()
+
+                        } else if(data.response.sending) {
+                            $rootScope.stage = 'sending';
+                            $timeout(user_wait, 1000);
+
+                        } else if(data.response.sent) {
+                            $rootScope.stage = 'sent';
+
 
                         } else {
-                        $rootScope.stage = 'cod';
-                        $rootScope.sms.waited = data.response.sms_waited;
-                        $rootScope.sms.callie = data.response.sms_callie;
-                        $timeout(user_wait,1000);//TODO port to $interval
+                            $rootScope.stage = 'cod';
+                            $rootScope.sms.waited = data.response.sms_waited;
+                            $rootScope.sms.callie = data.response.sms_callie;
+                            $timeout(user_wait,1000);//TODO port to $interval
                         }
                         console.log(data);
                     },function(error){
@@ -146,7 +181,6 @@ app.controller('login',  ['User','Client','$rootScope','$http','$timeout',
                 console.log(app.SALT);
                 console.log($rootScope.phone);
                 $rootScope.stage = 'reg';
-
                 phonehash = hash(app.SALT,$rootScope.phone);
                 console.log(phonehash)
                 user_wait();

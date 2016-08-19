@@ -5,8 +5,8 @@ debug = logger.debug
 
 SALT = b'441dbf23b4d344f19b89c76fd65cc75c'
 
-def polling_setup(config):
-    ztes = config['SMS_POLLING'].get('ZTE',[])
+def modem_setup(config):
+    ztes = config.get('ZTE',[])
     procs = []
     if ztes:
         import zte
@@ -31,11 +31,10 @@ def setup():
     config['SALT_ASCII'] = SALT.decode()
 
     services = []
-    services.extend( radius.setup(config))
-    services.extend( api.setup(config))
+    services.extend( radius.setup(config) )
+    services.extend( api.setup(config) )
 
-    if config.get('SMS_POLLING'):
-        services.extend(polling_setup(config))
+    services.extend( modem_setup(config) )
 
     if config.get('NETFLOW'):
         import netflow
