@@ -1,0 +1,20 @@
+#!/bin/sh
+
+check_required()
+{
+echo pass
+}
+
+writeconfig()
+{
+echo pass
+}
+
+radiusconfig()
+{
+echo pass
+}
+
+HS_ADMINTERVAL=0
+MAIN_CONF=/etc/chilli/main.conf
+

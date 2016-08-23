@@ -1,5 +1,5 @@
 */build/*
 *.pyc
 */__pycache__
-frontend*/node_modules/*
-
+*/node_modules/*
+*/bower_components/*

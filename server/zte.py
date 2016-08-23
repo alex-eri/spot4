@@ -1,11 +1,10 @@
 from multiprocessing import Process, current_process
 import logging
-import db
 import asyncio
 import aiohttp
 import json
 
-import procutil
+from utils import procutil
 import sys, traceback
 import urllib.request
 import urllib.parse
@@ -13,14 +12,29 @@ import time
 import re
 from datetime import datetime
 from utils.codecs import decodeHexUcs2
-
+import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
 
+retoken = re.compile('([0-9]{6})')
+
+def get_json(fu):
+    c = fu()
+    debug(c)
+    assert c.status == 200
+    resp = c.read()
+    debug(resp)
+    data = json.loads(resp.decode('ascii'))
+    debug(data)
+    return data
+
 class Client(object):
     def __init__(self,*a,**kw):
+        self.db = kw.pop('db')
+        self.config = kw.pop('config')
         self.base_url = kw.pop('url')
-        self.sms_unread_num = 0
+        self.callie =  kw.pop('callie')
+        self.sender =  kw.pop('sender')
 
         self.headers = {
             'Referer':self.base_url+"/index.html",
@@ -85,99 +99,109 @@ class Client(object):
             )
         return self.post(uri,data=postdata)
 
+    async def handle_messages(self,messages):
+        read = []
+        delete = []
+        debug(messages)
+        for m in messages:
+            phone = decodeHexUcs2(m.get('number'))
+            logger.info(phone)
+            text = decodeHexUcs2(m.get('content'))
+            logger.info(text)
+            #d = [int(i) for i in m.get('date').split(',')]
+            #d[0] = d[0]+2000
+            #tz = d.pop(-1)
+            #date = datetime(*d)
+
+            t = retoken.match(text)
+
+            if t:
+                debug(t.group())
+
+                h = hashlib.md5()
+                h.update(self.config.get("SALT",b""))
+                h.update(phone.encode('ascii'))
+
+                q = dict(
+                    phonehash = h.hexdigest(),
+                    sms_waited=t.group()
+                )
+                debug(q)
+                r = await self.db.devices.update(q, {
+                    '$set':{
+                        'checked':True,
+                        'phone': phone
+                            },
+                    '$currentDate':{'check_date':True}
+                                              })
+                debug(r)
+                delete.append(m.get('id',0))
+            else:
+                read.append(m.get('id',0))
+
+        return read,delete
 
 
-def get_json(fu):
-    c = fu()
-    debug(c)
-    assert c.status == 200
-    resp = c.read()
-    debug(resp)
-    data = json.loads(resp.decode('ascii'))
-    debug(data)
-    return data
+    async def worker(self):
+        try:
+            data = get_json(self.get_messages)
+            if data.get("messages"):
+                read,delete = await self.handle_messages(data.get("messages"))
+                if delete: self.delete_sms(delete)
+                if read:
+                    r = self.set_msg_read(read)
+                    debug(r.read())
 
+        except json.decoder.JSONDecodeError as e:
+            logger.error(self.base_url)
+            logger.error(e.__repr__())
 
-retoken = re.compile('([0-9]{6})')
+        except urllib.error.URLError as e:
+            logger.error(self.base_url)
+            logger.error(e.__repr__())
 
+        except AssertionError as e:
+            logger.warning(e.__repr__())
 
-async def handle_messages(messages):
-    read = []
-    delete = []
-    debug(messages)
-    for m in messages:
-        phone = decodeHexUcs2(m.get('number'))
-        logger.info(phone)
-        text = decodeHexUcs2(m.get('content'))
-        logger.info(text)
-        #d = [int(i) for i in m.get('date').split(',')]
-        #d[0] = d[0]+2000
-        #tz = d.pop(-1)
-        #date = datetime(*d)
-
-        t = retoken.match(text)
-
-        if t:
-            debug(t.group())
-            q = dict(
-                login=phone,
-                sms_waited=t.group()
-            )
-            r = await db.db.devices.update(q, {
-                '$set':{'checked':True},
-                '$currentDate':{'check_date':True}
-                                          })
-            debug(r)
-            delete.append(m.get('id',0))
-        else:
-            read.append(m.get('id',0))
-
-    return read,delete
-
-
-async def worker(client):
-    try:
-        data = get_json(client.get_messages)
-        if data.get("messages"):
-            read,delete = await handle_messages(data.get("messages"))
-            if delete: client.delete_sms(delete)
-            if read:
-                r = client.set_msg_read(read)
-                debug(r.read())
-
-    except json.decoder.JSONDecodeError as e:
-        logger.error(client.base_url)
-        logger.error(e.__repr__())
-
-    except urllib.error.URLError as e:
-        logger.error(client.base_url)
-        logger.error(e.__repr__())
-
-    except AssertionError as e:
-        logger.warning(e.__repr__())
-
-    except Exception as e:
-        logger.error(client.base_url)
-        logger.error(e.__repr__())
-        raise e
-
+        except Exception as e:
+            logger.error(self.base_url)
+            logger.error(e.__repr__())
+            raise e
 
 
 
 async def main_loop(clients):
+
     while True:
-        tasks = [ asyncio.ensure_future(worker(client)) for client in clients ]
+        tasks = [ asyncio.ensure_future(client.worker()) for client in clients ]
         await asyncio.wait(tasks)
         await asyncio.sleep(3)
 
 
-def setup_loop(ztes):
+def setup_loop(config):
     name = current_process().name
     procutil.set_proc_name(name)
 
+    ztes = config.get('ZTE',[])
+
+    import storage
+
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
+
+    debug(id(db))
+
     clients = []
-    for url in ztes:
-        clients.append( Client(url=url))
+    for modem in ztes:
+        clients.append( Client(
+            url=modem['url'],
+            db=db,
+            config=config,
+            callie=modem['number'],
+            sender=modem['sender']
+            ))
 
     loop = asyncio.get_event_loop()
 
@@ -190,8 +214,8 @@ def setup_loop(ztes):
         loop.close()
 
 
-def setup(ztes):
-    proc = Process(target=setup_loop, args=(ztes,))
+def setup(config):
+    proc = Process(target=setup_loop, args=(config,))
     proc.name = 'zte'
     return [proc]
 
@@ -200,7 +224,7 @@ def main():
     import json
     config = json.load(open('config.json','r'))
     logging.basicConfig(level=logging.DEBUG)
-    setup_loop(config['SMS_POLLING'].get('ZTE',[]))
+    setup_loop(config.get('ZTE',[]))
 
 
 if __name__ == '__main__':

@@ -5,13 +5,14 @@
     <form name="regform">
       <input
         type="tel"
-        ng-model=creds.username
+        ng-model="$root.phone"
         required
         pattern="\+\d{10,12}"
         placeholder="+79123456789"
-        name='login' />
-      <input type="hidden" name='mac' ng-model=client.mac />
-      <button ng-click="register(regform)" >Войти</button>
+        name='login'
+        phone-validation
+        />
+      <input type="submit" ng-click="register(regform)" value="Войти" />
 
     </form>
     </p>
@@ -21,15 +22,38 @@
   </div>
 
   <div class="animate-switch" ng-switch-when="cod">
-    <p>Отправьте смс с текстом
-    <input readonly ng-model=sms.waited type=text  class="token" />
-    на номер <!--a href="sms:{{sms.callie}}?body={{sms.waited}}">{{sms.callie}}</a-->
-    <input readonly ng-model=sms.callie type=text  class="phone" />
-    </p>
-    <p class="animate-switch-container">
-       <span class="animate-switch" ng-show="waiting" >
-          Интернет включится через мгновение после того, как оно будет доставленно
-       </span>
+      <p>Отправьте <a href="sms:{{sms.callie}}?body={{sms.waited}}">SMS</a> с текстом
+      <input readonly ng-model=sms.waited type=text  class="token" />
+      на <a htref="tel:{{sms.callie}}">номер</a>
+      <input readonly ng-model=sms.callie type=text  class="phone" />
+      </p>
+      <p class="animate-switch-container">
+         <span class="animate-switch" ng-show="waiting" >
+            Не закрывайте эту страницу.
+            Интернет включится через мгновение после того, как оно будет доставленно
+         </span>
+      </p>
+  </div>
+
+    <div class="animate-switch" ng-switch-when="sending">
+      <p>Отправка SMS...</p>
+    </div>
+
+  <div class="animate-switch" ng-switch-when="sent">
+    <p>
+    <form name="smsform">
+      <input
+        type="tel"
+        ng-model="$root.sentsms"
+        required
+        pattern="\d{6}"
+        placeholder="XXXXXX"
+        name='sentsms'
+        otp-validation
+        />
+      <input type="submit" ng-click="register(smsform)" value="Войти" />
+
+    </form>
     </p>
   </div>
 
