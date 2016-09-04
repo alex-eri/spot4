@@ -12,6 +12,7 @@ import netflow
 logger = logging.getLogger('radius')
 debug = logger.debug
 
+from password import getsms, getpassw
 
 
 class RadiusProtocol:
@@ -68,15 +69,15 @@ class RadiusProtocol:
             'checked':True
              }
 
-        base = base64.b32encode("{username}#{mac}".format(**q).encode('ascii'))
-        otp = pyotp.TOTP(base)
+        for n in [0,-1]:
+            psw = getpassw(n=n, **q)
+            if self.check_password(psw):
+                self.db.devices.find_one(q,callback=self.got_user)
+                return
 
-        if self.check_password(otp.now()) or self.check_password(otp.at(time.time(),-1)):
-            self.db.devices.find_one(q,callback=self.got_user)
-        else:
-            debug("otp was {}".format(otp.now()))
-            self.reply.code = rad.AccessReject
-            self.respond( self.reply )
+        debug("otp was {}".format(otp.now()))
+        self.reply.code = rad.AccessReject
+        self.respond( self.reply )
 
 
     def got_user(self,response,error):

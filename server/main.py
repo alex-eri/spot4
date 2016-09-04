@@ -1,22 +1,22 @@
 import logging,sys
+from multiprocessing import Manager
 
 logger = logging.getLogger('main')
 debug = logger.debug
 
-SALT = b'441dbf23b4d344f19b89c76fd65cc75c'
-
 def modem_setup(config):
-    ztes = config.get('ZTE',[])
+    import multiprocessing as mp
     procs = []
-    if ztes:
-        import zte
-        return zte.setup(config)
+    smsq = mp.Queue()
+    import zte
+    return zte.setup(config,smsq)
     return procs
 
 def setup():
     import api
     import radius
     import json
+    manager = Manager()
 
     config = json.load(open('config.json','r'))
     FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
@@ -27,8 +27,7 @@ def setup():
 
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
-    config['SALT'] = SALT
-    config['SALT_ASCII'] = SALT.decode()
+    config['numbers'] = manager.list()
 
     services = []
     services.extend( radius.setup(config) )

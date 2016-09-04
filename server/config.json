@@ -14,15 +14,14 @@
 	"SERVER": "mongodb://localhost:27017",
 	"NAME":"spot4"
 },
-"SMS_POLLING":{
-	"CALLIE": ["+79158190408"]
-},
-"ZTE": [
-		{
-		"url":"http://192.168.8.1",
-		"number": "+79158190408",
-		"sender": true
-		}
-	]
+"SMS": {
+	"ZTE": [
+			{
+			"url":"http://192.168.8.1",
+			"number": "+79158190408",
+			"sender": true
+			}
+		]
 
+	}
 }

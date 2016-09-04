@@ -4,7 +4,7 @@ from utils import procutil
 from multiprocessing import Process, current_process
 from bson.json_util import dumps, loads
 import random
-import base64, pyotp
+
 import logging
 import motor.core
 import hashlib
@@ -12,81 +12,79 @@ import hashlib
 logger = logging.getLogger('http')
 debug = logger.debug
 
-SMSSEND = 1
-SMSWAIT = 2
 
-async def salt_handler(request):
-    resp = {
-        'salt': request.app['config'].get('SALT_ASCII','')
-    }
-    return resp
+from password import getsms, getpassw
+
 
 async def device_handler(request):
     q = dict(
-        phonehash = request.match_info.get('phonehash'),
-        mac = request.match_info.get('mac')
+        _id = request.match_info.get('oid')
         )
-    #request.app.logger.debug(type(request.match_info.get('mac')))
 
-    base = base64.b32encode("{phonehash}#{mac}".format(**q).encode('ascii'))
-    device = await request.app['db'].devices.find_one(q)
-    request.app.logger.debug(device.__repr__())
+    coll = request.app['db'].devices
+
+    device = await coll.find_one(q,fields=['username','sms_callie','sms_waited'])
+    debug(device.__repr__())
+
     if device:
         if device.get('checked'):
-            otp = pyotp.TOTP(base)
-            device['password'] = otp.now()
+            device['password'] = getpassw(device['username'], mac)
         else:
-            numbers = request.app['config']['SMS_POLLING'].get('CALLIE')
+            numbers = request.app['numbers']
             if device.get('sms_callie') in numbers:
                 pass
             else:
                 device['sms_callie'] = callie = random.choice(numbers)
                 request.app.logger.debug(q)
-                r = await request.app['db'].devices.update(q, {'$set':{'sms_callie': callie}})
+                r = await coll.update(q, {'$set':{'sms_callie': callie}})
                 request.app.logger.debug(r)
         return {'response': device}
 
     else:
-        otp =  pyotp.HOTP(base)
-        q['username'] = q['phonehash']
-        q['sms_waited'] = otp.at(SMSWAIT)
-        q['sms_callie'] = random.choice(request.app['config']['SMS_POLLING'].get('CALLIE'))
-        debug(q)
-        device_id = await request.app['db'].devices.insert(q)
-        q['_id'] = device_id
-        return {'response': q}
+        raise web.HTTPNotFound()
+
+
+async def phone_handler(request):
+    q = dict(
+        phone = "+"+request.match_info.get('phone'),
+        mac = request.match_info.get('mac')
+        )
+
+    coll = request.app['db'].devices
+
+    upd = {
+        '$currentDate':{'seen':True}
+        #, "$set" {'sensor': request.ip }
+        }
+
+    device = await coll.find_and_modify(q, upd, upsert=True, new=True)
+
+    if device.get('username'):
+        pass
+    else:
+        sending, waited = getsms(**q)
+        numbers = request.app['config'].get('numbers')
+
+        upd = {
+            'username': device['_id'],
+            'sms_waited': waited,
+            'sms_callie': random.choice(numbers)
+        }
+        device = await coll.update({'_id':device['_id']}, upd)
+    return {'oid': device['_id']}
+
 
 
 async def sms_handler(request):
     POST = await request.post()
 
-    m = hashlib.md5()
-    m.update(request.app['config'].get("SALT",b""))
-    m.update(POST.get('phone').encode('ascii'))
-
     q = dict(
-        phonehash = m.hexdigest(),
+        phone = POST.get('phone'),
         sms_waited = POST.get('sms_waited')
         )
     device = await request.app['db'].devices.update(q, {'$set':{'checked':True}})
+    debug(device)
     return {'response': 'OK'}
-
-async def sms_sender(request):
-    q = dict(
-        phone = request.match_info.get('phone'),
-        mac = request.match_info.get('mac')
-        )
-
-    m = hashlib.md5()
-    m.update(request.app['config'].get("SALT",b""))
-    m.update(q['phone'].encode('ascii'))
-    q['phonehash'] = m.hexdigest()
-
-    base = base64.b32encode("{phonehash}#{mac}".format(**q).encode('ascii'))
-    otp =  pyotp.HOTP(base)
-    sms = otp.at(SMSSEND)
-
-
 
 
 
@@ -197,7 +195,7 @@ def setup_web(config):
     debug(id(db))
 
     db.devices.ensure_index( [ ("username",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
-    db.devices.ensure_index( [ ("phonehash",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
+    db.devices.ensure_index( [ ("phone",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
     db.devices.ensure_index( [ ("username",1) ], unique=False, callback=storage.index_cb)
 
     app = web.Application(middlewares=[cors, json_middleware])
@@ -207,13 +205,13 @@ def setup_web(config):
 
     if config.get('SMS_POLLING'):
 
-        app.router.add_route('GET', '/device/+{phone:\d+}/{mac}', sms_sender)
-        app.router.add_route('GET', '/device/%2B{phone:\d+}/{mac}', sms_sender)
+        app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
+        app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
 
-        app.router.add_route('GET', '/device/{phonehash}/{mac}', device_handler)
+        app.router.add_route('GET', '/device/{oid}', device_handler)
+
         app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 
-    app.router.add_route('GET', '/salt', salt_handler)
     app.router.add_route('POST', '/db/{collection}/{skip}::{limit}', check_auth(db_handler))
     app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))
 
