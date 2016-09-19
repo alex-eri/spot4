@@ -1,15 +1,14 @@
 import logging,sys
-from multiprocessing import Manager
+from multiprocessing import Manager, Queue
 
 logger = logging.getLogger('main')
 debug = logger.debug
 
 def modem_setup(config):
-    import multiprocessing as mp
+
     procs = []
-    smsq = mp.Queue()
     import zte
-    return zte.setup(config,smsq)
+    return zte.setup(config)
     return procs
 
 def setup():
@@ -17,6 +16,8 @@ def setup():
     import radius
     import json
     manager = Manager()
+    smsq = Queue()
+
 
     config = json.load(open('config.json','r'))
     FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'

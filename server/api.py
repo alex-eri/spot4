@@ -17,20 +17,32 @@ from password import getsms, getpassw
 
 
 async def device_handler(request):
+    POST = await request.post()
     q = dict(
         _id = request.match_info.get('oid')
         )
 
     coll = request.app['db'].devices
 
-    device = await coll.find_one(q,fields=['username','sms_callie','sms_waited'])
+    if request.match_info.get('check') == "smscheck":
+        POST = await request.post()
+        q['sms_sended'] = POST.get('sms_sended')
+        upd = {'checked':True}
+        try:
+            device = await coll.find_and_modify(q, upd, new=True)
+        except:
+            await asyncio.sleep(5)
+            raise web.HTTPNotFound()
+    else:
+        device = await coll.find_one(q,fields=['username','sms_callie','sms_waited'])
+
     debug(device.__repr__())
 
     if device:
         if device.get('checked'):
             device['password'] = getpassw(device['username'], mac)
         else:
-            numbers = request.app['numbers']
+            numbers = request.app['config'].get('numbers')
             if device.get('sms_callie') in numbers:
                 pass
             else:
@@ -45,12 +57,12 @@ async def device_handler(request):
 
 
 async def phone_handler(request):
+    coll = request.app['db'].devices
+    phone = "+"+request.match_info.get('phone')
     q = dict(
-        phone = "+"+request.match_info.get('phone'),
+        phone = phone,
         mac = request.match_info.get('mac')
         )
-
-    coll = request.app['db'].devices
 
     upd = {
         '$currentDate':{'seen':True}
@@ -62,17 +74,31 @@ async def phone_handler(request):
     if device.get('username'):
         pass
     else:
-        sending, waited = getsms(**q)
-        numbers = request.app['config'].get('numbers')
 
-        upd = {
-            'username': device['_id'],
-            'sms_waited': waited,
-            'sms_callie': random.choice(numbers)
-        }
+        POST = await request.post()
+        smsmode = POST.get('smsmode','wait')
+
+        text = getsms(**q)
+        if smsmode == "send":
+            upd = {
+                'username': device['_id'],
+                '$currentDate':{'registred':True},
+                'sms_sended': text
+            }
+
+            request.app['config']['smsq'].put((phone,text))
+
+        else:
+            numbers = request.app['config'].get('numbers')
+            upd = {
+                'username': device['_id'],
+                'sms_waited': text,
+                'sms_callie': random.choice(numbers),
+                '$currentDate':{'registred':True}
+            }
+
         device = await coll.update({'_id':device['_id']}, upd)
     return {'oid': device['_id']}
-
 
 
 async def sms_handler(request):
@@ -192,8 +218,6 @@ def setup_web(config):
         config['DB']['NAME']
     )
 
-    debug(id(db))
-
     db.devices.ensure_index( [ ("username",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
     db.devices.ensure_index( [ ("phone",1), ("mac",1) ], unique=True, dropDups=True ,callback=storage.index_cb)
     db.devices.ensure_index( [ ("username",1) ], unique=False, callback=storage.index_cb)
@@ -208,9 +232,10 @@ def setup_web(config):
         app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
         app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
 
-        app.router.add_route('GET', '/device/{oid}', device_handler)
-
         app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
+
+    app.router.add_route('GET', '/device/{oid}', device_handler)
+    app.router.add_route('GET', '/device/{oid}/{check}', device_handler)
 
     app.router.add_route('POST', '/db/{collection}/{skip}::{limit}', check_auth(db_handler))
     app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))

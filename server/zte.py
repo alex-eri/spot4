@@ -20,6 +20,10 @@ retoken = re.compile('([0-9]{6})')
 
 from itertools import cycle
 
+TZ = format(-time.timezone//3600,"+d")
+
+
+
 async def get_json(fu,*a,**kw):
     c = await fu(*a,**kw)
     debug(c)
@@ -31,13 +35,15 @@ async def get_json(fu,*a,**kw):
     return data
 
 class Client(object):
-    def __init__(self,db,url,callie,sender,smsq,config,*a,**kw):
+    def __init__(self,db,url,callie,sender,config,*a,**kw):
         self.db = db
         self.base_url = url
         self.callie =  callie
         self.sender =  sender
-        self.smsq = smsq
+        self.smsq = config['smsq']
         self.numbers = config['numbers']
+
+        config['numbers'].append(callie)
 
         self.sema = Semaphore()
 
@@ -45,6 +51,10 @@ class Client(object):
             'Referer':self.base_url+"/index.html",
             'X-Requested-With':'XMLHttpRequest'
         }
+
+    def __del__(self):
+        self.numbers.remove(callie)
+        super(Client,self).__del__()
 
     def get(self,uri):
         req = urllib.request.Request(uri, headers=self.headers, method="GET")
@@ -169,15 +179,29 @@ class Client(object):
 
 
 
-    def send(self,phone,text):
-        pass
+    def send_sms(self,phone,text):
+        uri = "{base}/goform/goform_set_cmd_process".format(
+                base=self.base_url
+            )
+
+        postdata = dict(isTest="false",
+                goformId="SEND_SMS",
+                Number=phone,
+                notCallback="true",
+                sms_time=time.strftime("%y;%m;%d;%H;%M;%S;")+TZ,
+                MessageBody=str(codecs.encode(text.encode('utf-16be'), 'hex_codec'), 'ascii').upper(),
+                encode_type="UNICODE",
+                ID=-1
+            )
+        debug(uri)
+        debug(postdata)
+        return self.post(uri,data=postdata)
 
     async def send_from_queue(self):
         debug('sender')
         sms = self.smsq.get()
-        self.send(*sms)
+        self.send_sms(*sms)
         self.smsq.task_done()
-        pass
 
 
 async def recieve_loop(clients):
@@ -207,7 +231,7 @@ async def send_loop(clients):
         await asyncio.sleep(3)
 
 
-def setup_clients(config, smsq=None):
+def setup_clients(config):
 
     ztes = config['SMS'].get('ZTE',[])
 
@@ -227,7 +251,6 @@ def setup_clients(config, smsq=None):
             db=db,
             callie=modem['number'],
             sender=modem['sender'],
-            smsq=smsq,
             config=config
             ))
 
@@ -244,9 +267,9 @@ def setup_loop(clients, forever):
         loop.close()
 
 
-def setup(config,smsq):
+def setup(config):
 
-    clients = setup_clients(config,smsq)
+    clients = setup_clients(config)
 
     reciever = Process(target=setup_loop, args=(clients,recieve_loop))
     reciever.name = 'zte_reciever'
@@ -259,8 +282,10 @@ def setup(config,smsq):
 
 def main():
     import json
+    import multiprocessing as mp
     config = json.load(open('config.json','r'))
     logging.basicConfig(level=logging.DEBUG)
+    config['smsq'] = mp.Queue()
     setup_loop(config)
 
 
