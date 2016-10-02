@@ -22,7 +22,7 @@ class Packet(defaultdict):
         elif secret:
 
             self.header = bytearray(struct.pack('!BBH', code, id, 0))
-            id = id or random.randrange(0, 256)
+            if id is None: id = random.randrange(0, 256)
             authenticator = authenticator or bytearray(random.getrandbits(8) for _ in range(16))
             self.header = bytearray(struct.pack('!BBH16s', code, id, 20,authenticator))
 

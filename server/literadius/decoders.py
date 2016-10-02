@@ -2,6 +2,7 @@ import struct
 from .constants import *
 from collections import defaultdict
 
+
 def int32be(data):
     if len(data) == 4:
         return struct.unpack("!L",data)[0]

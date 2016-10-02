@@ -1,0 +1,16 @@
+{
+  "name": "spot4",
+  "private": true,
+  "version": "0.0.0",
+  "license": "Custom",
+  "devDependencies": {
+    "bower": "^1.7.7",
+    "http-server": "^0.9.0",
+    "uglify-js": "^2.7.0"
+  },
+  "scripts": {
+    "postinstall": "bower install",
+    "prestart": "npm install; make",
+    "start": "http-server ./build/mikrotik -a localhost -p 8000 -c-1"
+  }
+}

@@ -1,5 +1,7 @@
 */build/*
+build/*
 *.pyc
 */__pycache__
 */node_modules/*
 */bower_components/*
+*/ht_docs/*

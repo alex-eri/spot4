@@ -5,17 +5,6 @@ var app = angular.module('hotspot',['ngResource','ngAnimate'])
 .run(['$http','$rootScope',
     function ($http,$rootScope) {
 
-        function onAPI(APIURL){
-            $http.get(APIURL+'/salt').then(
-                function(response) {
-                    app.SALT = response.data.salt;
-                }, function(error){
-                    $rootScope.error = "Сервер не отвечает, попробуйте позже";
-                    $rootScope.stage = 'error';
-                });
-        };
-
-
         $http.get('config.json').then( function(response) {
             console.log(response.data);
             app.APIURL = response.data.api;

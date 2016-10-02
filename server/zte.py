@@ -1,4 +1,4 @@
-from multiprocessing import Process, current_process
+from multiprocessing import Process, current_process, Semaphore
 import logging
 import asyncio
 import aiohttp
@@ -11,15 +11,21 @@ import urllib.parse
 import time
 import re
 from datetime import datetime
-from utils.codecs import decodeHexUcs2
+from utils.codecs import trydecodeHexUcs2,encodeUcs2
 import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
 
 retoken = re.compile('([0-9]{6})')
 
-def get_json(fu):
-    c = fu()
+from itertools import cycle
+
+TZ = format(-time.timezone//3600,"+d")
+
+
+
+async def get_json(fu,*a,**kw):
+    c = await fu(*a,**kw)
     debug(c)
     assert c.status == 200
     resp = c.read()
@@ -29,37 +35,50 @@ def get_json(fu):
     return data
 
 class Client(object):
-    def __init__(self,*a,**kw):
-        self.db = kw.pop('db')
-        self.config = kw.pop('config')
-        self.base_url = kw.pop('url')
-        self.callie =  kw.pop('callie')
-        self.sender =  kw.pop('sender')
+
+    def __init__(self,db,url,callie,sender,config,*a,**kw):
+        self.db = db
+        self.base_url = url
+        self.callie =  callie
+        self.sender =  sender
+        self.smsq = config['smsq']
+        config['numbers'].append(callie)
+        self.numbers = config['numbers']
+        self.sema = Semaphore()
 
         self.headers = {
             'Referer':self.base_url+"/index.html",
             'X-Requested-With':'XMLHttpRequest'
         }
 
+    #def __del__(self):
+    #    self.numbers.remove(self.callie)
+
     def get(self,uri):
         req = urllib.request.Request(uri, headers=self.headers, method="GET")
-        return urllib.request.urlopen(req,timeout=5)
+        return self.urlopen(req)
 
     def post(self,uri,data):
         data = urllib.parse.urlencode(data)
         data = data.encode('ascii')
         req = urllib.request.Request(uri, data=data, headers=self.headers, method='POST')
-        return urllib.request.urlopen(req,timeout=5)
+        return self.urlopen(req)
+
+    async def urlopen(self,req):
+        self.sema.acquire()
+        try: ret = urllib.request.urlopen(req,timeout=5)
+        except Exception as e: error=e
+        else: return ret
+        finally: self.sema.release()
+        raise error
 
     def get_count(self,*a,**kw):
-
         uri = "{base}/goform/goform_get_cmd_process?"\
             "multi_data=1&isTest=false&sms_received_flag_flag=0&sts_received_flag_flag=0&"\
             "cmd=sms_received_flag,sms_unread_num,sms_read_num&_={date}".format(
                 base=self.base_url,
                 date=int(time.time()*1000)
             )
-
         return self.get(uri,*a,**kw)
 
     def get_messages(self,*a,**kw):
@@ -104,36 +123,22 @@ class Client(object):
         delete = []
         debug(messages)
         for m in messages:
-            phone = decodeHexUcs2(m.get('number'))
+            phone = trydecodeHexUcs2(m.get('number'))
             logger.info(phone)
-            text = decodeHexUcs2(m.get('content'))
+            text = trydecodeHexUcs2(m.get('content'))
             logger.info(text)
-            #d = [int(i) for i in m.get('date').split(',')]
-            #d[0] = d[0]+2000
-            #tz = d.pop(-1)
-            #date = datetime(*d)
-
             t = retoken.match(text)
-
             if t:
                 debug(t.group())
 
-                h = hashlib.md5()
-                h.update(self.config.get("SALT",b""))
-                h.update(phone.encode('ascii'))
-
                 q = dict(
-                    phonehash = h.hexdigest(),
-                    sms_waited=t.group()
+                    phone=phone, sms_waited=t.group()
                 )
                 debug(q)
                 r = await self.db.devices.update(q, {
-                    '$set':{
-                        'checked':True,
-                        'phone': phone
-                            },
-                    '$currentDate':{'check_date':True}
-                                              })
+                      '$set':{ 'checked': True },
+                      '$currentDate':{'check_date':True}
+                    })
                 debug(r)
                 delete.append(m.get('id',0))
             else:
@@ -141,16 +146,15 @@ class Client(object):
 
         return read,delete
 
-
     async def worker(self):
+        debug("worker")
+
         try:
-            data = get_json(self.get_messages)
+            data = await get_json(self.get_messages)
             if data.get("messages"):
-                read,delete = await self.handle_messages(data.get("messages"))
-                if delete: self.delete_sms(delete)
-                if read:
-                    r = self.set_msg_read(read)
-                    debug(r.read())
+                read, delete = await self.handle_messages(data["messages"])
+                if delete: await self.delete_sms(delete)
+                if read: await self.set_msg_read(read)
 
         except json.decoder.JSONDecodeError as e:
             logger.error(self.base_url)
@@ -167,22 +171,66 @@ class Client(object):
             logger.error(self.base_url)
             logger.error(e.__repr__())
             raise e
+        finally:
+            debug('worker_done')
 
 
 
-async def main_loop(clients):
 
-    while True:
-        tasks = [ asyncio.ensure_future(client.worker()) for client in clients ]
-        await asyncio.wait(tasks)
-        await asyncio.sleep(3)
+    def send_sms(self,phone,text):
+        uri = "{base}/goform/goform_set_cmd_process".format(
+                base=self.base_url
+            )
+
+        postdata = dict(isTest="false",
+                goformId="SEND_SMS",
+                Number=phone,
+                notCallback="true",
+                sms_time=time.strftime("%y;%m;%d;%H;%M;%S;")+TZ,
+                MessageBody=encodeUcs2(text),
+                encode_type="UNICODE",
+                ID=-1
+            )
+        debug(uri)
+        debug(postdata)
+        return self.post(uri,data=postdata)
+
+    async def send_from_queue(self):
+        debug('sender')
+        sms = self.smsq.get()
+        self.send_sms(*sms)
+        self.smsq.task_done()
 
 
-def setup_loop(config):
+async def recieve_loop(clients):
     name = current_process().name
     procutil.set_proc_name(name)
 
-    ztes = config.get('ZTE',[])
+    while clients:
+        try:
+            tasks = [ asyncio.ensure_future(client.worker()) for client in clients ]
+            await asyncio.wait(tasks)
+
+        except Exception as e:
+            debug(e)
+        await asyncio.sleep(4)
+
+async def send_loop(clients):
+    name = current_process().name
+    procutil.set_proc_name(name)
+
+    clients = list(filter(lambda x: x.sender, clients))
+    while clients:
+        tasks = [ asyncio.ensure_future(
+            client.send_from_queue()
+            ) for client in clients ]
+        await asyncio.wait(tasks)
+        await asyncio.sleep(4)
+
+
+def setup_clients(config):
+
+    ztes = config['SMS'].get('ZTE',[])
 
     import storage
 
@@ -198,15 +246,17 @@ def setup_loop(config):
         clients.append( Client(
             url=modem['url'],
             db=db,
-            config=config,
             callie=modem['number'],
-            sender=modem['sender']
+            sender=modem['sender'],
+            config=config
             ))
 
-    loop = asyncio.get_event_loop()
+    return clients
 
+def setup_loop(clients, forever):
+    loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(main_loop(clients))
+        loop.run_until_complete(forever(clients))
     except Exception as e:
         logger.critical(e.__repr__())
         raise e
@@ -215,16 +265,25 @@ def setup_loop(config):
 
 
 def setup(config):
-    proc = Process(target=setup_loop, args=(config,))
-    proc.name = 'zte'
-    return [proc]
+
+    clients = setup_clients(config)
+
+    reciever = Process(target=setup_loop, args=(clients,recieve_loop))
+    reciever.name = 'zte_reciever'
+
+    sender = Process(target=setup_loop, args=(clients,send_loop))
+    sender.name = 'zte_sender'
+
+    return [reciever, sender]
 
 
 def main():
     import json
+    import multiprocessing as mp
     config = json.load(open('config.json','r'))
     logging.basicConfig(level=logging.DEBUG)
-    setup_loop(config.get('ZTE',[]))
+    config['smsq'] = mp.Queue()
+    setup_loop(config)
 
 
 if __name__ == '__main__':

@@ -11,6 +11,16 @@ def index_cb(result,error):
         logger.error(error.__repr__())
         raise error
 
+def ensure_obj(result,error):
+    if error:
+        if isinstance(error, (pymongo.errors.DuplicateKeyError)):
+            return
+        logger.error(error.__repr__())
+        raise error
+
+
+
+
 def insert_cb(result,error):
     if error:
         logger.error(error.__repr__())

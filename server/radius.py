@@ -12,6 +12,7 @@ import netflow
 logger = logging.getLogger('radius')
 debug = logger.debug
 
+from utils.password import getsms, getpassw
 
 
 class RadiusProtocol:
@@ -60,35 +61,51 @@ class RadiusProtocol:
     def handle_auth(self):
 
         reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
-        self.reply = self.pkt.reply(rad.AccessAccept)
+        self.reply = self.pkt.reply(rad.AccessReject)
 
-        q = {
-            'username':self[rad.UserName],
-            'mac':self[rad.CallingStationId],
-            'checked':True
-             }
 
-        base = base64.b32encode("{username}#{mac}".format(**q).encode('ascii'))
-        otp = pyotp.TOTP(base)
 
-        if self.check_password(otp.now()) or self.check_password(otp.at(time.time(),-1)):
-            self.db.devices.find_one(q,callback=self.got_user)
-        else:
-            debug("otp was {}".format(otp.now()))
-            self.reply.code = rad.AccessReject
-            self.respond( self.reply )
+        self.db.users.find_one({'_id':self[rad.UserName]},callback=self.got_user)
 
+
+        debug("otp was {}".format(otp.now()))
+
+        self.respond( self.reply )
 
     def got_user(self,response,error):
         if error:
             logger.error(error.__repr__())
         if response:
+            q = {
+                'username':response['username'],
+                'mac':self[rad.CallingStationId]
+                 }
+            if self.check_password(response.get('password')):
+                self.db.devices.find_and_modify(q,
+                    {'$currentDate':{'seen':True},'$set':{'checked':True}},
+                    upsert=True, new=True,
+                    callback=self.got_device
+                    )
+            else:
+                for n in [0,-1]:
+                    psw = getpassw(n=n, **q)
+                    if self.check_password(psw):
+                        q['checked']=True
+                        self.db.devices.find_one(q,callback=self.got_device)
+                        return
+        self.respond( self.reply )
+
+
+    def got_device(self,response,error):
+        if error:
+            logger.error(error.__repr__())
+        if response:
             self.reply.code = rad.AccessAccept
-        else:
-            self.reply.code = rad.AccessReject
         self.respond( self.reply )
 
     def check_password(self, cleartext=""):
+        if not cleartext: return
+
         pkt = self.pkt
         debug(type(cleartext))
         debug(type(pkt.pw_decrypt(pkt[rad.UserPassword])))

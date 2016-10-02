@@ -1,0 +1,16 @@
+{
+  "name": "spot4",
+  "description": "Spot4 AngularJS",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "angular": "1.5.x",
+    "angular-animate": "1.5.x",
+    "angular-mocks": "1.5.x",
+    "angular-resource": "1.5.x",
+    "angular-route": "1.5.x",
+    "bootstrap": "3.3.x",
+    "forge": "0.6.x",
+    "jquery": "2.2.x"
+  }
+}
