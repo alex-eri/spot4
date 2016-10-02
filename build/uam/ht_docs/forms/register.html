@@ -1,0 +1,18 @@
+<form name="regform" class="form-inline">
+  <div class="form-group ">
+    <div class="input-group input-group">
+      <span class="input-group-addon" >tel:</span>
+      <input
+        class="form-control"
+        type="tel"
+        ng-model="$root.phone"
+        required
+        pattern="\+\d{10,12}"
+        placeholder="+79123456789"
+        name='login'
+        phone-validation
+        />
+    </div>
+      <input class="btn btn-default" type="submit" ng-click="register(regform)" value="Войти" />
+</div>
+    </form>

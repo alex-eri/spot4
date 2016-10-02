@@ -11,13 +11,14 @@
 "DEBUG": true,
 "LOGFILE": null,
 "DB": {
-	"SERVER": "mongodb://localhost:27017",
+	"SERVER": "mongodb://127.0.0.1:27017",
 	"NAME":"spot4"
 },
 "SMS": {
+	"enabled": true,
 	"ZTE": [
 			{
-			"url":"http://192.168.8.1",
+			"url":"http://192.168.0.1",
 			"number": "+79158190408",
 			"sender": true
 			}

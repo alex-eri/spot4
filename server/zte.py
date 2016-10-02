@@ -11,7 +11,7 @@ import urllib.parse
 import time
 import re
 from datetime import datetime
-from utils.codecs import decodeHexUcs2
+from utils.codecs import trydecodeHexUcs2,encodeUcs2
 import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
@@ -35,16 +35,15 @@ async def get_json(fu,*a,**kw):
     return data
 
 class Client(object):
+
     def __init__(self,db,url,callie,sender,config,*a,**kw):
         self.db = db
         self.base_url = url
         self.callie =  callie
         self.sender =  sender
         self.smsq = config['smsq']
-        self.numbers = config['numbers']
-
         config['numbers'].append(callie)
-
+        self.numbers = config['numbers']
         self.sema = Semaphore()
 
         self.headers = {
@@ -52,9 +51,8 @@ class Client(object):
             'X-Requested-With':'XMLHttpRequest'
         }
 
-    def __del__(self):
-        self.numbers.remove(callie)
-        super(Client,self).__del__()
+    #def __del__(self):
+    #    self.numbers.remove(self.callie)
 
     def get(self,uri):
         req = urllib.request.Request(uri, headers=self.headers, method="GET")
@@ -125,9 +123,9 @@ class Client(object):
         delete = []
         debug(messages)
         for m in messages:
-            phone = decodeHexUcs2(m.get('number'))
+            phone = trydecodeHexUcs2(m.get('number'))
             logger.info(phone)
-            text = decodeHexUcs2(m.get('content'))
+            text = trydecodeHexUcs2(m.get('content'))
             logger.info(text)
             t = retoken.match(text)
             if t:
@@ -173,8 +171,8 @@ class Client(object):
             logger.error(self.base_url)
             logger.error(e.__repr__())
             raise e
-
-        debug('worker_done')
+        finally:
+            debug('worker_done')
 
 
 
@@ -189,7 +187,7 @@ class Client(object):
                 Number=phone,
                 notCallback="true",
                 sms_time=time.strftime("%y;%m;%d;%H;%M;%S;")+TZ,
-                MessageBody=str(codecs.encode(text.encode('utf-16be'), 'hex_codec'), 'ascii').upper(),
+                MessageBody=encodeUcs2(text),
                 encode_type="UNICODE",
                 ID=-1
             )
@@ -215,8 +213,7 @@ async def recieve_loop(clients):
 
         except Exception as e:
             debug(e)
-        debug('sleep')
-        await asyncio.sleep(3)
+        await asyncio.sleep(4)
 
 async def send_loop(clients):
     name = current_process().name
@@ -228,7 +225,7 @@ async def send_loop(clients):
             client.send_from_queue()
             ) for client in clients ]
         await asyncio.wait(tasks)
-        await asyncio.sleep(3)
+        await asyncio.sleep(4)
 
 
 def setup_clients(config):

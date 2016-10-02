@@ -28,6 +28,7 @@ def setup():
 
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
+    config['smsq'] = smsq
     config['numbers'] = manager.list()
 
     services = []

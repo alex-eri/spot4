@@ -1,0 +1,30 @@
+<p>
+  <label>Подтверждение номера {{$root.phone}}</label>
+</p>
+<p>
+<form name="codform" class="form-inline">
+  <div class="form-group" ng-class="{'has-feedback has-error':wrongcode}" >
+    <div class="input-group">
+      <span class="input-group-addon" >Код</span>
+      <input
+        class="form-control"
+        type="number"
+        ng-model="code"
+        required
+        pattern="\d{4}"
+        placeholder="XXXX"
+        name='code'
+        code-validation
+        />
+    </div>
+    <span class="glyphicon glyphicon-warning-sign form-control-feedback" ng-show=wrongcode ></span>
+    </div>
+  <div class="form-group">
+          <input class="btn btn-default form-control" type="submit" ng-click="confirm(codform)" value="Далее" />
+    </div>
+</form>
+</p>
+<p>
+  <a href=wait/sms/>Не приходит СМС</a>
+  <!--a href=register/>Другой номер</a-->
+</p>

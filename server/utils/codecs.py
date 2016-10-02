@@ -1,8 +1,13 @@
 import codecs
 
-def decodeHexUcs2(a):
-    a = codecs.decode(a, "hex")
-    return decodeUcs2(iter(a),len(a))
+def trydecodeHexUcs2(a):
+    if len(a) > 6 and len(a)%2 == 0 and a[0]=='0':
+        try:
+            a = codecs.decode(a, "hex")
+            return decodeUcs2(iter(a),len(a))
+        except:
+            pass
+    return a
 
 
 def decodeUcs2(byteIter, numBytes=256):
@@ -18,7 +23,7 @@ def decodeUcs2(byteIter, numBytes=256):
         pass
     return ''.join(userData)
 
-def encodeUcs2(text):
+def encodeUcs2byte(text):
     """ UCS2 text encoding algorithm
 
     Encodes the specified text string into UCS2-encoded bytes.
@@ -33,3 +38,6 @@ def encodeUcs2(text):
         result.append(b >> 8)
         result.append(b & 0xFF)
     return result
+
+def encodeUcs2(text):
+    return str(codecs.encode(text.encode('utf-16be'), 'hex_codec'), 'ascii').upper()
