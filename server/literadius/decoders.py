@@ -65,5 +65,7 @@ decoders = defaultdict(default_decoder, {
     CHAPChallenge : bytes,
     NASPortType : int,
     PortLimit : int,
-    (14988, 10): ipaddr
+    MikrotikHostIP: ipaddr,
+    WISPrLocationName: string,
+    ChilliSpotVersion: ascii
 })

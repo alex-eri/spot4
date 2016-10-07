@@ -32,6 +32,9 @@ class RadiusProtocol:
         self.caller = addr
         self.pkt = rad.Packet(data, self.radsecret)
 
+        debug(self.pkt.authenticator)
+        debug(self.pkt.secret)
+
         if self.pkt.code == rad.AccessRequest:
             self.handle_auth()
         elif self.pkt.code == rad.AccountingRequest:
@@ -63,29 +66,24 @@ class RadiusProtocol:
         reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
         self.reply = self.pkt.reply(rad.AccessReject)
 
-
-
         self.db.users.find_one({'_id':self[rad.UserName]},callback=self.got_user)
-
-
-        debug("otp was {}".format(otp.now()))
-
-        self.respond( self.reply )
+        debug('user was {}'.format(self[rad.UserName]))
 
     def got_user(self,response,error):
         if error:
             logger.error(error.__repr__())
         if response:
             q = {
-                'username':response['username'],
+                'username':response['_id'],
                 'mac':self[rad.CallingStationId]
                  }
-            if self.check_password(response.get('password')):
+            if response.get('password') and self.check_password(response.get('password')):
                 self.db.devices.find_and_modify(q,
                     {'$currentDate':{'seen':True},'$set':{'checked':True}},
                     upsert=True, new=True,
                     callback=self.got_device
                     )
+                return
             else:
                 for n in [0,-1]:
                     psw = getpassw(n=n, **q)
@@ -93,6 +91,9 @@ class RadiusProtocol:
                         q['checked']=True
                         self.db.devices.find_one(q,callback=self.got_device)
                         return
+                    else:
+                        debug('otp was {}'.format(psw))
+        #reject
         self.respond( self.reply )
 
 
@@ -107,12 +108,13 @@ class RadiusProtocol:
         if not cleartext: return
 
         pkt = self.pkt
-        debug(type(cleartext))
-        debug(type(pkt.pw_decrypt(pkt[rad.UserPassword])))
         debug(pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
 
         if pkt[rad.UserPassword]:
-            return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
+            try:
+                return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
+            except UnicodeDecodeError:
+                return
 
         chap_challenge = pkt[rad.CHAPChallenge]
         chap_password  = pkt[rad.CHAPPassword]

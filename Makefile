@@ -26,6 +26,5 @@ netns:
 
 
 opera:
-	ip netns exec TESTA dhclient -r ve0b
 	resolvconf -u
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"

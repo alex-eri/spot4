@@ -4,7 +4,7 @@ from utils.password import getsms, getpassw
 from utils.phonenumbers import check as phcheck
 import random
 from .logger import *
-
+#from .device import FIELDS
 
 
 async def nextuser(db):
@@ -50,10 +50,10 @@ async def phone_handler(request):
         #, "$set" {'sensor': request.ip }
         }
 
-    device = await coll.find_and_modify(q, updq, upsert=True, new=True)
+    device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
     debug(device.__repr__())
     if device.get('username'):
-        pass
+        device['password'] = getpassw(device.get('username'), device.get('mac'))
     else:
         upd = {'try': 0 }
         smsmode = DATA.get('smsmode','wait')
@@ -61,12 +61,11 @@ async def phone_handler(request):
         if numbers:
             code = getsms(**q)
             upd['sms_waited'] = code
-            upd['sms_callie'] = random.choice(numbers),
+            upd['sms_callie'] = random.choice(numbers)
 
-
-            if smsmode == "send" and not device.get('sms_sended'):
+            if smsmode == "send" and not device.get('sms_sent'):
                 code = getsms(**q)
-                upd['sms_sended'] = code
+                upd['sms_sent'] = code
 
                 text = "Код подтвеждения {code}.".format(code=code)
                 debug(phone)
@@ -81,15 +80,12 @@ async def phone_handler(request):
         }
 
         debug(upd)
-        device = await coll.find_and_modify({'_id':device['_id']}, updq, new=True)
+        device = await coll.find_and_modify({'_id':device['_id']}, updq, new=True)#,fields=FIELDS)
         debug(device.__repr__())
 
-    debug(device.get('seen') - device.get('registred'))
     if device:
-        return {
-            'id': device.get('_id'),
-            'sms_sended':device.get('sms_sended') and True
-            }
+        device['sms_sent'] = device.get('sms_sent') and True
+        return device
     else:
         raise web.HTTPNotFound()
 
