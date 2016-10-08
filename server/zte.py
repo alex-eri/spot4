@@ -16,7 +16,7 @@ import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
 
-retoken = re.compile('([0-9]{6})')
+retoken = re.compile('([0-9]{4,6})')
 
 from itertools import cycle
 

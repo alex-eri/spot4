@@ -8,7 +8,7 @@ from utils import procutil
 import asyncio
 import time, base64, pyotp
 import netflow
-
+import socket
 logger = logging.getLogger('radius')
 debug = logger.debug
 
@@ -18,6 +18,7 @@ from utils.password import getsms, getpassw
 class RadiusProtocol:
     radsecret = None
     db = None
+    ttl = 60
 
     def __getitem__(self,y):
         r = self.pkt.decode(y)
@@ -25,6 +26,8 @@ class RadiusProtocol:
 
     def connection_made(self, transport):
         debug('start'+ transport.__repr__())
+        sock = transport.get_extra_info('socket')
+        sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
         self.transport = transport
 
     def datagram_received(self, data, addr):

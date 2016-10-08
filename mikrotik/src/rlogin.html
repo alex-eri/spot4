@@ -1,0 +1,12 @@
+$(if http-status == 302)Hotspot login required$(endif)
+$(if http-header == "Location")http://192.168.236.34:8080/uam/register/?nasid=$(server-name)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorg=$(link-orig-esc)$(endif)
+<html>
+<head>
+<title>...</title>
+<meta http-equiv="refresh" content="0; url=http://192.168.236.34:8080/uam/register/?nasid=$(server-name)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorg=$(link-orig-esc)">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="-1">
+</head>
+<body>
+</body>
+</html>

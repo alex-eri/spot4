@@ -2,12 +2,15 @@ buildall:
 	make -C ./server
 	make -C ./static
 	make -C ./uam
-	mkdir -p build/{uam,static,admin}/ht_docs
+	make -C ./mikrotik
+	mkdir -p ./build/{uam,static,admin}/ht_docs
+	mkdir -p ./build/mikrotik
 	rm -rf ./build/exe.*
 	cp -R ./server/build/* ./build
-	cp -R ./uam/ht_docs/* ./build/uam/ht_docs/
+	cp -R ./uam/config ./build/uam/
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
 	cp -R ./uam/theme ./build/uam/
+	cp -R ./mikrotik/build/* ./build/mikrotik/
 
 
 start:

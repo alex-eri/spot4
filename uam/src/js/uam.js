@@ -140,7 +140,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
         var username =    $location.$$search.username;
         var password =    $location.$$search.password;
         var ischilli = $cookies.get('uamip');
-        var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
+        if (ischilli)
+            var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
 
         function onerror(error){
             console.log('login failed');
@@ -180,23 +181,45 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 },
                 {get:{ method: 'JSONP'}}
             ).get(onchillilogin)
+            if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
+        }
+
+        function onmikrotikstatus(response){
+
+                var charpassw = hexMD5(response.chapid + password + response.challenge);
+                $resource($cookies.get('linklogin'),
+                {
+                    target:'jsonp',
+                    dst:$cookies.get('linkorig'),
+                    username:username,
+                    password:charpassw,
+                    var:"JSON_CALLBACK"
+                },
+                {get:{ method: 'JSONP'}}).get(onchillilogin)
+                if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
 
 
         if (username && password) {
             if(ischilli) {
-
+                //chilli
                 $resource(chilli+'status', { callback:"JSON_CALLBACK"},
                 {get:{ method: 'JSONP'}}
                 ).get(onchillistatus,onerror)
-
-
-
             } else {
+                //mikrotik
+
+                $resource($cookies.get('linklogin'),
+                {
+                    target:'jsonp',
+                    var:"JSON_CALLBACK"
+                },
+                {get:{ method: 'JSONP'}}).get(onmikrotikstatus,onerror)
+
 
             }
         } else {
-            onerror()
+            onerror({})
         }
 
 }]);
@@ -206,9 +229,37 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
     function ( $scope, $resource, $cookies ,$location,$window){
         $scope.wrongcode = false;
         $scope.code = null;
-        $scope.device = $scope.device || {};
+        var oid = $location.$$search.device || $cookies.get('device');
+
+        function prelogin(response){
+            $scope.device=response;
+            console.log(response);
+            $scope.device = response;
+            if (response.password) {
+                $location.search('password', response.password);
+                $location.search('username', response.username);
+                $location.path('/login/')
+            } else {
+                $scope.wrongcode = true;
+                $scope.code = null;
+            }
+        }
+        function onerror(error) {
+                        $window.alert('Не сработало...Попробуйте с начала. Похоже Сервер Вас не помнит.');
+                        $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
+                }
+
+        if ($scope.device) {
+        } else {
+             $resource('/device/:oid').get({
+                    'oid': oid
+                },
+                prelogin,onerror
+             )
+        }
+
         $scope.confirm = function(form) {if (form.$valid) {
-            var oid = $location.$$search.device || $cookies.get('device');
+
             console.log(form);
 
             //TODOdisable form
@@ -220,22 +271,8 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
                     'oid': oid,
                     'sms_sent': form.code.$viewValue
                 },
-                function(response) {
-                        console.log(response);
-                        $scope.device = response;
-                        if (response.password) {
-                            $location.search('password', response.password);
-                            $location.search('username', response.username);
-                            $location.path('/login/')
-                        } else {
-                            $scope.wrongcode = true;
-                            $scope.code = null;
-                        }
-                        },
-                function(error) {
-                        $window.alert('Не сработало...Похоже Сервер Вас не помнит.');
-                        $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
-                }
+                prelogin,onerror
+
             );
 
 
@@ -243,8 +280,33 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
 
     }]);
 
-app.controller('Status',  ['$rootScope','$http','$timeout',
-    function ( $scope, $http, $timeout ){
+app.controller('Status',  ['$rootScope','$resource','$cookies',
+    function ( $scope, $resource, $cookies ){
+
+    var ischilli = $cookies.get('uamip');
+
+    function onstatus(response){
+        $scope.status = response;
+    }
+
+    if(ischilli) {
+        //chilli
+        var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
+        $resource(chilli+'status', { callback:"JSON_CALLBACK"},
+        {get:{ method: 'JSONP'}}
+        ).get(onstatus)
+    } else {
+        //mikrotik
+
+        $resource($cookies.get('linklogin').replace('login','status'),
+        {
+            target:'jsonp',
+            var:"JSON_CALLBACK"
+        },
+        {get:{ method: 'JSONP'}}).get(onstatus)
+
+    }
+
     }]);
 
 
@@ -255,6 +317,8 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
 
     for (var key in $location.$$search){
         $cookies.put(key, $location.$$search[key]);
+        console.log(key);
+        console.log($location.$$search[key])
         if (key == 'uamip'){
             $cookies.remove('linklogin');
             }
@@ -272,7 +336,7 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
     },
     function(error){
         $scope.config ={
-            smsmode:'send',
+            smsmode:'wait',
             password_auth:true,
             theme:"default"
             }
