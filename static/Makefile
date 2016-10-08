@@ -1,3 +1,5 @@
+all: clean build
+
 build:
 	install -d ./ht_docs/js
 	install -d ./ht_docs/css

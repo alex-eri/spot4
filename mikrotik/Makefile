@@ -1,4 +1,5 @@
 all:
+	rm -rf build
 	install -d build
 	install src/rlogin.html build/rlogin.html
 	install src/rlogin.html build/falogin.html

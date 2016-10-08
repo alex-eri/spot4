@@ -3,6 +3,7 @@ buildall:
 	make -C ./static
 	make -C ./uam
 	make -C ./mikrotik
+	make -C ./admin
 	mkdir -p ./build/{uam,static,admin}/ht_docs
 	mkdir -p ./build/mikrotik
 	rm -rf ./build/exe.*
