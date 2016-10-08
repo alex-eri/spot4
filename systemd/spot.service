@@ -1,10 +1,12 @@
 [Unit]
-Description=Authenticator Server
+Description=Hotspot Server
 After=mongod.service
 Requires=mongod.service
+BindsTo=mongod.service
 
 [Service]
 Type=simple
+ExecStartPre=/bin/sleep 1
 ExecStart=/opt/spot4/exe.linux-x86_64-3.5/spot4.exe
 WorkingDirectory=/opt/spot4/exe.linux-x86_64-3.5/
 Restart=always

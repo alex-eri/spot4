@@ -1,3 +1,5 @@
+all: clean buildall config
+
 buildall:
 	make -C ./server
 	make -C ./static
@@ -5,14 +7,23 @@ buildall:
 	make -C ./mikrotik
 	make -C ./admin
 	mkdir -p ./build/{uam,static,admin}/ht_docs
-	mkdir -p ./build/mikrotik
-	rm -rf ./build/exe.*
 	cp -R ./server/build/* ./build
+	mkdir -p ./build/mikrotik
 	cp -R ./uam/config ./build/uam/
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
 	cp -R ./uam/theme ./build/uam/
 	cp -R ./mikrotik/build/* ./build/mikrotik/
 
+config:
+	mkdir -p ./build/{config,systemd}/
+	cp ./systemd/spot.service ./build/systemd/
+	install ./server/config.json ./build/config/config.json
+	ln -s ../config/config.json ./build/$(shell (ls ./build/ |grep exe))/config.json
+	ln -s ../uam/config/ ./build/config/uam
+
+
+clean:
+	rm -rf ./build/*
 
 start:
 	cd ./build/exe.* ; ./spot4.exe
