@@ -6,6 +6,7 @@ from aiohttp.file_sender import FileSender
 import logging
 logger = logging.getLogger('http')
 debug = logger.debug
+from bson.json_util import dumps, loads
 
 def add_cmd(pipe,command,args):
     if type(args) == dict:

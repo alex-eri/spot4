@@ -1,0 +1,31 @@
+<h1>Сессии {{label}}</h1>
+  <table class=table>
+  <thead>
+    <tr>
+      <th>Пользователь / Устройство</th>
+      <th>Роутер</th>
+      <th>Начало</th>
+      <th>Время в сети</th>
+      <th>Получено / Передано</th>
+    </tr>
+  </thead>
+
+<tbody ng-repeat="n in online.response track by t(n._id)">
+
+  <tr>
+    <th colspan=2>День</th>
+    <th>{{t(n._id) | date}}</th>
+    <th>{{days(n.session_time)}}d&nbsp;{{(n.session_time*1000)| date: 'hh:mm:ss': 'UTC'}}</th>
+    <th>{{n.input_bytes}} / {{n.output_bytes}}</th>
+  </tr>
+  <tr ng-repeat="a in n.accts">
+    <td>{{a.username}} / {{a.caller}}</td>
+    <td>{{a.nas}} / {{a.callee}}</td>
+    <td>{{a.start_date.$date | date: 'hh:mm:ss'}}</td>
+    <td>{{days(n.session_time)}}d&nbsp;{{(n.session_time*1000)| date: 'hh:mm:ss': 'UTC'}}</td>
+    <td>{{a.input_bytes}} / {{a.output_bytes}}</td>
+  </tr>
+
+</tbody>
+
+</table>

@@ -26,8 +26,8 @@ class RadiusProtocol:
 
     def connection_made(self, transport):
         debug('start'+ transport.__repr__())
-        sock = transport.get_extra_info('socket')
-        sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
+        #sock = transport.get_extra_info('socket')
+        #sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
         self.transport = transport
 
     def datagram_received(self, data, addr):
@@ -146,7 +146,7 @@ class RadiusProtocol:
         q = {
                 'auth_class': self[rad.Class],
                 'session_id': self[rad.AcctSessionId],
-                'sensor': self.caller[0]
+                'sensor': self.caller
             }
         upd = {}
 
@@ -215,9 +215,11 @@ def setup_radius(config,PORT):
         config['DB']['NAME']
     )
 
-    db.accounting.ensure_index(
-        [ ("auth_class",1), ("session_id",1) ],
-        unique=True, dropDups=True ,callback=storage.index_cb)
+    #db.accounting.ensure_index(
+    #    [ ("auth_class",1), ("session_id",1) ],
+    #    unique=True, dropDups=True ,callback=storage.index_cb)
+
+    db.accounting.ensure_index([ ("username",1) ], unique=False, callback=storage.index_cb)
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 
@@ -236,6 +238,7 @@ def setup_radius(config,PORT):
 
 
 def setup(config):
+
     acct = Process(target=setup_radius, args=(config, config.get('ACCT_PORT', 1813)))
     acct.name = 'radius.acct'
 

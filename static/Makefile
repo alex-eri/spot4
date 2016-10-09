@@ -25,6 +25,8 @@ build:
 		bower_components/angular-resource/angular-resource.min.js \
 		bower_components/angular-animate/angular-animate.min.js \
 		bower_components/angular-route/angular-route.min.js \
+		bower_components/angular-i18n/angular-locale_ru.js \
+		bower_components/angular-i18n/angular-locale_ru-ru.js \
 		bower_components/bootstrap/dist/js/bootstrap.min.js \
 		> ./ht_docs/js/libadmin.js
 
