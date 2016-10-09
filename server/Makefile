@@ -1,5 +1,5 @@
 build_exe:
 	rm -rf build/*
-	python setup.py build_exe
+	python setup.py build
 	#tar czfh build/server.exe.linux-x86_64-3.5.tar.gz build/exe.linux-x86_64-3.5/
  
