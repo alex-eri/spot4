@@ -6,3 +6,4 @@ build/*
 */bower_components/*
 */ht_docs/*
 mikrotik/hotspot/*
+*.c

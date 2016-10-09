@@ -7,7 +7,7 @@ buildall:
 	make -C ./mikrotik
 	make -C ./admin
 	mkdir -p ./build/{uam,static,admin}/ht_docs
-	cp -R ./server/build/* ./build
+	cp -R ./server/build/exe* ./build
 	mkdir -p ./build/mikrotik
 	cp -R ./uam/config ./build/uam/
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
