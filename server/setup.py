@@ -1,5 +1,4 @@
-from cx_Freeze import Executable
-from cx_Freeze import setup as cx_setup
+from cx_Freeze import setup, Executable
 
 build_exe_options = {
     "packages": ["os","utils","struct"],
@@ -36,33 +35,11 @@ executables = [Executable(
     ),
     ]
 
-USE_CYTHON = True
 
-if USE_CYTHON:
-    from distutils.extension import Extension
-    from distutils.core import setup
-    from Cython.Build import cythonize
-
-    build_exe_options['excludes'].append('radius')
-
-    extensions = [
-        Extension("radius", [
-            "radius.py",
-            "literadius/__init__.py",
-            "literadius/packet.py",
-            "literadius/decoders.py",
-            "literadius/constants.py",
-            ]),
-    ]
-
-    setup(
-        ext_modules = cythonize(extensions)
-    )
-
-cx_setup(  name = "spot4",
+setup(  name = "spot4",
         version = "0.1",
         description = "Spot 4",
         options = {"build_exe": build_exe_options},
         executables = executables,
-        data_files = ['config.json'],
+        data_files = ['config.json','dictionary']
         )
