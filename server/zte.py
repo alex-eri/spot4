@@ -16,7 +16,7 @@ import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
 
-retoken = re.compile('([0-9]{6})')
+retoken = re.compile('([0-9]{4,6})')
 
 from itertools import cycle
 
@@ -26,10 +26,8 @@ TZ = format(-time.timezone//3600,"+d")
 
 async def get_json(fu,*a,**kw):
     c = await fu(*a,**kw)
-    debug(c)
     assert c.status == 200
     resp = c.read()
-    debug(resp)
     data = json.loads(resp.decode('ascii'))
     debug(data)
     return data
@@ -45,7 +43,7 @@ class Client(object):
         config['numbers'].append(callie)
         self.numbers = config['numbers']
         self.sema = Semaphore()
-
+        debug(self.numbers)
         self.headers = {
             'Referer':self.base_url+"/index.html",
             'X-Requested-With':'XMLHttpRequest'
@@ -121,7 +119,6 @@ class Client(object):
     async def handle_messages(self,messages):
         read = []
         delete = []
-        debug(messages)
         for m in messages:
             phone = trydecodeHexUcs2(m.get('number'))
             logger.info(phone)
@@ -134,7 +131,6 @@ class Client(object):
                 q = dict(
                     phone=phone, sms_waited=t.group()
                 )
-                debug(q)
                 r = await self.db.devices.update(q, {
                       '$set':{ 'checked': True },
                       '$currentDate':{'check_date':True}
@@ -147,7 +143,6 @@ class Client(object):
         return read,delete
 
     async def worker(self):
-        debug("worker")
 
         try:
             data = await get_json(self.get_messages)
@@ -198,8 +193,8 @@ class Client(object):
     async def send_from_queue(self):
         debug('sender')
         sms = self.smsq.get()
-        self.send_sms(*sms)
-        self.smsq.task_done()
+        await self.send_sms(*sms)
+        #self.smsq.task_done() for multiprocessing.JoinableQueue only
 
 
 async def recieve_loop(clients):

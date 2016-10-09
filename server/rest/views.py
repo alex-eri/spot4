@@ -5,6 +5,8 @@ import aiohttp.web
 from aiohttp.file_sender import FileSender
 import logging
 logger = logging.getLogger('http')
+debug = logger.debug
+from bson.json_util import dumps, loads
 
 def add_cmd(pipe,command,args):
     if type(args) == dict:
@@ -63,3 +65,7 @@ async def uam_index(request):
     with open('../static/ht_docs/uam.html','rb') as f:
         return aiohttp.web.Response(body=f.read(),content_type='text/html', charset='utf-8')
     #return aiohttp.web.HTTPFound('/static/uam.html')
+
+async def admin_index(request):
+    with open('../static/ht_docs/admin.html','rb') as f:
+        return aiohttp.web.Response(body=f.read(),content_type='text/html', charset='utf-8')

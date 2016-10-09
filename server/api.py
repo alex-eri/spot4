@@ -13,9 +13,6 @@ logger = logging.getLogger('http')
 debug = logger.debug
 
 
-
-
-
 def setup_web(config):
     global logger
     name = current_process().name

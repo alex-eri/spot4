@@ -1,14 +1,29 @@
+all: clean buildall config
+
 buildall:
 	make -C ./server
 	make -C ./static
 	make -C ./uam
-	mkdir -p build/{uam,static,admin}/ht_docs
-	rm -rf ./build/exe.*
-	cp -R ./server/build/* ./build
-	cp -R ./uam/ht_docs/* ./build/uam/ht_docs/
+	make -C ./mikrotik
+	make -C ./admin
+	mkdir -p ./build/{uam,static,admin}/ht_docs
+	cp -R ./server/build/exe* ./build
+	mkdir -p ./build/mikrotik
+	cp -R ./uam/config ./build/uam/
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
 	cp -R ./uam/theme ./build/uam/
+	cp -R ./mikrotik/build/* ./build/mikrotik/
 
+config:
+	mkdir -p ./build/{config,systemd}/
+	cp ./systemd/spot.service ./build/systemd/
+	install ./server/config.json ./build/config/config.json
+	ln -s ../config/config.json ./build/$(shell (ls ./build/ |grep exe))/config.json
+	ln -s ../uam/config/ ./build/config/uam
+
+
+clean:
+	rm -rf ./build/*
 
 start:
 	cd ./build/exe.* ; ./spot4.exe
@@ -26,6 +41,5 @@ netns:
 
 
 opera:
-	ip netns exec TESTA dhclient -r ve0b
 	resolvconf -u
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"

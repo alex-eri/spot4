@@ -8,7 +8,7 @@ from utils import procutil
 import asyncio
 import time, base64, pyotp
 import netflow
-
+import socket
 logger = logging.getLogger('radius')
 debug = logger.debug
 
@@ -18,6 +18,7 @@ from utils.password import getsms, getpassw
 class RadiusProtocol:
     radsecret = None
     db = None
+    ttl = 60
 
     def __getitem__(self,y):
         r = self.pkt.decode(y)
@@ -25,12 +26,17 @@ class RadiusProtocol:
 
     def connection_made(self, transport):
         debug('start'+ transport.__repr__())
+        #sock = transport.get_extra_info('socket')
+        #sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
         self.transport = transport
 
     def datagram_received(self, data, addr):
         debug('From {} data received: '.format(addr))
         self.caller = addr
         self.pkt = rad.Packet(data, self.radsecret)
+
+        debug(self.pkt.authenticator)
+        debug(self.pkt.secret)
 
         if self.pkt.code == rad.AccessRequest:
             self.handle_auth()
@@ -63,29 +69,24 @@ class RadiusProtocol:
         reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
         self.reply = self.pkt.reply(rad.AccessReject)
 
-
-
         self.db.users.find_one({'_id':self[rad.UserName]},callback=self.got_user)
-
-
-        debug("otp was {}".format(otp.now()))
-
-        self.respond( self.reply )
+        debug('user was {}'.format(self[rad.UserName]))
 
     def got_user(self,response,error):
         if error:
             logger.error(error.__repr__())
         if response:
             q = {
-                'username':response['username'],
+                'username':response['_id'],
                 'mac':self[rad.CallingStationId]
                  }
-            if self.check_password(response.get('password')):
+            if response.get('password') and self.check_password(response.get('password')):
                 self.db.devices.find_and_modify(q,
                     {'$currentDate':{'seen':True},'$set':{'checked':True}},
                     upsert=True, new=True,
                     callback=self.got_device
                     )
+                return
             else:
                 for n in [0,-1]:
                     psw = getpassw(n=n, **q)
@@ -93,6 +94,9 @@ class RadiusProtocol:
                         q['checked']=True
                         self.db.devices.find_one(q,callback=self.got_device)
                         return
+                    else:
+                        debug('otp was {}'.format(psw))
+        #reject
         self.respond( self.reply )
 
 
@@ -107,12 +111,13 @@ class RadiusProtocol:
         if not cleartext: return
 
         pkt = self.pkt
-        debug(type(cleartext))
-        debug(type(pkt.pw_decrypt(pkt[rad.UserPassword])))
         debug(pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
 
         if pkt[rad.UserPassword]:
-            return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
+            try:
+                return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
+            except UnicodeDecodeError:
+                return
 
         chap_challenge = pkt[rad.CHAPChallenge]
         chap_password  = pkt[rad.CHAPPassword]
@@ -141,7 +146,7 @@ class RadiusProtocol:
         q = {
                 'auth_class': self[rad.Class],
                 'session_id': self[rad.AcctSessionId],
-                'sensor': self.caller[0]
+                'sensor': self.caller
             }
         upd = {}
 
@@ -210,9 +215,11 @@ def setup_radius(config,PORT):
         config['DB']['NAME']
     )
 
-    db.accounting.ensure_index(
-        [ ("auth_class",1), ("session_id",1) ],
-        unique=True, dropDups=True ,callback=storage.index_cb)
+    #db.accounting.ensure_index(
+    #    [ ("auth_class",1), ("session_id",1) ],
+    #    unique=True, dropDups=True ,callback=storage.index_cb)
+
+    db.accounting.ensure_index([ ("username",1) ], unique=False, callback=storage.index_cb)
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 
@@ -231,6 +238,7 @@ def setup_radius(config,PORT):
 
 
 def setup(config):
+
     acct = Process(target=setup_radius, args=(config, config.get('ACCT_PORT', 1813)))
     acct.name = 'radius.acct'
 

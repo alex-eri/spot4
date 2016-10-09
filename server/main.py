@@ -20,7 +20,10 @@ def setup():
 
 
     config = json.load(open('config.json','r'))
-    FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
+    if config.get('LOGFILE'):
+        FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
+    else:
+        FORMAT = '%(processName)s\%(name)-8s %(levelname)s: %(message)s'
 
     level = logging.WARNING
     if config.get('DEBUG'):
@@ -62,7 +65,8 @@ def main():
         proc.terminate()
 
 
-if __name__ == "__main__":
+def premain():
+
     import multiprocessing,os
     multiprocessing.freeze_support()
     import argparse
@@ -98,8 +102,7 @@ if __name__ == "__main__":
 
 
 
+if __name__ == "__main__":
+    premain()
 
 
-
-
-    

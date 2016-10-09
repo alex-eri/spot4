@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<!--Не редактировать этот файл, смотри templates-->
-<html lang="ru" ng-app="uam">
+<html lang="ru" ng-app="admin">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1">
-    <base href="/uam/" />
-    <title>WiFi</title>
+    <base href="/admin/" />
+    <title>WiFi Admin</title>
 
     <link rel="apple-touch-icon" href="/static/icons/apple-touch-favicon.png"/>
     <link rel="icon" type="image/png" href="/static/icons/favicon.png" />
@@ -15,15 +14,12 @@
   </head>
   <body>
     <div class="container">
-      <div ng-include="'/uam/theme/' + (theme||'default') + '/login.tpl.html'">
-        <center>
-          <div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div>
-        </center>
+      <div ng-view>
       </div>
     </div>
 
-    <script src="/static/js/libuam.js"></script>
-    <script src="/static/js/uam.js"></script>
+    <script src="/static/js/libadmin.js"></script>
+    <script src="/static/js/admin.js"></script>
 
   </body>
 

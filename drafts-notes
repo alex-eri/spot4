@@ -1,3 +1,14 @@
+chilli logon
+angular.callbacks._1(
+{"version":"1.0",
+"clientState":1,
+"redir":{"originalURL":"http://ya.ru/","redirectionURL":"",
+"logoutURL":"http://192.168.182.1:3990/logoff",
+"ipAddress":"192.168.182.2","macAddress":"A6-06-57-62-78-C4"},
+"session":{"sessionId":"57f8348d00000001","userName":"000010","startTime":1475884047,"sessionTimeout":0,"terminateTime":0,"idleTimeout":0},"accounting":{"sessionTime":0,"idleTime":0,"inputOctets":0,"outputOctets":0,"inputGigawords":0,"outputGigawords":0,"viewPoint":"client"}})
+
+
+
 unpack быстрее чем int.from_bytes быстрее чем unpack_from
 
 unpack_from быстрее чем unpack+[s:s]

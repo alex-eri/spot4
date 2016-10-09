@@ -71,10 +71,27 @@ CHAPChallenge = 60
 NASPortType = 61
 PortLimit = 62
 
-NASPortId	= 87
+MessageAuthenticator = 80
+
+NASPortId = 87
 
 AccountingStart	=		1
 AccountingStop	=		2
 AccountingUpdate	=	3
 AccountingOn	=	7
 AccountingOff	=	8
+
+ChilliSpot = 14559
+ChilliSpotVersion = (ChilliSpot, 8)
+
+WISPr = 14122
+WISPrLocationName = (WISPr,2)
+WISPrLogoffURL = (WISPr,3)
+WISPrRedirectionURL = (WISPr,4)
+
+
+Mikrotik = 14988
+MikrotikHostIP = (Mikrotik,10)
+MikrotikWirelessPSK = (Mikrotik, 16)
+
+MSMPPE = 311

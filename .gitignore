@@ -5,3 +5,5 @@ build/*
 */node_modules/*
 */bower_components/*
 */ht_docs/*
+mikrotik/hotspot/*
+*.c

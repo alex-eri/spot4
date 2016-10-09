@@ -104,7 +104,7 @@ class Packet(defaultdict):
         return resp
 
     def pw_decrypt(self,v):
-        last = self.authenticator
+        last = self.authenticator.copy()
         buf = v
         pw = b''
         while buf:
@@ -115,7 +115,7 @@ class Packet(defaultdict):
             (last, buf) = (buf[:16], buf[16:])
 
         pw=pw.rstrip(b'\x00')
-
+        print(pw)
         return pw.decode('utf-8')
 
 
