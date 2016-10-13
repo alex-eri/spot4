@@ -1,5 +1,10 @@
-build_exe:
+all: clean build_exe copy
+
+clean:
 	rm -rf build/*
-	python setup.py build_exe
-	#tar czfh build/server.exe.linux-x86_64-3.5.tar.gz build/exe.linux-x86_64-3.5/
+
+build_exe:
+	python setup.py build
  
+copy:
+	[ -x ./build/lib* ] && cp -r ./build/$(shell (ls build | grep lib))/* ./build/$(shell (ls build | grep exe))/

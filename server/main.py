@@ -1,4 +1,7 @@
 import logging,sys
+
+sys.path.insert(0, '.')
+
 from multiprocessing import Manager, Queue
 
 logger = logging.getLogger('main')
@@ -25,7 +28,7 @@ def setup():
     else:
         FORMAT = '%(processName)s\%(name)-8s %(levelname)s: %(message)s'
 
-    level = logging.WARNING
+    level = logging.INFO
     if config.get('DEBUG'):
         level = logging.DEBUG
 

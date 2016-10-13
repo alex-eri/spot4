@@ -1,0 +1,26 @@
+<h1>Регистрации</h1>
+  <table class=table>
+  <thead>
+    <tr>
+      <th>Пользователь / Устройство</th>
+      <th>Регистрация</th>
+      <th>Последний визит</th>
+    </tr>
+  </thead>
+
+<tbody ng-repeat="n in registred track by n._id.username">
+
+  <tr>
+    <th>{{n._id.username}} <a ng-if="n.devs[0].phone" href="tel:{{n.devs[0].phone}}">{{n.devs[0].phone}}</a></th>
+    <th>{{n.count}} шт.</th>
+    <th>{{n.seen.$date| date: 'medium'}}</th>
+  </tr>
+  <tr ng-repeat="a in n.devs">
+    <td><i ng-if="a.checked" class="glyphicon glyphicon-ok"></i> {{a.mac}} </td>
+    <td>{{a.registred.$date| date: 'mediumDate'}}</td>
+    <td>{{a.seen.$date| date: 'medium'}}</td>
+  </tr>
+
+</tbody>
+
+</table>

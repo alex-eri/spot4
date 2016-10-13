@@ -29,17 +29,29 @@ start:
 	cd ./build/exe.* ; ./spot4.exe
 
 
+mikrobr:
+	ip link add link net1 name net1.3 type vlan id 3
+	ip link set dev net1.3 netns TESTA
+
+
 netns:
 	ip netns add TESTA
 	ip link add name ve0a type veth peer name ve0b
 	ip link set dev ve0b netns TESTA
 	brctl addif virbr1 ve0a
 	ip link set dev ve0a up
+
+dhclient1:
 	ip netns exec TESTA ip link set dev ve0b up
 	ip netns exec TESTA dhclient ve0b
 	ip netns exec TESTA ip a l
 
+dhclient2:
+	ip netns exec TESTA ip link set dev net1.3 up
+	ip netns exec TESTA dhclient net1.3
+	ip netns exec TESTA ip a l
+
+
 
 opera:
-	resolvconf -u
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"

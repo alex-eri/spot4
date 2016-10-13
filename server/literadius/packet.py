@@ -3,9 +3,15 @@ from .decoders import decoders
 from collections import defaultdict
 from .constants import *
 
+from mschap import mschap
+
 import random
 #random_generator = random.SystemRandom()
 import hashlib
+
+import logging
+logger = logging.getLogger('packet')
+debug = logger.debug
 
 class Packet(defaultdict):
     header = bytearray()
@@ -88,15 +94,14 @@ class Packet(defaultdict):
     def data(self):
         resp = self.header.copy()
 
-        for k in self.keys():
-            for v in self[k]:
-                l = len(v)
-                if type(k) == int:
-                    key = [k,l]
-                if type(k) == tuple:
-                    key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
-                resp.extend(key)
-                resp.extend(v)
+        for k,v in self.items():
+            l = len(v)+2 #wireshark
+            if type(k) == int:
+                key = [k,l]
+            if type(k) == tuple:
+                key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
+            resp.extend(key)
+            resp.extend(v)
 
         struct.pack_into("!H",resp,2,len(resp))
         authenticator = hashlib.md5(resp+self.secret).digest()
@@ -115,7 +120,41 @@ class Packet(defaultdict):
             (last, buf) = (buf[:16], buf[16:])
 
         pw=pw.rstrip(b'\x00')
-        print(pw)
+        debug(pw)
         return pw.decode('utf-8')
 
+    def check_password(self, cleartext=""):
+        debug(cleartext)
+
+        if self[UserPassword]:
+            try:
+                return (self.pw_decrypt(self[UserPassword]) == cleartext)
+            except UnicodeDecodeError:
+                return
+
+        chap_challenge = self[CHAPChallenge]
+        chap_password  = self[CHAPPassword]
+
+        if chap_password:
+
+            chap_id = bytes([chap_password[0]])
+            chap_password = chap_password[1:]
+
+            m = hashlib.md5()
+            m.update(chap_id)
+            m.update(cleartext.encode(encoding='utf-8', errors='strict'))
+            m.update(chap_challenge)
+            res = m.digest()
+            debug(res)
+            debug(chap_password)
+            return chap_password == m.digest()
+
+        if self[MSCHAPResponse] and self[MSCHAPChallenge]:
+            return mschap.generate_nt_response_mschap(
+                self[MSCHAPChallenge],cleartext.encode('utf-8')
+            ) == self[MSCHAPResponse][26:]
+            raise NotImplementedError
+
+        if self[MSCHAP2Response] and self[MSCHAPChallenge]:
+            raise NotImplementedError
 

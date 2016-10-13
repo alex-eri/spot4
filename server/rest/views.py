@@ -57,15 +57,3 @@ async def db_options(request):
     return resp
 
 
-async def uam_index(request):
-    #sender = FileSender()
-    #return await sender.send(request,'../static/ht_docs/uam.html')
-
-    #должен быть небольшой..
-    with open('../static/ht_docs/uam.html','rb') as f:
-        return aiohttp.web.Response(body=f.read(),content_type='text/html', charset='utf-8')
-    #return aiohttp.web.HTTPFound('/static/uam.html')
-
-async def admin_index(request):
-    with open('../static/ht_docs/admin.html','rb') as f:
-        return aiohttp.web.Response(body=f.read(),content_type='text/html', charset='utf-8')

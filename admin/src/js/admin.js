@@ -21,6 +21,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/online.html',
         controller: 'Online'
       }).
+      when('/accounting/:year/:month/', {
+        templateUrl: '/static/admin-forms/online.html',
+        controller: 'Accs'
+      }).
       when('/accounting/', {
         templateUrl: '/static/admin-forms/online.html',
         controller: 'Accs'
@@ -35,18 +39,41 @@ app.config(['$routeProvider','$locationProvider',
   }
 ]);
 
-function daysf(time){
-            return Math.floor(time/86400)
+function pad(num) {
+    var s = "0" + num;
+    return s.substr(s.length-2);
+}
+
+function intervalt(time,start){
+    if (time) {
+        return {
+        s : pad(time % 60),
+        m : pad(Math.floor(time/60) % 60),
+        h : pad(Math.floor(time/3600) % 24),
+        d : Math.floor(time/86400)
         }
+    } else {
+        console.log(start);
+        var now = new Date();
+        var t = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCDate() ,
+      now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds());
+        console.log(t);
+        return intervalt((t-start)/1000);
+     }
+
+}
+
+
 
 function datefymd(id) {
             return new Date(id.year , id.month - 1, id.day);
         };
 
+
 app.controller('Online',  ['$scope','$resource',
     function ( $scope, $resource ){
         $scope.label = "в сети"
-        $scope.days = daysf;
+        $scope.interval = intervalt;
         $scope.t = datefymd;
         $resource('/db/accounting').save(
             [
@@ -65,7 +92,7 @@ app.controller('Online',  ['$scope','$resource',
                     }
 
                 },
-                {'$sort':{ '_id.year': -1, '_id.month': -1 , '_id.day': -1}}
+                {'$sort':{  '_id.day': -1, '_id.year': -1,'_id.month': -1 }}
                 ]]
             }
         ], function(response){
@@ -74,16 +101,27 @@ app.controller('Online',  ['$scope','$resource',
         )
     }]);
 
-app.controller('Accs',  ['$scope','$resource',
-    function ( $scope, $resource ){
+app.controller('Accs',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
         $scope.label = "";
-        $scope.days = daysf;
+        $scope.interval = intervalt;
         $scope.t = datefymd;
+
+        if ($routeParams.month) {
+            var y = $routeParams.year , m= $routeParams.month - 1;
+        }   else {
+            var date = new Date(), y = date.getFullYear(), m = date.getMonth();
+        }
+            var startdate = new Date(y, m, 1);
+            var stopdate = new Date(y, m+1, 1);
         $resource('/db/accounting').save(
             [
 
             {aggregate:[[
-                //{'$match': {'termination_cause':{$exists: false}} },
+                {'$match': {'start_date':{
+                    '$gte': {'$date':startdate.getTime()},
+                    '$lte': {'$date':stopdate.getTime()}
+                }}},
                 {'$group': {_id: {
                         year:{'$year':"$start_date"},
                         month :{'$month': "$start_date"},
@@ -96,11 +134,39 @@ app.controller('Accs',  ['$scope','$resource',
                     }
 
                 },
-                {'$sort':{ '_id.year': -1, '_id.month': -1 , '_id.day': -1}}
+                {'$sort':{'_id.day': -1}}
                 ]]
             }
         ], function(response){
             $scope.online = response;
+        }
+        )
+    }]);
+
+app.controller('Regs',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+        $resource('/db/devices').save(
+            [
+
+            {aggregate:[[
+
+                {'$group': {_id: {
+                        username:"$username",
+                        },
+                        devs :{'$push':'$$CURRENT'},
+                        count: {'$sum':1},
+                        seen: {'$max':"$seen"}
+                    }
+
+                },
+            {'$sort':{ 'seen': -1}}
+                ]]
+            }
+        ], function(response){
+            $scope.registred = response.response;
         }
         )
     }]);

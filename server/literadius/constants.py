@@ -83,15 +83,43 @@ AccountingOff	=	8
 
 ChilliSpot = 14559
 ChilliSpotVersion = (ChilliSpot, 8)
+CoovaChilliAcctViewPoint = (ChilliSpot, 10)
+
+CoovaChilliNASViewPoint = 1
+CoovaChilliClientViewPoint = 2
 
 WISPr = 14122
 WISPrLocationName = (WISPr,2)
 WISPrLogoffURL = (WISPr,3)
 WISPrRedirectionURL = (WISPr,4)
 
-
-Mikrotik = 14988
+MT = Mikrotik = 14988
 MikrotikHostIP = (Mikrotik,10)
 MikrotikWirelessPSK = (Mikrotik, 16)
 
-MSMPPE = 311
+MS = Microsoft = 311
+MSCHAPResponse = (Microsoft,1)
+MSCHAPChallenge  = (Microsoft,11)
+MSCHAPMPPEKeys =  (Microsoft,12)
+MSCHAP2Response = (Microsoft,25)
+MSMPPEEncryptionPolicy = (Microsoft,7)
+
+#Acct-Terminate-Cause
+TCUserRequest   =         1
+TCLostCarrier   =         2
+TCLostService   =         3
+TCIdleTimeout   =         4
+TCSessionTimeout=         5
+TCAdminReset    =         6
+TCAdminReboot   =         7
+TCPortError     =         8
+TCNASError      =         9
+TCNASRequest    =         10
+TCNASReboot     =         11
+TCPortUnneeded  =         12
+TCPortPreempted =         13
+TCPortSuspended =         14
+TCServiceUnavailable =    15
+TCCallback      =          16
+TCUserError     =         17
+TCHostRequest   =         18

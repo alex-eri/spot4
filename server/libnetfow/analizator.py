@@ -40,8 +40,8 @@ async def aggregate_remoteaddr(db, account):
         return db.collector.aggregate( pipe )
 
     try:
-        rxc = group(RX)
-        txc = group(TX)
+        rxc = group_remoteaddr(RX)
+        txc = group_remoteaddr(TX)
         return  {
             'rx': await rxc.to_list(),
             'tx': await txc.to_list(),

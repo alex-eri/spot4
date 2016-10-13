@@ -21,6 +21,7 @@ build:
 		> ./ht_docs/js/libuam.js
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/jquery/dist/jquery.min.js \
+		bower_components/moment/moment.js \
 		bower_components/angular/angular.min.js \
 		bower_components/angular-resource/angular-resource.min.js \
 		bower_components/angular-animate/angular-animate.min.js \

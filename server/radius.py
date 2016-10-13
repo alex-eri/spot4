@@ -11,24 +11,24 @@ import netflow
 import socket
 logger = logging.getLogger('radius')
 debug = logger.debug
-
+from datetime import datetime
 from utils.password import getsms, getpassw
 
 
-class RadiusProtocol:
+class RadiusProtocol(asyncio.DatagramProtocol):
     radsecret = None
     db = None
-    ttl = 60
+    ttl = 56
 
     def __getitem__(self,y):
         r = self.pkt.decode(y)
         return r
 
     def connection_made(self, transport):
-        debug('start'+ transport.__repr__())
-        #sock = transport.get_extra_info('socket')
-        #sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
         self.transport = transport
+        sock = self.transport.get_extra_info('socket')
+        sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
+
 
     def datagram_received(self, data, addr):
         debug('From {} data received: '.format(addr))
@@ -65,9 +65,8 @@ class RadiusProtocol:
 
 
     def handle_auth(self):
-
-        reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
         self.reply = self.pkt.reply(rad.AccessReject)
+        self.reply[rad.Class]=uuid4().bytes
 
         self.db.users.find_one({'_id':self[rad.UserName]},callback=self.got_user)
         debug('user was {}'.format(self[rad.UserName]))
@@ -86,7 +85,7 @@ class RadiusProtocol:
                     upsert=True, new=True,
                     callback=self.got_device
                     )
-                return
+                self.reply.code = rad.AccessAccept
             else:
                 for n in [0,-1]:
                     psw = getpassw(n=n, **q)
@@ -108,52 +107,20 @@ class RadiusProtocol:
         self.respond( self.reply )
 
     def check_password(self, cleartext=""):
-        if not cleartext: return
+        return self.pkt.check_password(cleartext)
 
-        pkt = self.pkt
-        debug(pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
-
-        if pkt[rad.UserPassword]:
-            try:
-                return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
-            except UnicodeDecodeError:
-                return
-
-        chap_challenge = pkt[rad.CHAPChallenge]
-        chap_password  = pkt[rad.CHAPPassword]
-
-        if chap_challenge and chap_password:
-
-            chap_id = bytes([chap_password[0]])
-            chap_password = chap_password[1:]
-
-            m = hashlib.md5()
-            m.update(chap_id)
-            m.update(cleartext.encode(encoding='utf_8', errors='strict'))
-            m.update(chap_challenge)
-
-            return chap_password == m.digest()
-        """
-        if self['MS-CHAP-Response'] and self['MS-CHAP-Challenge']:
-            #https://github.com/mehulsbhatt/freeIBS/blob/master/radius_server/pyrad/packet.py
-            raise NotImplementedError
-
-        if self['MS-CHAP2-Response'] and self['MS-CHAP-Challenge']:
-            raise NotImplementedError
-        """
 
     def handle_acct(self):
         q = {
                 'auth_class': self[rad.Class],
                 'session_id': self[rad.AcctSessionId],
-                'sensor': self.caller
+                #'sensor': self.caller[0]
             }
+
         upd = {}
 
         if self[rad.AcctStatusType] == rad.AccountingStart:
-            upd = {
-                '$currentDate':{'start_date':True},
-                '$set':{
+            upd['$set']={
                     'ip': self[rad.FramedIPAddress],
                     'nas': self[rad.NASIdentifier],
                     'callee': self[rad.CalledStationId],
@@ -161,7 +128,7 @@ class RadiusProtocol:
                     'username': self[rad.UserName],
                     'start_time': self[rad.EventTimestamp]
                 }
-            }
+
 
         elif self[rad.AcctStatusType] in [rad.AccountingUpdate, rad.AccountingStop] :
 
@@ -174,28 +141,33 @@ class RadiusProtocol:
                 'delay':self[rad.AcctDelayTime],
                 'event_time': self[rad.EventTimestamp]
             }
-            if self[rad.AcctStatusType] == rad.AccountingUpdate:
-                upd={ '$set': account }
+#            if self[rad.AcctStatusType] == rad.AccountingUpdate:
+#                pass #update always
 
-            elif self[rad.AcctStatusType] == rad.AccountingStop:
+            if self[rad.AcctStatusType] == rad.AccountingStop:
                 account['termination_cause'] =  self[rad.AcctTerminateCause]
-                upd = {
-                        '$set': account,
-                        '$currentDate':{'stop_date':True}
-                    }
+
+            upd['$set']= account
+
+        elif self[rad.AcctStatusType] in [rad.AccountingOn, rad.AccountingOff]:
+            self.db.accounting.find_and_modify(
+                {'nas': self[rad.NASIdentifier],'termination_cause':{'$exists': False}},
+                {'$set':{'termination_cause': rad.TCNASReboot}},
+                callback=self.accounting_cb
+            )
+            #TODO accountin on/off
+
         if upd :
+            upd.update({
+            '$setOnInsert':{'start_date':datetime.now()},
+            '$currentDate':{'stop_date':True}
+            })
+
             self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
-        debug('accounting respond')
+
         self.respond( self.pkt.reply(rad.AccountingResponse) )
 
     def accounting_cb(self,r,e,*a,**kw):
-        #debug(r)
-        #if r and r.get('termination_cause'):
-        #    loop = asyncio.get_event_loop()
-        #    asyncio.run_coroutine_threadsafe(
-        #        netflow.aggregate(self.db, r),
-        #        loop)
-
         if e:
             logger.error('accounting callback')
             logger.error(e.__repr__())

@@ -12,17 +12,20 @@ import time
 import re
 from datetime import datetime
 from utils.codecs import trydecodeHexUcs2,encodeUcs2
+from utils.password import SMSLEN
 import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
 
-retoken = re.compile('([0-9]{4,6})')
+
+
+retoken = re.compile('([0-9]{%d})' % SMSLEN)
 
 from itertools import cycle
 
 TZ = format(-time.timezone//3600,"+d")
 
-
+INTERVAL = 4
 
 async def get_json(fu,*a,**kw):
     c = await fu(*a,**kw)
@@ -208,7 +211,7 @@ async def recieve_loop(clients):
 
         except Exception as e:
             debug(e)
-        await asyncio.sleep(4)
+        await asyncio.sleep(INTERVAL)
 
 async def send_loop(clients):
     name = current_process().name
@@ -220,7 +223,7 @@ async def send_loop(clients):
             client.send_from_queue()
             ) for client in clients ]
         await asyncio.wait(tasks)
-        await asyncio.sleep(4)
+        await asyncio.sleep(INTERVAL)
 
 
 def setup_clients(config):
