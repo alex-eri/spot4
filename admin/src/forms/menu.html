@@ -1,49 +1,82 @@
 <style type="text/css">
 /*
- * Sidebar
- */
-
-/* Hide for mobile, show later */
+* Sidebar
+*/
 .sidebar {
-  display: none;
+border-radius:0;
+background-color: #222;
+color: #eee;
+border-bottom: 1px solid #f04f18;
+}
+#menu {
+padding:6px;
+display: block;
 }
 @media (min-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    display: block;
-    padding: 20px;
-    overflow-x: hidden;
-    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
-    background-color: #f5f5f5;
-    border-right: 1px solid #eee;
-  }
+#menu button {
+display: none;
 }
-
+.sidebar {
+position: fixed;
+top: 0;
+bottom: 0;
+left: 0;
+z-index: 1000;
+display: block;
+padding: 20px;
+overflow-x: hidden;
+overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
+border-bottom:0;
+border-right: 1px solid #f04f18;
+margin:0;
+}
+}
 /* Sidebar navigation */
 .nav-sidebar {
-  margin-right: -21px; /* 20px padding + 1px border */
-  margin-bottom: 20px;
-  margin-left: -20px;
+margin-right: -21px; /* 20px padding + 1px border */
+margin-bottom: 20px;
+margin-left: -20px;
+padding: 0;
 }
-.nav-sidebar > li > a {
-  padding-right: 20px;
-  padding-left: 20px;
+.nav-sidebar  li > a {
+padding-right: 20px;
+padding-left: 20px;
+color:#eee;
 }
-.nav-sidebar > .active > a,
-.nav-sidebar > .active > a:hover,
-.nav-sidebar > .active > a:focus {
-  color: #fff;
-  background-color: #428bca;
+.nav-sidebar .active > a {
+border-right: 2px solid #f04f18;
+}
+.nav-sidebar .active > a,
+.nav-sidebar li > a:active,
+.nav-sidebar li > a:hover,
+.nav-sidebar li > a:focus {
+color:#222;
+background-color: #eee;
+}
+.logo{
+height:20px;
+background-color: gray;
+border-radius: 2px;
 }
 
 </style>
 
-<ul class="nav nav-sidebar">
-  <li><a href="registrations/">Регистрации</a></li>
-  <li><a href="online/">Онлайн</a></li>
-  <li><a href="accounting/">Аккаунтинг</a></li>
+<div id=menu>
+    <button id=menu type="button" data-target="#navbarCollapse" data-toggle="collapse" class="btn btn-default">
+      <span >Меню</span>
+    </button>
+  <h1>Spot 4</h1>
+
+</div>
+
+<div id="navbarCollapse" class="navbar-collapse collapse nav-sidebar">
+<ul class="nav nav-stacked">
+  <li ng-class="menuClass('registrations/')"><a href="registrations/">Регистрации</a></li>
+  <li ng-class="menuClass('online/')"><a href="online/">Онлайн</a></li>
+  <li ng-class="menuClass('accounting/')"><a href="accounting/">Аккаунтинг</a></li>
+  <li ng-class="menuClass('limits/')"><a href="limits/">Ограничения</a></li>
 </ul>
+</div>
+
+
+

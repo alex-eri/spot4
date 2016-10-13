@@ -13,6 +13,9 @@ logger = logging.getLogger('radius')
 debug = logger.debug
 from datetime import datetime
 from utils.password import getsms, getpassw
+import pytz
+
+
 
 
 class RadiusProtocol(asyncio.DatagramProtocol):
@@ -159,8 +162,12 @@ class RadiusProtocol(asyncio.DatagramProtocol):
 
         if upd :
             upd.update({
-            '$setOnInsert':{'start_date':datetime.now()},
-            '$currentDate':{'stop_date':True}
+            '$setOnInsert':{'start_date':datetime.now(pytz.utc)},
+            '$currentDate':{'stop_date':True},
+            '$set':{'sensor':{
+                'ip':self.caller[0],
+                'port':self.caller[1]
+              }}
             })
 
             self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)

@@ -33,6 +33,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/registrations.html',
         controller: 'Regs'
       }).
+      when('/limits/', {
+        templateUrl: '/static/admin-forms/limits.html',
+        controller: 'Limit'
+      }).
       otherwise({
         redirectTo: '/online/'
       });
@@ -53,14 +57,14 @@ function intervalt(time,start){
         d : Math.floor(time/86400)
         }
     } else {
-        console.log(start);
-        var now = new Date();
-        var t = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCDate() ,
-      now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds());
-        console.log(t);
-        return intervalt((t-start)/1000);
+//        console.log(start);
+//        var now = new Date();
+//        var t = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCDate() ,
+//      now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds(), now.getUTCMilliseconds());
+//        console.log(t);
+//        return intervalt((t-start)/1000);
+        return intervalt(0);
      }
-
 }
 
 
@@ -170,3 +174,24 @@ app.controller('Regs',  ['$scope','$resource',
         }
         )
     }]);
+
+app.controller('Limit',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+        $resource('/db/limit').save(
+            [
+            {find: {} }
+        ], function(response){
+            $scope.limits = response.response;
+        }
+        )
+    }]);
+
+app.controller("MenuCtrl", function($scope, $location) {
+  $scope.menuClass = function(page) {
+    var current = $location.path().substring(1);
+    return current.startsWith(page) ? "active" : "";
+  };
+});
