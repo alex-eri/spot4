@@ -82,20 +82,21 @@ class Packet(defaultdict):
     def decode(self,k):
         return decoders[k](self[k])
 
-    def encode(self,k,v):
+    def encode(self,v):
         if type(v) == bytes:
-            self[k] = v
+            return v
         elif type(v) == int:
-            self[k] = struct.pack("!L",v)
+            return struct.pack("!L",v)
         elif type(v) == str:
-            self[k] = v.encode('utf8')
+            return v.encode('utf8')
 
     @property
     def data(self):
         resp = self.header.copy()
 
         for k,v in self.items():
-            l = len(v)+2 #wireshark
+            v = self.encode(v)
+            l = len(v)+2
             if type(k) == int:
                 key = [k,l]
             if type(k) == tuple:

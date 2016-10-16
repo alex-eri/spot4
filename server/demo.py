@@ -1,9 +1,8 @@
 import main
 import radius
 import zte
-radius.RadiusProtocol.ttl = 1
-
-
+radius.TTL = 1
+zte.INTERVAL = 60
 
 if __name__ == "__main__":
     main.premain()

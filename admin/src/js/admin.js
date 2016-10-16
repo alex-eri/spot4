@@ -56,7 +56,15 @@ function intervalt(time,start){
         h : pad(Math.floor(time/3600) % 24),
         d : Math.floor(time/86400)
         }
-    } else {
+    } else if (time === 0){
+        return {
+            s : '00',
+            m : '00',
+            h : '00',
+            d : 0
+        }
+    }
+    else {
 //        console.log(start);
 //        var now = new Date();
 //        var t = Date.UTC(now.getUTCFullYear(),now.getUTCMonth(), now.getUTCDate() ,
@@ -126,6 +134,7 @@ app.controller('Accs',  ['$scope','$resource','$routeParams',
                     '$gte': {'$date':startdate.getTime()},
                     '$lte': {'$date':stopdate.getTime()}
                 }}},
+                {'$sort':{ 'start_date': -1}},
                 {'$group': {_id: {
                         year:{'$year':"$start_date"},
                         month :{'$month': "$start_date"},
@@ -156,7 +165,7 @@ app.controller('Regs',  ['$scope','$resource',
             [
 
             {aggregate:[[
-
+                {'$sort':{ 'seen': -1}},
                 {'$group': {_id: {
                         username:"$username",
                         },
@@ -165,8 +174,7 @@ app.controller('Regs',  ['$scope','$resource',
                         seen: {'$max':"$seen"}
                     }
 
-                },
-            {'$sort':{ 'seen': -1}}
+                }
                 ]]
             }
         ], function(response){
@@ -184,9 +192,35 @@ app.controller('Limit',  ['$scope','$resource',
             [
             {find: {} }
         ], function(response){
+            var nodefault = true ;
+            response.response.forEach( function(item){
+                if (item._id == "default") nodefault = false;
+            })
+
+            if (nodefault)
+                response.response.push({_id:'default'})
+
             $scope.limits = response.response;
         }
         )
+        $scope.update = function(router){
+            var id = router._id
+            $resource('/db/limit').save([{
+            find_and_modify:{
+                query:{_id:id},
+                update:router,
+                upsert:true,
+                new:true
+                }
+            }], function(response){
+                console.log(response)
+                $scope.limits.forEach( function(item,i){
+                    if (response._id == id )
+                        $scope.limits[i] = response;
+                })
+
+            })
+        }
     }]);
 
 app.controller("MenuCtrl", function($scope, $location) {
@@ -195,3 +229,14 @@ app.controller("MenuCtrl", function($scope, $location) {
     return current.startsWith(page) ? "active" : "";
   };
 });
+
+app.filter('interval', function() {
+  return function(input) {
+    input = input || 0;
+    var t = intervalt(input);
+    var out = '';
+    if (t.d) out = out + t.d + 'd ';
+    out = out + t.h+':'+ t.m +':'+t.s;
+    return out;
+  };
+})

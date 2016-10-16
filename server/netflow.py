@@ -3,10 +3,13 @@ import struct
 import logging
 from multiprocessing import Process, current_process
 from collections import namedtuple
-
+import threading
+import time
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
+FLUSHINTERVAL = 15
+FLUSHLEVEL = 4096
 
 FLOW5HEADER = "!HHIIII"
 FLOW5DATA = "!IIIHHIIIIHHxBBBHHBBxx"
@@ -20,44 +23,50 @@ Flow5Fields =  [
 
 insert_cb = None
 
-class Netflow5:
-    def connection_made(self, transport):
-        #self.transport = transport
-        pass
+class Netflow5(asyncio.DatagramProtocol):
+
+    def __init__(self,*a,**kw):
+        super(Netflow5,self).__init__(*a,**kw)
+        self.flows = []
+        self.flowslock = threading.Lock()
 
     def datagram_received(self, data, addr):
-        self.caller = addr
         debug(addr)
         assert data[1] == 5
-        ver,count,uptime,time,nanosecs,sequence = struct.unpack_from(FLOW5HEADER, data)
-        debug([ver,count,uptime,time,sequence])
+        ver,count,uptime,timestamp,nanosecs,sequence = struct.unpack_from(FLOW5HEADER, data)
 
-        delta = time*1000 + nanosecs//1000000 - uptime
+        delta = timestamp*1000 + nanosecs//1000000 - uptime
 
-        flows = []
+        def flow_gen():
+            for i in range(count):
+                x = struct.unpack_from(FLOW5DATA, data, i*48 + 24)
+                flow = dict(zip(Flow5Fields,x))
+                flow['first'] += delta
+                flow['last'] += delta
+                flow.update({'sensor': addr[0] , 'sequence': sequence + i })
+                yield flow
 
-        for i in range(count):
-            x = struct.unpack_from(FLOW5DATA, data, i*48 + 24)
-            flow = dict(zip(Flow5Fields,x))
-            flow['first'] += delta
-            flow['last'] += delta
-            flow.update({'sensor': addr[0] , 'sequence': sequence + i })
-            flows.append(flow)
+        with  self.flowslock:
+            self.flows.extend(flow_gen())
+
+        if len(self.flows) > FLUSHLEVEL:
+            loop.call_soon(self.store_once)
+
+        debug('collected {}'.format(len(self.flows)))
+
+
+    def store_once(self):
+        with self.flowslock:
+            flows = self.flows[:]
+            del self.flows[:]
 
         self.collector.insert(flows, callback=insert_cb)
+        debug('inserted {}'.format(len(flows)))
 
-
-    def respond(self,resp):
-        #self.transport.sendto(resp, self.caller)
-        pass
-
-    def error_received(self, exc):
-        #debug('Error received:', exc)
-        pass
-
-    def connection_lost(self, exc):
-        #debug('stop', exc)
-        pass
+    def store(self):
+        loop = asyncio.get_event_loop()
+        self.store_once()
+        loop.call_later(FLUSHINTERVAL,self.store)
 
 def run5(config):
     global insert_cb
@@ -83,13 +92,25 @@ def run5(config):
 
     Netflow5.collector = db.collector
 
+    debug("starting")
+
     t = asyncio.Task(loop.create_datagram_endpoint(
         Netflow5, local_addr=(HOST,PORT)))
 
+    debug("task set")
     transport, server = loop.run_until_complete(t)
+    debug("started")
+
+    loop.call_later(FLUSHINTERVAL,server.store)
+    debug("flush sheduled")
+
+
     try:
         loop.run_forever()
+    except Exception as e:
+        logger.error(repr(e))
     finally:
+        server.store_once()
         transport.close()
         loop.close()
 

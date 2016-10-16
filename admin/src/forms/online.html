@@ -15,7 +15,7 @@
 
   <tr>
     <th colspan=3>День: {{t(n._id) | date}}</th>
-    <th ng-init="i=interval(n.session_time)"> {{i.d}}d&nbsp;{{i.h}}:{{i.m}}:{{i.s}} </th>
+    <th> {{n.session_time| interval}} </th>
     <th>{{n.input_bytes}}</th>
       <th>{{n.output_bytes}}</th>
   </tr>
@@ -27,8 +27,8 @@
       </span>
     </td>
     <td>{{a.nas}} / {{a.callee}}</td>
-    <td>{{a.start_date.$date | date: 'HH:mm:ss' : 'UTC'}}</td>
-    <td ng-init="i=interval(a.session_time, a.start_date.$date)"> {{i.d}}d&nbsp;{{i.h}}:{{i.m}}:{{i.s}} </td>
+    <td>{{a.start_date.$date | date: 'HH:mm:ss' }}</td>
+    <td> {{a.session_time| interval:a.start_date.$date }} </td>
     <td>{{a.input_bytes}}</td>
       <td>{{a.output_bytes}}</td>
   </tr>

@@ -15,13 +15,11 @@ from datetime import datetime
 from utils.password import getsms, getpassw
 import pytz
 
-
-
+TTL = 56
 
 class RadiusProtocol(asyncio.DatagramProtocol):
     radsecret = None
     db = None
-    ttl = 56
 
     def __getitem__(self,y):
         r = self.pkt.decode(y)
@@ -29,9 +27,6 @@ class RadiusProtocol(asyncio.DatagramProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        sock = self.transport.get_extra_info('socket')
-        sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
-
 
     def datagram_received(self, data, addr):
         debug('From {} data received: '.format(addr))
@@ -54,14 +49,13 @@ class RadiusProtocol(asyncio.DatagramProtocol):
 
     def respond(self,resp):
         self.transport.sendto(resp.data, self.caller)
-        print(resp.data)
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
                 debug('{} :\t{}'.format(attr,resp.decode(attr)))
 
     def error_received(self, exc):
-        debug('Error received:', exc)
+        logger.error('Error received:', exc)
 
     def connection_lost(self, exc):
         debug('stop', exc)
@@ -82,6 +76,9 @@ class RadiusProtocol(asyncio.DatagramProtocol):
                 'username':response['_id'],
                 'mac':self[rad.CallingStationId]
                  }
+
+            self.get_limits(response)
+
             if response.get('password') and self.check_password(response.get('password')):
                 self.db.devices.find_and_modify(q,
                     {'$currentDate':{'seen':True},'$set':{'checked':True}},
@@ -109,6 +106,25 @@ class RadiusProtocol(asyncio.DatagramProtocol):
             self.reply.code = rad.AccessAccept
         self.respond( self.reply )
 
+    def get_limits(self,user):
+        profiles = [
+            user._id,
+            self[rad.CalledStationId],
+            self[rad.NASIdentifier],
+            'default'
+            ]
+        self.db.limit.find(
+            {'_id': {'$in':profiles}},
+            callback = self.set_limits
+        )
+
+    def set_limits(self,response):
+        limit = {}
+        for l in response:
+            for k,v in l.items:
+                limit[k] = limit.get(k) or v
+        debug(limit)
+
     def check_password(self, cleartext=""):
         return self.pkt.check_password(cleartext)
 
@@ -119,11 +135,10 @@ class RadiusProtocol(asyncio.DatagramProtocol):
                 'session_id': self[rad.AcctSessionId],
                 #'sensor': self.caller[0]
             }
-
-        upd = {}
+        account = {}
 
         if self[rad.AcctStatusType] == rad.AccountingStart:
-            upd['$set']={
+            account={
                     'ip': self[rad.FramedIPAddress],
                     'nas': self[rad.NASIdentifier],
                     'callee': self[rad.CalledStationId],
@@ -150,7 +165,6 @@ class RadiusProtocol(asyncio.DatagramProtocol):
             if self[rad.AcctStatusType] == rad.AccountingStop:
                 account['termination_cause'] =  self[rad.AcctTerminateCause]
 
-            upd['$set']= account
 
         elif self[rad.AcctStatusType] in [rad.AccountingOn, rad.AccountingOff]:
             self.db.accounting.find_and_modify(
@@ -160,15 +174,18 @@ class RadiusProtocol(asyncio.DatagramProtocol):
             )
             #TODO accountin on/off
 
-        if upd :
-            upd.update({
+        if account :
+            account.update({
+                'stop_date':datetime.now(pytz.utc),
+                'sensor':{
+                    'ip':self.caller[0],
+                    'port':self.caller[1]
+                    }
+                })
+            upd={
             '$setOnInsert':{'start_date':datetime.now(pytz.utc)},
-            '$currentDate':{'stop_date':True},
-            '$set':{'sensor':{
-                'ip':self.caller[0],
-                'port':self.caller[1]
-              }}
-            })
+            '$set':account
+            }
 
             self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
 
@@ -209,6 +226,10 @@ def setup_radius(config,PORT):
         RadiusProtocol, local_addr=(HOST,PORT)))
 
     transport, server = loop.run_until_complete(t)
+
+    sock = transport.get_extra_info('socket')
+    sock.setsockopt(socket.SOL_IP, socket.IP_TTL, TTL)
+
     try:
         loop.run_forever()
     finally:

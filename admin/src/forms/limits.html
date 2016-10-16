@@ -1,9 +1,67 @@
-{{limits}}
+<h1>Ограничения</h1>
+<div ng-repeat="router in limits track by router._id">
+<h3 data-target="#form{{router._id}}" data-toggle="collapse" >
+  <i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
+  <small ng-init="i=interval(router.time)">
+    <i class="glyphicon glyphicon-download"></i>
+    {{router.rate}}
+    <i class="glyphicon glyphicon-time"></i>
+    {{ router.time | interval }}
+    <i class="glyphicon glyphicon-retweet"></i>
+    {{router.redir}}
 
-<h3>default</h3>
-<label>Скорость</label>
-<label>Время</label>
-<label>Сессии</label>
-<label>Байты</label>
-<label>Редирект</label>
-<label>Фильтр</label>
+  </small>
+   </h3>
+<form class="form-horizontal collapse" id="form{{router._id}}">
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Скорость</label>
+    <div class="col-sm-4">
+    <input type="number" class="form-control" ng-model="router.rate" min=0 step="0.1">
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">мегабит. Можно с десятыми.</p></div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Время</label>
+    <div class="col-sm-4">
+    <input type="number" class="form-control" ng-model="router.time" min=0>
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">секунд. Сбрасывать авторизацию по истечении этого времени.</p></div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" >Одновременно</label>
+    <div class="col-sm-4">
+    <input type="range" class="form-control" min="1" max="99" step=1 ng-model="router.ports">
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+           {{router.ports}} сессий. В пределах одного роутера, если аккаунтинг отключен
+    </p>
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" >Трафик</label>
+    <div class="col-sm-4">
+    <input type="number" class="form-control" min=0 ng-model="router.bytes" step=1>
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">мегабайт</p></div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" >Редирект</label>
+    <div class="col-sm-4">
+    <input type="url" class="form-control" ng-model="router.redir">
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">ссылка</p></div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Фильтр</label>
+    <div class="col-sm-4">
+    <input type="text" class="form-control" ng-model="router.filter">
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">имя цепочки в фаерволе</p></div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+    <input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
+    </div>
+  </div>
+</form>
+</div>
