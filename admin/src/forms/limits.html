@@ -1,16 +1,16 @@
 <h1>Ограничения</h1>
 <div ng-repeat="router in limits track by router._id">
 <h3 data-target="#form{{router._id}}" data-toggle="collapse" >
-  <i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
-  <small ng-init="i=interval(router.time)">
-    <i class="glyphicon glyphicon-download"></i>
-    {{router.rate}}
-    <i class="glyphicon glyphicon-time"></i>
-    {{ router.time | interval }}
-    <i class="glyphicon glyphicon-retweet"></i>
-    {{router.redir}}
-
-  </small>
+<i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
+<small>
+  <i class="glyphicon glyphicon-download"></i>  {{router.rate}}
+</small>
+<small>
+  <i class="glyphicon glyphicon-time"></i>  {{ router.time | interval }}
+</small>
+<small>
+  <i class="glyphicon glyphicon-retweet"></i>  {{router.redir}}
+</small>
    </h3>
 <form class="form-horizontal collapse" id="form{{router._id}}">
   <div class="form-group">
