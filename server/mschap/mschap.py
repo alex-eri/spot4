@@ -1,6 +1,5 @@
 from . import des
 import hashlib
-from . import utils
 
 
 def generate_nt_response_mschap(challenge,password):
@@ -96,6 +95,7 @@ def nt_password_hash(passwd,pad_to_21_bytes=True):
        * including any terminating 0.
        */
     """
+    #res = hashlib.new('md4', passwd.encode('utf-16le')).digest()
     res = hashlib.new('md4', passwd.encode('utf-16le')).digest()
 
     if pad_to_21_bytes:
@@ -131,7 +131,7 @@ def challenge_response(challenge,password_hash):
 #    while len(zpassword_hash)<21:
 #	zpassword_hash+="\0"
 
-    response=""
+    response=b""
     des_obj=des.DES(zpassword_hash[0:7])
     response+=des_obj.encrypt(challenge)
 
@@ -211,8 +211,8 @@ def generate_authenticator_response(password,nt_response,peer_challenge,authenti
 
    }
     """
-    Magic1="\x4D\x61\x67\x69\x63\x20\x73\x65\x72\x76\x65\x72\x20\x74\x6F\x20\x63\x6C\x69\x65\x6E\x74\x20\x73\x69\x67\x6E\x69\x6E\x67\x20\x63\x6F\x6E\x73\x74\x61\x6E\x74"
-    Magic2="\x50\x61\x64\x20\x74\x6F\x20\x6D\x61\x6B\x65\x20\x69\x74\x20\x64\x6F\x20\x6D\x6F\x72\x65\x20\x74\x68\x61\x6E\x20\x6F\x6E\x65\x20\x69\x74\x65\x72\x61\x74\x69\x6F\x6E"
+    Magic1=b"\x4D\x61\x67\x69\x63\x20\x73\x65\x72\x76\x65\x72\x20\x74\x6F\x20\x63\x6C\x69\x65\x6E\x74\x20\x73\x69\x67\x6E\x69\x6E\x67\x20\x63\x6F\x6E\x73\x74\x61\x6E\x74"
+    Magic2=b"\x50\x61\x64\x20\x74\x6F\x20\x6D\x61\x6B\x65\x20\x69\x74\x20\x64\x6F\x20\x6D\x6F\x72\x65\x20\x74\x68\x61\x6E\x20\x6F\x6E\x65\x20\x69\x74\x65\x72\x61\x74\x69\x6F\x6E"
 
     password_hash=nt_password_hash(password,False)
     password_hash_hash=hash_nt_password_hash(password_hash)

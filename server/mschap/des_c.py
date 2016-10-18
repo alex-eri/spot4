@@ -163,29 +163,33 @@ class DES:
 
     def __init__(self, key_str):
         # key - UChar[8]
-        key = []
-        for i in key_str: key.append(ord(i))
+        #key = []
+        #for i in key_str: key.append(ord(i))
         #print 'key:', key
-        self.KeySched = des_set_key(key)
+        #key = bytearray(key_str)
+        #key =key_str
+        self.KeySched = des_set_key(key_str)
         #print 'schedule:', self.KeySched, len(self.KeySched)
 
-    def decrypt(self, str):
+    def decrypt(self, block):
         # block - UChar[]
-        block = []
-        for i in str: block.append(ord(i))
+        #block = []
+        #block = bytearray(str)
+        #for i in str: block.append(ord(i))
         #print block
         block = des_ecb_encrypt(block, self.KeySched, 0)
-        res = ''
-        for i in block: res = res + (chr(i))
+        #res = ''
+        #for i in block: res = res + (chr(i))
+        res = bytes(block)
         return res
 
-    def encrypt(self, str):
+    def encrypt(self, block):
         # block - UChar[]
-        block = []
-        for i in str: block.append(ord(i))
+        #block = bytearray(str)
+        #for i in str: block.append(ord(i))
         block = des_ecb_encrypt(block, self.KeySched, 1)
-        res = ''
-        for i in block: res = res + (chr(i))
+        res = bytes(block)
+        #for i in block: res = res + (chr(i))
         return res
 
 

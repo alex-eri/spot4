@@ -17,7 +17,7 @@
 # 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
 #
 
-from . import des_c, utils
+from . import des_c
 
 #---------------------------------------------------------------------
 class DES:
@@ -29,7 +29,8 @@ class DES:
         ""
         k = str_to_key56(key_str)
         k = key56_to_key64(k)
-        key_str = utils.lst2str(k)
+        #key_str = utils.lst2str(k)
+        key_str = bytes(k)
         self.des_c_obj = des_c.DES(key_str)
 
     #-----------------------------------------------------------------
@@ -51,21 +52,22 @@ DESException = 'DESException'
 #---------------------------------------------------------------------
 def str_to_key56(key_str):
     ""
-    if type(key_str) != type(''):
+    #if type(key_str) != type(b''):
         #rise DESException, 'ERROR. Wrong key type.'
-        pass
+    #    pass
     if len(key_str) < 7:
-        key_str = key_str + '\000\000\000\000\000\000\000'[:(7 - len(key_str))]
-    key_56 = []
-    for i in key_str[:7]: key_56.append(ord(i))
+        key_str = key_str + b'\000\000\000\000\000\000\000'[:(7 - len(key_str))]
+    key_56 = bytearray(key_str[:7])
+
+    #for i in key_str[:7]: key_56.append(ord(i))
 
     return key_56
 
 #---------------------------------------------------------------------
 def key56_to_key64(key_56):
     ""
-    key = []
-    for i in range(8): key.append(0)
+    key = bytearray(8)
+    #for i in range(8): key.append(0)
 
     key[0] = key_56[0];
     key[1] = ((key_56[0] << 7) & 0xFF) | (key_56[1] >> 1);

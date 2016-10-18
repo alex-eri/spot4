@@ -1,1 +1,0 @@
-[Solarus] [0] Error: Cannot find settings file 'settings.dat'

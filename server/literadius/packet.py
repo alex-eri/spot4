@@ -154,10 +154,11 @@ class Packet(defaultdict):
 
         if self[MSCHAPResponse] and self[MSCHAPChallenge]:
             return mschap.generate_nt_response_mschap(
-                self[MSCHAPChallenge],cleartext.encode('utf-8')
+                self[MSCHAPChallenge],cleartext
             ) == self[MSCHAPResponse][26:]
-            raise NotImplementedError
 
         if self[MSCHAP2Response] and self[MSCHAPChallenge]:
             raise NotImplementedError
+
+        #TODO: MSCHAP2 EAP
 

@@ -1,18 +1,23 @@
 all: clean buildall config
 
+dist:
+	mkdir -p ./dist/
+	cd ./build; tar cz -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
+
 buildall:
 	make -C ./server
 	make -C ./static
 	make -C ./uam
 	make -C ./mikrotik
 	make -C ./admin
-	mkdir -p ./build/{uam,static,admin}/ht_docs
+	mkdir -p ./build/static/ht_docs
 	cp -R ./server/build/exe* ./build
 	mkdir -p ./build/mikrotik
-	cp -R ./uam/config ./build/uam/
+	mkdir -p ./build/uam/{config,theme}/
+	cp -R ./uam/config/* ./build/uam/config/
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
-	cp -R ./uam/theme ./build/uam/
-	cp -R ./mikrotik/build/* ./build/mikrotik/
+	cp -R ./uam/theme/* ./build/uam/theme/
+	cp -R ./mikrotik/* ./build/mikrotik/
 
 config:
 	mkdir -p ./build/{config,systemd}/
@@ -24,6 +29,7 @@ config:
 
 clean:
 	rm -rf ./build/*
+	rm -rf ./dist
 
 start:
 	cd ./build/exe.* ; ./spot4.exe
