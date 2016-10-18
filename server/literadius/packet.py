@@ -8,19 +8,20 @@ from mschap import mschap
 import random
 #random_generator = random.SystemRandom()
 import hashlib
-
+import threading
 import logging
 logger = logging.getLogger('packet')
 debug = logger.debug
 
 class Packet(defaultdict):
-    header = bytearray()
-    body = bytearray()
-    secret = b''
-
     def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None, authenticator=None):
         super().__init__(bytes)
+
+        self.lock = threading.Lock()
+        self.header = bytearray()
+        self.body = bytearray()
         self.secret = secret
+
         if data:
             self.header = bytearray(data[:20])
             self.body = data[20:]
@@ -83,31 +84,32 @@ class Packet(defaultdict):
         return decoders[k](self[k])
 
     def encode(self,v):
-        if type(v) == bytes:
+        if isinstance(v, bytes):
             return v
-        elif type(v) == int:
+        elif isinstance(v, int):
             return struct.pack("!L",v)
-        elif type(v) == str:
+        elif isinstance(v, str):
             return v.encode('utf8')
 
     @property
     def data(self):
-        resp = self.header.copy()
+        with self.lock:
+            resp = self.header.copy()
 
-        for k,v in self.items():
-            v = self.encode(v)
-            l = len(v)+2
-            if type(k) == int:
-                key = [k,l]
-            if type(k) == tuple:
-                key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
-            resp.extend(key)
-            resp.extend(v)
+            for k,v in self.items():
+                v = self.encode(v)
+                l = len(v)+2
+                if isinstance(k,int):
+                    key = [k,l]
+                elif isinstance(k, tuple):
+                    key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
+                resp.extend(key)
+                resp.extend(v)
 
-        struct.pack_into("!H",resp,2,len(resp))
-        authenticator = hashlib.md5(resp+self.secret).digest()
-        struct.pack_into("!16s",resp,4,authenticator)
-        return resp
+            struct.pack_into("!H",resp,2,len(resp))
+            authenticator = hashlib.md5(resp+self.secret).digest()
+            struct.pack_into("!16s",resp,4,authenticator)
+            return resp
 
     def pw_decrypt(self,v):
         last = self.authenticator.copy()

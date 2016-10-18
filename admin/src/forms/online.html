@@ -16,8 +16,8 @@
   <tr>
     <th colspan=3>День: {{t(n._id) | date}}</th>
     <th> {{n.session_time| interval}} </th>
-    <th>{{n.input_bytes}}</th>
-      <th>{{n.output_bytes}}</th>
+    <th>{{n.input_bytes| mega}}</th>
+      <th>{{n.output_bytes| mega}}</th>
   </tr>
   <tr ng-repeat="a in n.accts">
     <td>
@@ -29,8 +29,8 @@
     <td>{{a.nas}} / {{a.callee}}</td>
     <td>{{a.start_date.$date | date: 'HH:mm:ss' }}</td>
     <td> {{a.session_time| interval:a.start_date.$date }} </td>
-    <td>{{a.input_bytes}}</td>
-      <td>{{a.output_bytes}}</td>
+    <td>{{a.input_bytes| mega}}</td>
+      <td>{{a.output_bytes| mega}}</td>
   </tr>
 
 </tbody>
