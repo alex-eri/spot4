@@ -65,7 +65,8 @@ if USE_CYTHON:
         "literadius/__init__",
         "literadius/packet",
         "literadius/constants",
-        "literadius/decoders"
+        "literadius/decoders",
+        "literadius/protocol",
         ]
 
 

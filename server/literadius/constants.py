@@ -75,6 +75,9 @@ MessageAuthenticator = 80
 
 NASPortId = 87
 
+AscendDataRate = 197
+AscendXmitRate = 255
+
 AccountingStart	=		1
 AccountingStop	=		2
 AccountingUpdate	=	3
@@ -85,8 +88,8 @@ ChilliSpot = 14559
 ChilliSpotVersion = (ChilliSpot, 8)
 CoovaChilliAcctViewPoint = (ChilliSpot, 10)
 
-CoovaChilliNASViewPoint = 1
-CoovaChilliClientViewPoint = 2
+CoovaChilliNASViewPoint = NASViewPoint = 1
+CoovaChilliClientViewPoint = ClientViewPoint = 2
 
 WISPr = 14122
 WISPrLocationName = (WISPr,2)
@@ -94,8 +97,15 @@ WISPrLogoffURL = (WISPr,3)
 WISPrRedirectionURL = (WISPr,4)
 
 MT = Mikrotik = 14988
+MikrotikRecvLimit = (Mikrotik,1)
+MikrotikXmitLimit = (Mikrotik,2)
+MikrotikRateLimit = (Mikrotik,8)
 MikrotikHostIP = (Mikrotik,10)
+MikrotikRecvLimitGigawords = (Mikrotik,14)
+MikrotikXmitLimitGigawords = (Mikrotik,15)
 MikrotikWirelessPSK = (Mikrotik, 16)
+MikrotikAddressList = (Mikrotik,19 )
+
 
 MS = Microsoft = 311
 MSCHAPResponse = (Microsoft,1)

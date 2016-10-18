@@ -49,18 +49,18 @@ class Netflow5(asyncio.DatagramProtocol):
         with  self.flowslock:
             self.flows.extend(flow_gen())
 
-        if len(self.flows) > FLUSHLEVEL:
-            loop.call_soon(self.store_once)
-
         debug('collected {}'.format(len(self.flows)))
 
+        if len(self.flows) > FLUSHLEVEL:
+            loop = asyncio.get_event_loop()
+            loop.call_soon(self.store_once)
 
     def store_once(self):
         with self.flowslock:
             flows = self.flows[:]
             del self.flows[:]
-
-        self.collector.insert(flows, callback=insert_cb)
+        if len(flows):
+            self.collector.insert(flows, callback=insert_cb)
         debug('inserted {}'.format(len(flows)))
 
     def store(self):

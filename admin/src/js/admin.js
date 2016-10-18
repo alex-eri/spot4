@@ -240,3 +240,19 @@ app.filter('interval', function() {
     return out;
   };
 })
+
+
+app.filter('mega', function() {
+  return function(input) {
+    var k = input >> 10;
+    var M = input >> 20;
+    var G = input >> 30;
+    if( G > 2 )
+        return G + 'G';
+    if( M > 3 )
+        return M + 'M';
+    if( k > 4 )
+        return k + 'k';
+
+  };
+})
