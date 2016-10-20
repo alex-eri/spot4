@@ -37,6 +37,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/limits.html',
         controller: 'Limit'
       }).
+      when('/top/', {
+        templateUrl: '/static/admin-forms/top.html',
+        controller: 'Top'
+      }).
       otherwise({
         redirectTo: '/online/'
       });
@@ -223,6 +227,48 @@ app.controller('Limit',  ['$scope','$resource',
         }
     }]);
 
+
+app.controller('Top',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource ,$routeParams){
+
+        if ($routeParams.month) {
+            var y = $routeParams.year , m= $routeParams.month - 1;
+        }   else {
+            var date = new Date(), y = date.getFullYear(), m = date.getMonth();
+        }
+        var startdate = new Date(y, m, 1);
+        var stopdate = new Date(y, m+1, 1);
+        $scope.startdate = startdate;
+        $scope.stopdate= stopdate;
+
+        $resource('/db/accounting').save(
+            [
+                {aggregate:[[
+                {'$match': {'start_date':{
+                    '$gte': {'$date':startdate.getTime()},
+                    '$lte': {'$date':stopdate.getTime()}
+                }}},
+                {'$group': {_id: {
+                        username:"$username"
+                        },
+
+                        session_time: {'$sum':"$session_time"},
+                        output_bytes: {'$sum':'$output_bytes'},
+                        input_bytes: {'$sum':'$input_bytes'}
+                    }
+
+                },
+                {'$sort':{'session_time':-1}},
+                {'$limit': 10 }
+                ]]
+            }
+        ], function(response){
+            $scope.response = response.response;
+        }
+        )
+
+    }]);
+
 app.controller("MenuCtrl", function($scope, $location) {
   $scope.menuClass = function(page) {
     var current = $location.path().substring(1);
@@ -244,15 +290,30 @@ app.filter('interval', function() {
 
 app.filter('mega', function() {
   return function(input) {
-    var k = input >> 10;
+    if (input > 1073741824) {
+        var G = input / 1073741824 ;
+        return G.toFixed(1) + 'G';
+    }
     var M = input >> 20;
-    var G = input >> 30;
-    if( G > 2 )
-        return G + 'G';
     if( M > 3 )
         return M + 'M';
+    var k = input >> 10;
     if( k > 4 )
         return k + 'k';
-
+    return input;
   };
 })
+
+app.filter('proto', function() {
+  return function(input) {
+switch(input) {
+    case 6: return 'tcp'
+    case 17: return 'udp'
+    case 1: return 'icmp'
+    case 2: return 'igmp'
+    case 47: return 'gre'
+    default:return input;
+    }
+  };
+})
+
