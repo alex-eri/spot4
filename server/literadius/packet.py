@@ -81,7 +81,10 @@ class Packet(defaultdict):
             cursor += l2
 
     def decode(self,k):
-        return decoders[k](self[k])
+        v = self.get(k)
+        if isinstance(v, bytes):
+            return decoders[k](v)
+        return v
 
     def encode(self,v):
         if isinstance(v, bytes):

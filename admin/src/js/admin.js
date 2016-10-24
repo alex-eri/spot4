@@ -86,6 +86,20 @@ function datefymd(id) {
         };
 
 
+var accounting_group = {'$group': {_id: {
+                        year:{'$year':"$start_date"},
+                        month :{'$month': "$start_date"},
+                        day: {'$dayOfMonth': "$start_date"}
+                        },
+                        count : {'$sum':1},
+                        accts :{'$push':'$$CURRENT'},
+                        session_time: {'$sum':'$session_time'},
+                        output_bytes: {'$sum':'$output_bytes'},
+                        input_bytes: {'$sum':'$input_bytes'}
+                    }
+
+                }
+
 app.controller('Online',  ['$scope','$resource',
     function ( $scope, $resource ){
         $scope.label = "в сети"
@@ -96,18 +110,7 @@ app.controller('Online',  ['$scope','$resource',
 
             {aggregate:[[
                 {'$match': {'termination_cause':{$exists: false}} },
-                {'$group': {_id: {
-                        year:{'$year':"$start_date"},
-                        month :{'$month': "$start_date"},
-                        day: {'$dayOfMonth': "$start_date"}
-                        },
-                        accts :{'$push':'$$CURRENT'},
-                        session_time: {'$sum':'$session_time'},
-                        output_bytes: {'$sum':'$output_bytes'},
-                        input_bytes: {'$sum':'$input_bytes'}
-                    }
-
-                },
+                accounting_group,
                 {'$sort':{  '_id.day': -1, '_id.year': -1,'_id.month': -1 }}
                 ]]
             }
@@ -130,6 +133,10 @@ app.controller('Accs',  ['$scope','$resource','$routeParams',
         }
             var startdate = new Date(y, m, 1);
             var stopdate = new Date(y, m+1, 1);
+
+        $scope.startdate = startdate;
+        $scope.stopdate= stopdate;
+
         $resource('/db/accounting').save(
             [
 
@@ -139,18 +146,7 @@ app.controller('Accs',  ['$scope','$resource','$routeParams',
                     '$lte': {'$date':stopdate.getTime()}
                 }}},
                 {'$sort':{ 'start_date': -1}},
-                {'$group': {_id: {
-                        year:{'$year':"$start_date"},
-                        month :{'$month': "$start_date"},
-                        day: {'$dayOfMonth': "$start_date"}
-                        },
-                        accts :{'$push':'$$CURRENT'},
-                        session_time: {'$sum':'$session_time'},
-                        output_bytes: {'$sum':'$output_bytes'},
-                        input_bytes: {'$sum':'$input_bytes'}
-                    }
-
-                },
+                accounting_group,
                 {'$sort':{'_id.day': -1}}
                 ]]
             }
@@ -192,21 +188,31 @@ app.controller('Limit',  ['$scope','$resource',
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
+
+        $scope.limits = { default:{_id:'default'}}
+
+        $resource('/db/accounting').save(
+
+        [
+            {distinct:['callee']}
+        ], function(response){
+
+            response.response.forEach( function(item){
+                $scope.limits[item]={_id:item};
+            })
+            }
+        )
+
+
         $resource('/db/limit').save(
             [
             {find: {} }
         ], function(response){
-            var nodefault = true ;
             response.response.forEach( function(item){
-                if (item._id == "default") nodefault = false;
+                $scope.limits[item._id]=item;
             })
 
-            if (nodefault)
-                response.response.push({_id:'default'})
-
-            $scope.limits = response.response;
-        }
-        )
+        })
         $scope.update = function(router){
             var id = router._id
             $resource('/db/limit').save([{
@@ -218,10 +224,7 @@ app.controller('Limit',  ['$scope','$resource',
                 }
             }], function(response){
                 console.log(response)
-                $scope.limits.forEach( function(item,i){
-                    if (response._id == id )
-                        $scope.limits[i] = response;
-                })
+                $scope.limits[response.response._id] = response.response;
 
             })
         }
@@ -263,10 +266,34 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
                 ]]
             }
         ], function(response){
-            $scope.response = response.response;
+            $scope.users = response.response;
+        }
+        );
+        $resource('/db/accounting').save(
+            [
+                {aggregate:[[
+                {'$match': {'start_date':{
+                    '$gte': {'$date':startdate.getTime()},
+                    '$lte': {'$date':stopdate.getTime()}
+                }}},
+                {'$group': {_id: {
+                        nas:"$nas"
+                        },
+
+                        session_time: {'$sum':"$session_time"},
+                        output_bytes: {'$sum':'$output_bytes'},
+                        input_bytes: {'$sum':'$input_bytes'}
+                    }
+
+                },
+                {'$sort':{'session_time':-1}},
+                {'$limit': 10 }
+                ]]
+            }
+        ], function(response){
+            $scope.nases = response.response;
         }
         )
-
     }]);
 
 app.controller("MenuCtrl", function($scope, $location) {

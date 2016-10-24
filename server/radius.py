@@ -5,6 +5,7 @@ from utils import procutil
 import asyncio
 import socket
 from literadius.protocol import RadiusProtocol
+import literadius.constants as rad
 
 logger = logging.getLogger('radius')
 debug = logger.debug
@@ -25,6 +26,13 @@ def setup_radius(config,PORT):
     )
 
     db.accounting.ensure_index([ ("username",1) ], unique=False, callback=storage.index_cb)
+    db.accounting.ensure_index([ ("nas",1) ], unique=False, callback=storage.index_cb)
+    db.accounting.ensure_index([ ("callee",1) ], unique=False, callback=storage.index_cb)
+    db.accounting.find_and_modify(
+                {'termination_cause':{'$exists': False}},
+                {'$set':{'termination_cause': rad.TCAdminReboot}},
+                callback=storage.index_cb
+            )
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 

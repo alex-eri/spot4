@@ -1,23 +1,24 @@
-<h1>Сессии {{label}}</h1>
-  <table class=table>
+<h1>Сессии {{label}} <small>{{startdate| date}} - {{stopdate|date}}</small></h1>
+  <table class="table table-hover table-condensed table-bordered">
   <thead>
     <tr>
       <th>Пользователь / Устройство</th>
-      <th>Роутер</th>
+      <th>Роутер / Хотспот</th>
       <th>Начало</th>
       <th>Время в сети</th>
-      <th>Получено</th>
       <th>Передано</th>
+      <th>Получено</th>
     </tr>
   </thead>
 
 <tbody ng-repeat="n in online.response track by t(n._id)">
 
   <tr>
-    <th colspan=3>День: {{t(n._id) | date}}</th>
-    <th> {{n.session_time| interval}} </th>
-    <th>{{n.input_bytes| mega}}</th>
-      <th>{{n.output_bytes| mega}}</th>
+    <th colspan=2>Всего сессий: {{n.count}}</th>
+    <th>{{t(n._id) | date}}</th>
+    <th class="text-right"> {{n.session_time| interval}} </th>
+    <th class="text-right">{{n.input_bytes| mega}}</th>
+      <th class="text-right">{{n.output_bytes| mega}}</th>
   </tr>
   <tr ng-repeat="a in n.accts">
     <td>
@@ -27,10 +28,10 @@
       </span>
     </td>
     <td>{{a.nas}} / {{a.callee}}</td>
-    <td>{{a.start_date.$date | date: 'HH:mm:ss' }}</td>
-    <td> {{a.session_time| interval:a.start_date.$date }} </td>
-    <td>{{a.input_bytes| mega}}</td>
-      <td>{{a.output_bytes| mega}}</td>
+    <td class="text-right">{{a.start_date.$date | date: 'HH:mm:ss' }}</td>
+    <td class="text-right"> {{a.session_time| interval:a.start_date.$date }} </td>
+    <td class="text-right">{{a.input_bytes| mega}}</td>
+    <td class="text-right">{{a.output_bytes| mega}}</td>
   </tr>
 
 </tbody>

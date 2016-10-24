@@ -26,7 +26,7 @@ radius.acct\radius   DEBUG: 61 :	b'\x00\x00\x00\x13'	19
 
 
 
-
+http://192.168.122.1:8080/uam/register/?res=notyet&uamip=192.168.182.1&uamport=3990&challenge=38a6861524aaaf1ae2fdb4bdf330c9b3&called=chilli&mac=F2-AC-8F-88-EE-BB&ip=192.168.182.2&nasid=nas01qemu&sessionid=580b4f5900000001&userurl=http:%2F%2Fya.ru%2F
 
 chilli logon
 angular.callbacks._1(

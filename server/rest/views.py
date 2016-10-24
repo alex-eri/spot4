@@ -9,6 +9,7 @@ debug = logger.debug
 from bson.json_util import dumps, loads
 import asyncio
 import motor
+import motor.core
 
 def add_cmd(pipe,command,args):
     if type(args) == dict:
@@ -39,7 +40,7 @@ async def db_handler(request):
         for c,a in cmd.items():
             cursor = add_cmd(cursor,c,a)
 
-    if isinstance(cursor, motor.MotorCollection):
+    if hasattr(cursor,'find'):
         cursor = cursor.find()
 
     c = None

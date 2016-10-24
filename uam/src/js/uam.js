@@ -340,8 +340,8 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
 
     console.log($cookies.getAll())
 
-    $resource('/uam/config/:nasid.json').get(
-    {nasid:$cookies.get('nasid')},
+    $resource('/uam/config/:called.json').get(
+    {called:$cookies.get('called')},
     function(response){
         $scope.config = response
     },

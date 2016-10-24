@@ -1,18 +1,25 @@
 <h1>Ограничения</h1>
-<div ng-repeat="router in limits track by router._id">
-<h3 data-target="#form{{router._id}}" data-toggle="collapse" >
+
+<table class=table>
+
+<tbody ng-repeat="(id,router) in limits">
+<tr data-target="#form{{router._id}}" data-toggle="collapse">
+<th>
 <i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
-<small>
-  <i class="glyphicon glyphicon-download"></i>  {{router.rate}}
-</small>
-<small>
+</th>
+  <td>
+  <i class="glyphicon glyphicon-download"></i>  {{router.rate||"&#x221e;"}} Mb/s
+</td>
+<td>
   <i class="glyphicon glyphicon-time"></i>  {{ router.time | interval }}
-</small>
-<small>
-  <i class="glyphicon glyphicon-retweet"></i>  {{router.redir}}
-</small>
-   </h3>
-<form class="form-horizontal collapse" id="form{{router._id}}">
+</td>
+<td>
+  <i class="glyphicon glyphicon-retweet"></i>  {{router.redir ||"default"}}
+</td>
+
+</tr>
+<tr id="form{{router._id}}" class="collapse"><td colspan=4>
+  <form class="form-horizontal" >
   <div class="form-group">
     <label class="col-sm-2 control-label">Скорость</label>
     <div class="col-sm-4">
@@ -64,4 +71,6 @@
     </div>
   </div>
 </form>
-</div>
+</td></tr>
+</tbody>
+</table>

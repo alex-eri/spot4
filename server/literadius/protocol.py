@@ -6,6 +6,7 @@ import asyncio
 from datetime import datetime
 from utils.password import getsms, getpassw
 import pytz
+from bson.json_util import dumps, loads
 
 logger = logging.getLogger('protocol')
 debug = logger.debug
@@ -92,12 +93,22 @@ class Accounting:
 
         elif self[rad.AcctStatusType] in [rad.AccountingUpdate, rad.AccountingStop] :
 
+            input_bytes = self[rad.AcctInputGigawords] or 0 << 32 | self[rad.AcctInputOctets]
+            output_bytes = self[rad.AcctOutputGigawords] or 0 << 32 | self[rad.AcctOutputOctets]
+
+            input_packets = self[rad.AcctInputPackets]
+            output_packets = self[rad.AcctOutputPackets]
+
+            if self[rad.CoovaChilliAcctViewPoint] == rad.CoovaChilliClientViewPoint:
+                input_bytes, output_bytes = output_bytes, input_bytes
+                input_packets, output_packets = output_packets, input_packets
+
             account = {
                 'session_time': self[rad.AcctSessionTime],
-                'input_bytes': self[rad.AcctInputGigawords] or 0 << 32 | self[rad.AcctInputOctets],
-                'input_packets': self[rad.AcctInputPackets],
-                'output_bytes': self[rad.AcctOutputGigawords] or 0 << 32 | self[rad.AcctOutputOctets],
-                'output_packets': self[rad.AcctOutputPackets],
+                'input_bytes': input_bytes,
+                'input_packets': input_packets,
+                'output_bytes': output_bytes,
+                'output_packets': output_packets,
                 'delay':self[rad.AcctDelayTime],
                 'event_time': self[rad.EventTimestamp]
             }
@@ -135,19 +146,22 @@ class Accounting:
 class Auth:
     async def set_limits(self,user,reply):
         profiles = [
-            user['_id'],
-            self[rad.CalledStationId],
+            'default',
             self[rad.NASIdentifier],
-            'default'
+            self[rad.CalledStationId],
+            user['_id']
             ]
-        limits = self.db.limit.find( {'_id': {'$in':profiles}})
+        limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(4)
+        ordered = sorted(limits,key=lambda l:profiles.index(l['_id'])) #TODO: enum style
         limit = {}
-        async for l in limits:
+        for l in ordered:
             for k,v in l.items():
                 if v == 0:
                     limit.pop(k)
                 if v:
                     limit[k] = v
+        limit.pop('_id')
+
         with reply.lock:
             for k,v in limit.items():
                 if k == 'rate':
@@ -156,7 +170,13 @@ class Auth:
                     r = int(v * 0.9)
                     reply[rad.MikrotikRateLimit] = \
                         "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(v,b,r, BURST_TIME)
-                    reply[rad.AscendDataRate] = v << 10
+
+                    bps = v << 10
+
+                    reply[rad.AscendDataRate] = bps
+                    reply[rad.AscendXmitRate] = bps
+                    reply[rad.WISPrBandwidthMaxDown] = bps
+                    reply[rad.WISPrBandwidthMaxUp] = bps
                 elif k == 'time':
                     reply[rad.SessionTimeout] = v
                 elif k == 'ports':
@@ -174,8 +194,16 @@ class Auth:
                     reply[rad.WISPrRedirectionURL] = v
                 elif k == 'filter':
                     reply[rad.FilterId] = v
-                if isinstance(k,(int,tuple)):
-                    reply[k] = v
+                else:
+                    try:
+                        jk = loads(k)
+                    except Exception:
+                        logger.warning("Bad limit: %s",k)
+                    else:
+                        if isinstance(jk,int):
+                            reply[jk] = v
+                        elif isinstance(jk,list):
+                            reply[tuple(jk)] = v
 
         return reply
 

@@ -3,11 +3,11 @@ USE_CYTHON = True
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
-packages = ["os","utils","struct","mschap","pytz"]
+packages = ["os","utils","struct","mschap","pytz","motor"]
 
 build_exe_options = {
     "packages": packages,
-    "excludes": ["tkinter","tornado","zope","twisted","xmlrpc","xml"],
+    "excludes": ["tkinter","tornado","zope","twisted","xmlrpc"],
     "includes": packages,
     'include_files': [],
     'create_shared_zip': True, #не запускается если отключить library.zip

@@ -1,9 +1,9 @@
 $(if http-status == 302)Hotspot login required$(endif)
-$(if http-header == "Location")http://{IP}:{PORT}/uam/register/?nasid=$(server-name)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorig=$(link-orig-esc)$(endif)
+$(if http-header == "Location")http://{IP}:{PORT}/uam/register/?nasid=$(identity)&called=$(server-name)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorig=$(link-orig-esc)$(endif)
 <html>
 <head>
-<title>...</title>
-<meta http-equiv="refresh" content="0; url=http://{IP}:{PORT}/uam/register/?nasid=$(server-name)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorig=$(link-orig-esc)">
+<title>Redirecting...</title>
+<meta http-equiv="refresh" content="0; url=http://{IP}:{PORT}/uam/register/?nasid=$(identity)&called=$(server-name)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorig=$(link-orig-esc)">
 <meta http-equiv="pragma" content="no-cache">
 <meta http-equiv="expires" content="-1">
 </head>

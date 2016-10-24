@@ -91,10 +91,16 @@ CoovaChilliAcctViewPoint = (ChilliSpot, 10)
 CoovaChilliNASViewPoint = NASViewPoint = 1
 CoovaChilliClientViewPoint = ClientViewPoint = 2
 
+CoovaChilliBandwidthMaxUp = (ChilliSpot, 4)
+CoovaChilliBandwidthMaxDown = (ChilliSpot, 5)
+
 WISPr = 14122
 WISPrLocationName = (WISPr,2)
 WISPrLogoffURL = (WISPr,3)
 WISPrRedirectionURL = (WISPr,4)
+
+WISPrBandwidthMaxUp = (WISPr, 7)
+WISPrBandwidthMaxDown = (WISPr,8)
 
 MT = Mikrotik = 14988
 MikrotikRecvLimit = (Mikrotik,1)
