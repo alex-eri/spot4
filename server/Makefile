@@ -5,6 +5,6 @@ clean:
 
 build_exe:
 	python setup.py build
- 
+
 copy:
-	[ -x ./build/lib* ] && cp -r ./build/$(shell (ls build | grep lib))/* ./build/$(shell (ls build | grep exe))/
+	[ -x ./build/lib* ] && cp -r ./build/$(shell (ls build | grep lib))/* ./build/$(shell (ls build | grep exe))/ || true

@@ -17,19 +17,22 @@ BITMASK32 = 2**32-1
 class BaseRadius(asyncio.DatagramProtocol):
     radsecret = None
     db = None
-    def __getitem__(self,y): #TODO: remove it
-        r = self.pkt.decode(y)
-        return r
 
     def connection_made(self, transport):
         self.transport = transport
 
-    def respond(self,task):
-        resp = task.result()
-        self.transport.sendto(resp.data, self.caller)
+    def respond(self,resp, caller):
+        self.transport.sendto(resp.data, caller)
+
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
                 debug('{} :\t{}'.format(attr,resp.decode(attr)))
+
+    def respond_cb(self,caller):
+        def untask(task):
+            resp = task.result()
+            self.respond(resp,caller)
+        return untask
 
     def error_received(self, exc):
         logger.error('Error received: %s', exc)
@@ -39,28 +42,29 @@ class BaseRadius(asyncio.DatagramProtocol):
 
     def datagram_received(self, data, addr):
         debug('From {} received'.format(addr))
-        self.caller = addr
-        self.pkt = Packet(data, self.radsecret)
+        req = Packet(data, self.radsecret)
 
-        if self.pkt.code == rad.AccessRequest:
+        if req.code == rad.AccessRequest:
             handler = self.handle_auth
-        elif self.pkt.code == rad.AccountingRequest:
+        elif req.code == rad.AccountingRequest:
             handler = self.handle_acct
-        elif self.pkt.code == rad.CoARequest:
+        elif req.code == rad.CoARequest:
             handler = self.handle_coa
         else:
             raise Exception('Packet is not request')
         if logger.isEnabledFor(logging.DEBUG):
-            for attr in self.pkt.keys():
-                debug('{} :\t{}'.format(attr,self.pkt.decode(attr)))
+            for attr in req.keys():
+                debug('{} :\t{}'.format(attr,req.decode(attr)))
 
         loop = asyncio.get_event_loop()
-        c = handler() #coroutine
+
+        c = handler(req, addr) #coroutine
+
         f = asyncio.ensure_future(c,loop=loop)
-        f.add_done_callback(self.respond)
-        def wakeup():
-            pass
-        loop.call_soon(wakeup)
+        f.add_done_callback(self.respond_cb(addr))
+        #def wakeup():
+        #    pass
+        #loop.call_soon(wakeup)
 
 
     def db_cb(self,r,e,*a,**kw):
@@ -68,58 +72,59 @@ class BaseRadius(asyncio.DatagramProtocol):
             logger.error(e.__repr__())
 
 class CoA:
-    async def handle_coa(self):
+    async def handle_coa(self,req,caller):
         raise NotImplemented('Coa not yet')
 
 class Accounting:
-    async def handle_acct(self):
+    async def handle_acct(self,req,caller):
         q = {
-                'auth_class': self[rad.Class],
-                'session_id': self[rad.AcctSessionId],
+                'auth_class': req.decode(rad.Class),
+                'session_id': req.decode(rad.AcctSessionId),
                 #'sensor': self.caller[0]
             }
         account = {}
 
-        if self[rad.AcctStatusType] == rad.AccountingStart:
+        if req.decode(rad.AcctStatusType) == rad.AccountingStart:
             account={
-                    'ip': self[rad.FramedIPAddress],
-                    'nas': self[rad.NASIdentifier],
-                    'callee': self[rad.CalledStationId],
-                    'caller': self[rad.CallingStationId],
-                    'username': self[rad.UserName],
-                    'start_time': self[rad.EventTimestamp]
+                    'ip': req.decode(rad.FramedIPAddress),
+                    'nas': req.decode(rad.NASIdentifier),
+                    'callee': req.decode(rad.CalledStationId),
+                    'caller': req.decode(rad.CallingStationId),
+                    'username': req.decode(rad.UserName),
+                    'start_time': req.decode(rad.EventTimestamp)
                 }
 
 
-        elif self[rad.AcctStatusType] in [rad.AccountingUpdate, rad.AccountingStop] :
+        elif req.decode(rad.AcctStatusType) in [rad.AccountingUpdate, rad.AccountingStop] :
 
-            input_bytes = self[rad.AcctInputGigawords] or 0 << 32 | self[rad.AcctInputOctets]
-            output_bytes = self[rad.AcctOutputGigawords] or 0 << 32 | self[rad.AcctOutputOctets]
+            input_bytes = req.decode(rad.AcctInputGigawords) or 0 << 32 | req.decode(rad.AcctInputOctets)
+            output_bytes = req.decode(rad.AcctOutputGigawords) or 0 << 32 | req.decode(rad.AcctOutputOctets)
 
-            input_packets = self[rad.AcctInputPackets]
-            output_packets = self[rad.AcctOutputPackets]
+            input_packets = req.decode(rad.AcctInputPackets)
+            output_packets = req.decode(rad.AcctOutputPackets)
 
-            if self[rad.CoovaChilliAcctViewPoint] == rad.CoovaChilliClientViewPoint:
+            if req.decode(rad.CoovaChilliAcctViewPoint) == rad.CoovaChilliClientViewPoint:
                 input_bytes, output_bytes = output_bytes, input_bytes
                 input_packets, output_packets = output_packets, input_packets
 
             account = {
-                'session_time': self[rad.AcctSessionTime],
+                'session_time': req.decode(rad.AcctSessionTime),
                 'input_bytes': input_bytes,
                 'input_packets': input_packets,
                 'output_bytes': output_bytes,
                 'output_packets': output_packets,
-                'delay':self[rad.AcctDelayTime],
-                'event_time': self[rad.EventTimestamp]
+                'delay':req.decode(rad.AcctDelayTime),
+                'event_time': req.decode(rad.EventTimestamp)
             }
 
-            if self[rad.AcctStatusType] == rad.AccountingStop:
-                account['termination_cause'] =  self[rad.AcctTerminateCause]
+            if req.decode(rad.AcctStatusType) == rad.AccountingStop:
+                account['termination_cause'] =  req.decode(rad.AcctTerminateCause)
 
 
-        elif self[rad.AcctStatusType] in [rad.AccountingOn, rad.AccountingOff]:
+        elif req.decode(rad.AcctStatusType) in [rad.AccountingOn, rad.AccountingOff]:
             self.db.accounting.find_and_modify(
-                {'nas': self[rad.NASIdentifier],'termination_cause':{'$exists': False}},
+                {'nas': req.decode(rad.NASIdentifier),
+                'termination_cause':{'$exists': False}},
                 {'$set':{'termination_cause': rad.TCNASReboot}},
                 callback=self.db_cb
             )
@@ -129,8 +134,8 @@ class Accounting:
             account.update({
                 'stop_date':datetime.now(pytz.utc),
                 'sensor':{
-                    'ip':self.caller[0],
-                    'port':self.caller[1]
+                    'ip':caller[0],
+                    'port':caller[1]
                     }
                 })
             upd={
@@ -140,15 +145,15 @@ class Accounting:
 
             self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.db_cb)
 
-        return self.pkt.reply(rad.AccountingResponse)
+        return req.reply(rad.AccountingResponse)
 
 
 class Auth:
-    async def set_limits(self,user,reply):
+    async def set_limits(self,user,req,reply):
         profiles = [
             'default',
-            self[rad.NASIdentifier],
-            self[rad.CalledStationId],
+            req.decode(rad.NASIdentifier),
+            req.decode(rad.CalledStationId),
             user['_id']
             ]
         limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(4)
@@ -208,10 +213,10 @@ class Auth:
         return reply
 
 
-    async def handle_auth(self):
+    async def handle_auth(self,req,caller):
         code = rad.AccessReject
-        reply = self.pkt.reply(rad.AccessReject)
-        user = await self.db.users.find_one({'_id':self[rad.UserName]})
+        reply = req.reply(code)
+        user = await self.db.users.find_one({'_id':req.decode(rad.UserName)})
 
         if not user:
             return  reply
@@ -220,10 +225,10 @@ class Auth:
 
         q = {
             'username':user['_id'],
-            'mac':self[rad.CallingStationId]
+            'mac':req.decode(rad.CallingStationId)
              }
 
-        if user.get('password') and self.pkt.check_password(user.get('password')):
+        if user.get('password') and req.check_password(user.get('password')):
             self.db.devices.find_and_modify(q,
                     {'$currentDate':{'seen':True},'$set':{'checked':True}},
                     upsert=True, new=True, callback=self.db_cb
@@ -232,7 +237,7 @@ class Auth:
         else:
             for n in [0,-1]:
                 psw = getpassw(n=n, **q)
-                if self.pkt.check_password(psw):
+                if req.check_password(psw):
                     code = rad.AccessAccept
                     break
         if code == rad.AccessReject:
@@ -242,7 +247,7 @@ class Auth:
             device = await self.db.devices.find_one(q)
             if device:
                 reply.code = code
-                reply = await self.set_limits(user,reply)
+                reply = await self.set_limits(user,req,reply)
         return reply
 
 
@@ -250,70 +255,4 @@ class RadiusProtocol(Accounting,Auth,CoA,BaseRadius):
     """
     Implementation with Auth and Accounting
     """
-
-class Legacy:
-    def handle_auth(self):
-        self.reply = self.pkt.reply(rad.AccessReject)
-        self.reply[rad.Class]=uuid4().bytes
-
-        self.db.users.find_one({'_id':self[rad.UserName]},callback=self.got_user)
-        debug('user was {}'.format(self[rad.UserName]))
-
-    def got_user(self,response,error):
-        if error:
-            logger.error(error.__repr__())
-        if response:
-            q = {
-                'username':response['_id'],
-                'mac':self[rad.CallingStationId]
-                 }
-
-            self.get_limits(response)
-
-            if response.get('password') and self.pkt.check_password(response.get('password')):
-                self.db.devices.find_and_modify(q,
-                    {'$currentDate':{'seen':True},'$set':{'checked':True}},
-                    upsert=True, new=True,
-                    callback=self.got_device
-                    )
-                self.reply.code = rad.AccessAccept
-            else:
-                for n in [0,-1]:
-                    psw = getpassw(n=n, **q)
-                    if self.pkt.check_password(psw):
-                        q['checked']=True
-                        self.db.devices.find_one(q,callback=self.got_device)
-                        return
-                    else:
-                        debug('otp was {}'.format(psw))
-        #reject
-        self.respond( self.reply )
-
-
-    def got_device(self,response,error):
-        if error:
-            logger.error(error.__repr__())
-        if response:
-            self.reply.code = rad.AccessAccept
-        self.respond( self.reply )
-
-    def get_limits(self,user):
-        profiles = [
-            user._id,
-            self[rad.CalledStationId],
-            self[rad.NASIdentifier],
-            'default'
-            ]
-        self.db.limit.find(
-            {'_id': {'$in':profiles}},
-            callback = self.set_limits
-        )
-
-    def set_limits(self,response):
-        limit = {}
-        for l in response:
-            for k,v in l.items:
-                limit[k] = limit.get(k) or v
-        debug(limit)
-
 

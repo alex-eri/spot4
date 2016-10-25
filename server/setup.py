@@ -1,4 +1,4 @@
-USE_CYTHON = True
+USE_CYTHON = False
 
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
