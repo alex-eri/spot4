@@ -10,6 +10,7 @@ import literadius.constants as rad
 logger = logging.getLogger('radius')
 debug = logger.debug
 TTL = 56
+BILLING = False
 
 def setup_radius(config,PORT):
 
@@ -25,9 +26,6 @@ def setup_radius(config,PORT):
         config['DB']['NAME']
     )
 
-    db.accounting.ensure_index([ ("username",1) ], unique=False, callback=storage.index_cb)
-    db.accounting.ensure_index([ ("nas",1) ], unique=False, callback=storage.index_cb)
-    db.accounting.ensure_index([ ("callee",1) ], unique=False, callback=storage.index_cb)
     db.accounting.find_and_modify(
                 {'termination_cause':{'$exists': False}},
                 {'$set':{'termination_cause': rad.TCAdminReboot}},

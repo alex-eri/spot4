@@ -1,4 +1,5 @@
 import literadius.constants as rad
+from literadius.constants import typeofNAS
 from literadius.packet import Packet
 from uuid import uuid4
 import logging
@@ -13,6 +14,7 @@ debug = logger.debug
 
 BURST_TIME = 5
 BITMASK32 = 2**32-1
+TIMEOUT = 10
 
 class BaseRadius(asyncio.DatagramProtocol):
     radsecret = None
@@ -21,7 +23,7 @@ class BaseRadius(asyncio.DatagramProtocol):
     def connection_made(self, transport):
         self.transport = transport
 
-    def respond(self,resp, caller):
+    def respond(self, resp, caller):
         self.transport.sendto(resp.data, caller)
 
         if logger.isEnabledFor(logging.DEBUG):
@@ -30,8 +32,11 @@ class BaseRadius(asyncio.DatagramProtocol):
 
     def respond_cb(self,caller):
         def untask(task):
-            resp = task.result()
-            self.respond(resp,caller)
+            if task.done():
+                resp = task.result()
+                self.respond(resp,caller)
+            else:
+                logger.warning('Droped request %s', task.exception())
         return untask
 
     def error_received(self, exc):
@@ -40,8 +45,8 @@ class BaseRadius(asyncio.DatagramProtocol):
     def connection_lost(self, exc):
         debug('Stop: %s', exc)
 
-    def datagram_received(self, data, addr):
-        debug('From {} received'.format(addr))
+    def datagram_received(self, data, caller):
+        debug('From {} received'.format(caller))
         req = Packet(data, self.radsecret)
 
         if req.code == rad.AccessRequest:
@@ -56,16 +61,25 @@ class BaseRadius(asyncio.DatagramProtocol):
             for attr in req.keys():
                 debug('{} :\t{}'.format(attr,req.decode(attr)))
 
-        loop = asyncio.get_event_loop()
+        #f = asyncio.ensure_future(
+        #    handler(req, caller),
+        #    loop=asyncio.get_event_loop()
+        #    )
+        #f.add_done_callback(self.respond_cb(caller))
 
-        c = handler(req, addr) #coroutine
+        loop=asyncio.get_event_loop()
+        f = loop.create_task(handler(req, caller))
+        f.add_done_callback(self.respond_cb(caller))
 
-        f = asyncio.ensure_future(c,loop=loop)
-        f.add_done_callback(self.respond_cb(addr))
-        #def wakeup():
-        #    pass
-        #loop.call_soon(wakeup)
-
+#        try:
+#            resp = f.result(TIMEOUT)
+#        except asyncio.TimeoutError:
+#            logger.warning('Droped request %s', task.exception())
+#            f.cancel()
+#        except Exception as exc:
+#            logger.error('{} raised an exception: {!r}'.format(caller,exc))
+#        else:
+#            self.respond(resp, caller)
 
     def db_cb(self,r,e,*a,**kw):
         if e:
@@ -132,14 +146,14 @@ class Accounting:
 
         if account :
             account.update({
-                'stop_date':datetime.now(pytz.utc),
+                'stop_date':datetime.utcnow(),
                 'sensor':{
                     'ip':caller[0],
                     'port':caller[1]
                     }
                 })
             upd={
-            '$setOnInsert':{'start_date':datetime.now(pytz.utc)},
+            '$setOnInsert':{'start_date':datetime.utcnow()},
             '$set':account
             }
 
@@ -147,9 +161,24 @@ class Accounting:
 
         return req.reply(rad.AccountingResponse)
 
-
 class Auth:
+
+    def get_type(self,req):
+        nas = 0
+        vendors = set(x for x,y in filter( lambda x: isinstance(x, tuple) ,req.keys()))
+        for x in vendors:
+            if x == rad.Mikrotik:
+                nas |= typeofNAS.mikrotik
+            elif x == rad.ChilliSpot :
+                 nas |= typeofNAS.chilli
+            elif x == rad.WISPr:
+                nas |= typeofNAS.wispr
+        return nas
+
+
     async def set_limits(self,user,req,reply):
+        nas = self.get_type(req)
+
         profiles = [
             'default',
             req.decode(rad.NASIdentifier),
@@ -171,17 +200,20 @@ class Auth:
             for k,v in limit.items():
                 if k == 'rate':
                     v = int(v * 1024)
-                    b = int(v * 1.3)
-                    r = int(v * 0.9)
-                    reply[rad.MikrotikRateLimit] = \
-                        "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(v,b,r, BURST_TIME)
+                    if nas | typeofNAS.mikrotik:
+                        b = int(v * 1.3)
+                        r = int(v * 0.9)
+                        reply[rad.MikrotikRateLimit] = \
+                            "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(v,b,r, BURST_TIME)
+                    else:
+                        bps = v << 10
+                        if nas | typeofNAS.wispr :  # +chilli here
+                            reply[rad.WISPrBandwidthMaxDown] = bps
+                            reply[rad.WISPrBandwidthMaxUp] = bps
+                        else:
+                            reply[rad.AscendDataRate] = bps
+                            reply[rad.AscendXmitRate] = bps
 
-                    bps = v << 10
-
-                    reply[rad.AscendDataRate] = bps
-                    reply[rad.AscendXmitRate] = bps
-                    reply[rad.WISPrBandwidthMaxDown] = bps
-                    reply[rad.WISPrBandwidthMaxUp] = bps
                 elif k == 'time':
                     reply[rad.SessionTimeout] = v
                 elif k == 'ports':
@@ -190,11 +222,16 @@ class Auth:
                     v = v << 20
                     g = v >> 32
                     b = v & BITMASK32
-                    reply[rad.MikrotikRecvLimit] = b
-                    reply[rad.MikrotikXmitLimit] = b
-                    if g > 0:
-                        reply[rad.MikrotikRecvLimitGigawords] = g
-                        reply[rad.MikrotikXmitLimitGigawords] = g
+                    if nas | typeofNAS.mikrotik:
+                        reply[rad.MikrotikRecvLimit] = b
+                        reply[rad.MikrotikXmitLimit] = b
+                        if g > 0:
+                            reply[rad.MikrotikRecvLimitGigawords] = g
+                            reply[rad.MikrotikXmitLimitGigawords] = g
+                    elif nas | typeofNAS.chilli:
+                        reply[rad.ChilliSpotMaxInputOctets] = b
+                        reply[rad.ChilliSpotMaxOutputOctets] = b
+
                 elif k == 'redir':
                     reply[rad.WISPrRedirectionURL] = v
                 elif k == 'filter':
@@ -241,6 +278,7 @@ class Auth:
                     code = rad.AccessAccept
                     break
         if code == rad.AccessReject:
+            asyncio.sleep(1)
             return reply
         else:
             q['checked'] = True

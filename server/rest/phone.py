@@ -5,7 +5,9 @@ from utils.phonenumbers import check as phcheck
 import random
 from .logger import *
 #from .device import FIELDS
+from datetime import datetime, timedelta
 
+REREG = timedelta(days=3)
 
 async def nextuser(db):
     n = await db.counters.find_and_modify({'_id':'userid'},{ '$inc': { 'seq': 1 } }, new=True)
@@ -22,11 +24,10 @@ async def setuser(db,reg):
     return await db.users.insert({'with':reg,'_id': await nextuser(db)})
 
 
-
-
-
 @json
 async def phone_handler(request):
+    now = datetime.utcnow()
+
     coll = request.app['db'].devices
     if 'json' in request.headers.get('Content-Type',''):
         DATA = await request.json()
@@ -34,7 +35,6 @@ async def phone_handler(request):
         DATA = await request.post()
     phone = DATA.get('phone')
 
-    debug(DATA)
     try:
         phcheck(phone)
     except:
@@ -46,16 +46,28 @@ async def phone_handler(request):
         )
 
     updq = {
-        '$currentDate':{'seen':True}
+        '$set':{'seen':now},
+        '$setOnInsert':{'registred': now},
         #, "$set" {'sensor': request.ip }
         }
 
     device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
     debug(device.__repr__())
+
+    upd = {'try': 0 }
+
     if device.get('username'):
-        device['password'] = getpassw(device.get('username'), device.get('mac'))
+        reg = False
+        if device.get('checked'):
+            device['password'] = getpassw(device.get('username'), device.get('mac'))
+        elif (now - device.get('registred',now)) > REREG:
+            reg = True
     else:
-        upd = {'try': 0 }
+        reg = True
+        upd['username'] = (await setuser(request.app['db'],phone))
+
+
+    if reg:
         smsmode = DATA.get('smsmode','wait')
         numbers = request.app['config'].get('numbers')
         if numbers:
@@ -72,11 +84,8 @@ async def phone_handler(request):
                 debug(text)
                 request.app['config']['smsq'].put((phone,text))
 
-        upd['username'] = (await setuser(request.app['db'],phone))
-
         updq = {
             '$set': upd,
-            '$currentDate':{'registred':True}
         }
 
         debug(upd)

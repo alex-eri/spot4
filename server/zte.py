@@ -17,8 +17,6 @@ import hashlib
 logger = logging.getLogger('zte')
 debug = logger.debug
 
-
-
 retoken = re.compile('([0-9]{%d})' % SMSLEN)
 
 from itertools import cycle
@@ -45,12 +43,25 @@ class Client(object):
         self.smsq = config['smsq']
         config['numbers'].append(callie)
         self.numbers = config['numbers']
-        self.sema = Semaphore()
-        debug(self.numbers)
         self.headers = {
             'Referer':self.base_url+"/index.html",
             'X-Requested-With':'XMLHttpRequest'
         }
+
+        self.sema = Semaphore()
+        debug(self.numbers)
+        self.max=100
+
+    def set_max(self):
+        loop = asyncio.get_event_loop()
+        c = get_json(self.sms_capacity_info)
+        f = loop.create_task(c)
+        try:
+            capacity = loop.run_until_complete(f)
+        except Exception as e:
+            logger.warning('sms_capacity_info: %s',e)
+        else:
+            self.max= capacity.get('sms_nv_total')
 
     #def __del__(self):
     #    self.numbers.remove(self.callie)
@@ -73,6 +84,20 @@ class Client(object):
         finally: self.sema.release()
         raise error
 
+    def sms_capacity_info(self,*a,**kw):
+
+        """
+        Request URL:http://192.168.0.1/goform/goform_get_cmd_process?isTest=false&cmd=sms_capacity_info&_=1477750277341
+        {"sms_nv_total":"100","sms_sim_total":"5","sms_nv_rev_total":"0",
+        "sms_nv_send_total":"1","sms_nv_draftbox_total":"0",
+        "sms_sim_rev_total":"0","sms_sim_send_total":"0","sms_sim_draftbox_total":"0"}
+        """
+        uri = "{base}/goform/goform_get_cmd_process?"\
+            "isTest=false&cmd=sms_capacity_info&_={date}".format(
+                base=self.base_url,
+                date=int(time.time()*1000))
+        return self.get(uri,*a,**kw)
+
     def get_count(self,*a,**kw):
         uri = "{base}/goform/goform_get_cmd_process?"\
             "multi_data=1&isTest=false&sms_received_flag_flag=0&sts_received_flag_flag=0&"\
@@ -82,12 +107,14 @@ class Client(object):
             )
         return self.get(uri,*a,**kw)
 
-    def get_messages(self,*a,**kw):
+    def get_messages(self,tags=1,*a,**kw):
         uri = "{base}/goform/goform_get_cmd_process?"\
-            "isTest=false&cmd=sms_data_total&page=0&data_per_page=100&mem_store=1&tags=1&"\
+            "isTest=false&cmd=sms_data_total&page=0&data_per_page={max}&mem_store=1&tags={tags}&"\
             "order_by=order+by+id+desc&_={date}".format(
+                max= self.max,
                 base=self.base_url,
-                date=int(time.time()*1000)
+                date=int(time.time()*1000),
+                tags=tags
             )
         return self.get(uri,*a,**kw)
 
@@ -124,13 +151,10 @@ class Client(object):
         delete = []
         for m in messages:
             phone = trydecodeHexUcs2(m.get('number'))
-            logger.info(phone)
             text = trydecodeHexUcs2(m.get('content'))
-            logger.info(text)
+            logger.info('SMS: %s >>> %s', phone,text)
             t = retoken.match(text)
             if t:
-                debug(t.group())
-
                 q = dict(
                     phone=phone, sms_waited=t.group()
                 )
@@ -138,21 +162,35 @@ class Client(object):
                       '$set':{ 'checked': True },
                       '$currentDate':{'check_date':True}
                     })
-                debug(r)
                 delete.append(m.get('id',0))
             else:
                 read.append(m.get('id',0))
 
         return read,delete
 
-    async def worker(self):
+    async def clean(self):
+        data = await get_json(self.get_messages,tags=10)
+        delete = [ m['id'] for m in data.get("messages",[]) ]
+        if delete: await self.delete_sms(delete)
 
+    async def worker(self):
         try:
             data = await get_json(self.get_messages)
             if data.get("messages"):
                 read, delete = await self.handle_messages(data["messages"])
                 if delete: await self.delete_sms(delete)
                 if read: await self.set_msg_read(read)
+
+            data = await get_json(self.sms_capacity_info)
+            if data.get('sms_nv_total'):
+                self.max = int(data.get('sms_nv_total',100))
+                total = \
+                    int(data.get("sms_nv_rev_total",0)) + \
+                    int(data.get("sms_nv_send_total",0)) + \
+                    int(data.get("sms_nv_draftbox_total",0))
+                top = self.max * 0.8
+                if total > top:
+                     await self.clean()
 
         except json.decoder.JSONDecodeError as e:
             logger.error(self.base_url)
@@ -170,7 +208,8 @@ class Client(object):
             logger.error(e.__repr__())
             raise e
         finally:
-            debug('worker_done')
+            pass
+            #debug('worker_done')
 
 
 

@@ -19,8 +19,6 @@ def ensure_obj(result,error):
         raise error
 
 
-
-
 def insert_cb(result,error):
     if error:
         logger.error(error.__repr__())

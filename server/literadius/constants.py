@@ -1,3 +1,10 @@
+class typeofNAS():
+    accend = 1
+    wispr = 2
+    mikrotik = 4
+    chilli = 8
+
+
 AccessRequest = 1
 AccessAccept = 2
 AccessReject = 3
@@ -84,8 +91,13 @@ AccountingUpdate	=	3
 AccountingOn	=	7
 AccountingOff	=	8
 
+
 ChilliSpot = 14559
+ChilliSpotMaxInputOctets = (ChilliSpot, 1)
+ChilliSpotMaxOutputOctets = (ChilliSpot, 2)
+ChilliSpotMaxTotalOctets = (ChilliSpot, 3)
 ChilliSpotVersion = (ChilliSpot, 8)
+
 CoovaChilliAcctViewPoint = (ChilliSpot, 10)
 
 CoovaChilliNASViewPoint = NASViewPoint = 1
@@ -93,6 +105,9 @@ CoovaChilliClientViewPoint = ClientViewPoint = 2
 
 CoovaChilliBandwidthMaxUp = (ChilliSpot, 4)
 CoovaChilliBandwidthMaxDown = (ChilliSpot, 5)
+
+
+
 
 WISPr = 14122
 WISPrLocationName = (WISPr,2)

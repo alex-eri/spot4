@@ -75,15 +75,22 @@ def premain():
     import argparse
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
-    parser.add_argument('--config-dir', nargs='?', help='config dir')
+    parser.add_argument('--config-dir', nargs='?', help='Config dir')
+    parser.add_argument('--reindex', help='Ensure indexes')
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
     args,argv = parser.parse_known_args()
 
+
     if args.config_dir:
         import utils.procutil
         utils.procutil.chdir(args.config_dir)
+
+    if args.reindex:
+        import reindex
+        reindex.index(json.load(open('config.json','r')))
+        return
 
     if os.name == 'nt':
         import utils.win32

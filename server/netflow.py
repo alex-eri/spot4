@@ -121,9 +121,10 @@ def setup5(config):
 
 
 def setup(config):
+    services = []
     if 5 in config.get('NETFLOW'):
-        return setup5(config)
-    return []
+        services.extend(setup5(config))
+    return services
 
 def main():
     import json

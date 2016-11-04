@@ -150,6 +150,7 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
 
         function onerror(error){
             console.log('login failed');
+           
             $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
         }
 
@@ -170,6 +171,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
         }
 
         function onchillistatus(response) {
+
+            console.log(response)
 
             var challenge = hex2bin(response.challenge);
             var chapid = '\x00';
@@ -223,8 +226,6 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
 
                 },
                 {get:{ method: 'JSONP'}}).get(onmikrotikstatus,onerror)
-
-
             }
         } else {
             onerror({})
@@ -233,8 +234,9 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
 }]);
 
 
-app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$window',
-    function ( $scope, $resource, $cookies ,$location,$window){
+
+app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$window','$interval',
+    function ( $scope, $resource, $cookies ,$location,$window,$interval){
         $scope.wrongcode = false;
         $scope.code = null;
         var oid = $location.$$search.device || $cookies.get('device');
@@ -244,6 +246,7 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
             console.log(response);
             $scope.device = response;
             if (response.password) {
+                $interval.cancel($scope.checker)
                 $location.search('password', response.password);
                 $location.search('username', response.username);
                 $location.path('/login/')
@@ -257,14 +260,21 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
                         $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
                 }
 
-        if ($scope.device) {
-        } else {
-             $resource('/device/:oid').get({
-                    'oid': oid
-                },
-                prelogin,onerror
-             )
+        if ($scope.checker) {
+            $interval.cancel($scope.checker)
         }
+
+        function getdevice(){
+                 $resource('/device/:oid').get({
+                        'oid': oid
+                    },
+                    prelogin,onerror
+                 )
+            }
+
+        $scope.checker = $interval(
+            getdevice, 4000)
+
 
         $scope.confirm = function(form) {if (form.$valid) {
 
@@ -337,6 +347,9 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
             $cookies.remove('uamip');
         }
     }
+
+    if ( $location.$$search.nasid && ! $location.$$search.called )
+        $cookies.put('called', $location.$$search.nasid);
 
     console.log($cookies.getAll())
 
