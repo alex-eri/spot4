@@ -64,3 +64,5 @@ async def db_options(request):
     return resp
 
 
+async def generate_204(request):
+    raise web.HTTPNoContent()

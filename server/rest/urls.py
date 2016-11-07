@@ -10,6 +10,8 @@ def index_factory(path,filename):
 
 
 def routers(app):
+    app.router.add_get('/generate_204', generate_204)
+
     if app['config'].get('SMS'):
 
         app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
