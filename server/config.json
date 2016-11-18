@@ -7,7 +7,7 @@
 "API_SECRET": {"admin":"testing123"},
 "NETFLOW": [5],
 "NETFLOW_PORT": 2055,
-"NETFLOW_SIZE": 2000,
+"NETFLOW_SIZE": 2100,
 "DEBUG": true,
 "LOGFILE": null,
 "DB": {

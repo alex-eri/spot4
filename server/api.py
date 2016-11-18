@@ -12,14 +12,13 @@ import hashlib
 logger = logging.getLogger('http')
 debug = logger.debug
 
-
 def setup_web(config):
     global logger
     name = current_process().name
     procutil.set_proc_name(name)
 
     import storage
-
+    import asyncio
     import rest.urls
 
     db = storage.setup(
@@ -27,7 +26,17 @@ def setup_web(config):
         config['DB']['NAME']
     )
 
-    db.counters.insert({'_id':'userid', 'seq':0}, callback=storage.ensure_obj)
+    loop = asyncio.get_event_loop()
+
+    loop.run_until_complete(
+        db.counters.find_and_modify(
+        {'_id':'userid'},
+        { '$setOnInsert': {'seq':0}},
+        upsert=True,new=True)
+        )
+
+    debug('starting webapp')
+
 
     app = web.Application()
     app['db'] = db

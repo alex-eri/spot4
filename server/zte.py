@@ -40,7 +40,6 @@ class Client(object):
         self.base_url = url
         self.callie =  callie
         self.sender =  sender
-        self.smsq = config['smsq']
         config['numbers'].append(callie)
         self.numbers = config['numbers']
         self.headers = {
@@ -48,6 +47,7 @@ class Client(object):
             'X-Requested-With':'XMLHttpRequest'
         }
 
+        self.logger = logging.getLogger('zte')
         self.sema = Semaphore()
         debug(self.numbers)
         self.max=100
@@ -214,7 +214,7 @@ class Client(object):
 
 
 
-    def send_sms(self,phone,text):
+    def send_sms(self,phone,text,**kw):
         uri = "{base}/goform/goform_set_cmd_process".format(
                 base=self.base_url
             )
@@ -232,18 +232,13 @@ class Client(object):
         debug(postdata)
         return self.post(uri,data=postdata)
 
-    async def send_from_queue(self):
-        debug('sender')
-        sms = self.smsq.get()
-        await self.send_sms(*sms)
-        #self.smsq.task_done() for multiprocessing.JoinableQueue only
-
 
 async def recieve_loop(clients):
     name = current_process().name
     procutil.set_proc_name(name)
 
     while clients:
+
         try:
             tasks = [ asyncio.ensure_future(client.worker()) for client in clients ]
             await asyncio.wait(tasks)
@@ -252,31 +247,29 @@ async def recieve_loop(clients):
             debug(e)
         await asyncio.sleep(INTERVAL)
 
-async def send_loop(clients):
-    name = current_process().name
-    procutil.set_proc_name(name)
-
+async def send_loop(clients,db):
     clients = list(filter(lambda x: x.sender, clients))
-    while clients:
-        tasks = [ asyncio.ensure_future(
-            client.send_from_queue()
-            ) for client in clients ]
-        await asyncio.wait(tasks)
-        await asyncio.sleep(INTERVAL)
+    if not clients: return
+
+    from pymongo.cursor import CursorType
+    while True:
+        skip = await db.sms_sent.count()
+        cursor = db.sms_sent.find(cursor_type=CursorType.TAILABLE_AWAIT,skip=skip)
+        while cursor.alive:
+            for client in clients:
+                if (await cursor.fetch_next):
+                        sms = cursor.next_object()
+                        try:
+                            await client.send_sms(**sms)
+                        except Exception as e:
+                            self.logger.error(e)
+                debug('next')
+            await asyncio.sleep(INTERVAL)
 
 
-def setup_clients(config):
+def setup_clients(db, config):
 
     ztes = config['SMS'].get('ZTE',[])
-
-    import storage
-
-    db = storage.setup(
-        config['DB']['SERVER'],
-        config['DB']['NAME']
-    )
-
-    debug(id(db))
 
     clients = []
     for modem in ztes:
@@ -290,10 +283,36 @@ def setup_clients(config):
 
     return clients
 
-def setup_loop(clients, forever):
+def setup_loop(config):
+    executor = None
+    name = current_process().name
+    procutil.set_proc_name(name)
+
     loop = asyncio.get_event_loop()
+    import storage
+
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
+
+    debug(id(db))
+
+
+    t = asyncio.Task(storage.create_capped(db,"sms_sent",2<<10))
+    loop.run_until_complete(t)
+    t = asyncio.Task(storage.create_capped(db,"sms_received",2<<10))
+    loop.run_until_complete(t)
+
+    clients = setup_clients(db, config)
+
+
+
     try:
-        loop.run_until_complete(forever(clients))
+        loop.create_task(recieve_loop(clients))
+        loop.create_task(send_loop(clients,db))
+
+        loop.run_forever()
     except Exception as e:
         logger.critical(e.__repr__())
         raise e
@@ -302,16 +321,9 @@ def setup_loop(clients, forever):
 
 
 def setup(config):
-
-    clients = setup_clients(config)
-
-    reciever = Process(target=setup_loop, args=(clients,recieve_loop))
-    reciever.name = 'zte_reciever'
-
-    sender = Process(target=setup_loop, args=(clients,send_loop))
-    sender.name = 'zte_sender'
-
-    return [reciever, sender]
+    smsd = Process(target=setup_loop,args=(config,))
+    smsd.name = 'smser'
+    return [smsd]
 
 
 def main():
@@ -319,7 +331,7 @@ def main():
     import multiprocessing as mp
     config = json.load(open('config.json','r'))
     logging.basicConfig(level=logging.DEBUG)
-    config['smsq'] = mp.Queue()
+    #config['smsq'] = mp.Queue()
     setup_loop(config)
 
 

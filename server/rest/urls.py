@@ -11,6 +11,7 @@ def index_factory(path,filename):
 
 def routers(app):
     app.router.add_get('/generate_204', generate_204)
+    app.router.add_get('/hotspot-detect.html', hotspot_detect)
 
     if app['config'].get('SMS'):
 

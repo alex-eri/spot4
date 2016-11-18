@@ -8,7 +8,7 @@ import time
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
-FLUSHINTERVAL = 30
+FLUSHINTERVAL = 300
 FLUSHLEVEL = 4096
 
 FLOW5HEADER = "!HHIIII"
@@ -29,6 +29,9 @@ class Netflow5(asyncio.DatagramProtocol):
         super(Netflow5,self).__init__(*a,**kw)
         self.flows = []
         self.flowslock = threading.Lock()
+        self._waiter = asyncio.Event()
+        loop = asyncio.get_event_loop()
+        self._flush_future = loop.create_task(self.store())
 
     def datagram_received(self, data, addr):
         debug(addr)
@@ -52,8 +55,9 @@ class Netflow5(asyncio.DatagramProtocol):
         debug('collected {}'.format(len(self.flows)))
 
         if len(self.flows) > FLUSHLEVEL:
-            loop = asyncio.get_event_loop()
-            loop.call_soon(self.store_once)
+            self._waiter.set()
+            #loop = asyncio.get_event_loop()
+            #loop.call_soon(self.store_once)
 
     def store_once(self):
         with self.flowslock:
@@ -63,10 +67,16 @@ class Netflow5(asyncio.DatagramProtocol):
             self.collector.insert(flows, callback=insert_cb)
         debug('inserted {}'.format(len(flows)))
 
-    def store(self):
-        loop = asyncio.get_event_loop()
-        self.store_once()
-        loop.call_later(FLUSHINTERVAL,self.store)
+    async def store(self):
+        debug("flusher started")
+        while True:
+            try:
+                await asyncio.wait_for(self._waiter.wait(), timeout=FLUSHINTERVAL)
+            except asyncio.TimeoutError:
+                pass
+            self.store_once()
+            self._waiter.clear()
+
 
 def run5(config):
     global insert_cb
@@ -100,10 +110,6 @@ def run5(config):
     debug("task set")
     transport, server = loop.run_until_complete(t)
     debug("started")
-
-    loop.call_later(FLUSHINTERVAL,server.store)
-    debug("flush sheduled")
-
 
     try:
         loop.run_forever()

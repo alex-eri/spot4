@@ -66,3 +66,8 @@ async def db_options(request):
 
 async def generate_204(request):
     raise web.HTTPNoContent()
+
+async def hotspot_detect(request):
+    return web.Response(
+        body=b"<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>",
+        content_type='text/html')

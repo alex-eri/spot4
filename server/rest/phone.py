@@ -82,7 +82,8 @@ async def phone_handler(request):
                 text = "Код подтвеждения {code}.".format(code=code)
                 debug(phone)
                 debug(text)
-                request.app['config']['smsq'].put((phone,text))
+                #request.app['config']['smsq'].put((phone,text))
+                request.app['db'].sms_sent.insert({'phone':phone,'text':text,'sent':now})
 
         updq = {
             '$set': upd,

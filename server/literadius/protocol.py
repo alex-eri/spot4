@@ -19,6 +19,7 @@ TIMEOUT = 10
 class BaseRadius(asyncio.DatagramProtocol):
     radsecret = None
     db = None
+    loop = None
 
     def connection_made(self, transport):
         self.transport = transport
@@ -67,8 +68,8 @@ class BaseRadius(asyncio.DatagramProtocol):
         #    )
         #f.add_done_callback(self.respond_cb(caller))
 
-        loop=asyncio.get_event_loop()
-        f = loop.create_task(handler(req, caller))
+        #loop=asyncio.get_event_loop()
+        f = self.loop.create_task(handler(req, caller))
         f.add_done_callback(self.respond_cb(caller))
 
 #        try:
@@ -139,8 +140,7 @@ class Accounting:
             self.db.accounting.find_and_modify(
                 {'nas': req.decode(rad.NASIdentifier),
                 'termination_cause':{'$exists': False}},
-                {'$set':{'termination_cause': rad.TCNASReboot}},
-                callback=self.db_cb
+                {'$set':{'termination_cause': rad.TCNASReboot}}
             )
             #TODO accountin on/off
 
@@ -157,7 +157,7 @@ class Accounting:
             '$set':account
             }
 
-            self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.db_cb)
+            self.db.accounting.find_and_modify(q,upd,upsert=True)
 
         return req.reply(rad.AccountingResponse)
 
@@ -186,6 +186,8 @@ class Auth:
             user['_id']
             ]
         limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(4)
+        if len(limits) == 0:
+            return reply
         ordered = sorted(limits,key=lambda l:profiles.index(l['_id'])) #TODO: enum style
         limit = {}
         for l in ordered:
@@ -266,10 +268,11 @@ class Auth:
              }
 
         if user.get('password') and req.check_password(user.get('password')):
-            self.db.devices.find_and_modify(q,
-                    {'$currentDate':{'seen':True},'$set':{'checked':True}},
-                    upsert=True, new=True, callback=self.db_cb
-                )
+            self.db.devices.find_and_modify(
+                q,
+                {'$currentDate':{'seen':True},'$set':{'checked':True}},
+                upsert=True
+            )
             code = rad.AccessAccept
         else:
             for n in [0,-1]:

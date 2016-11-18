@@ -14,15 +14,9 @@ def modem_setup(config):
     return zte.setup(config)
     return procs
 
-def setup():
-    import api
-    import radius
-    import json
-    manager = Manager()
-    smsq = Queue()
 
+def setup_log(config):
 
-    config = json.load(open('config.json','r'))
     if config.get('LOGFILE'):
         FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
     else:
@@ -34,7 +28,17 @@ def setup():
 
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
-    config['smsq'] = smsq
+
+def setup():
+    import api
+    import radius
+    import json
+    manager = Manager()
+    smsq = Queue()
+
+
+    config = json.load(open('config.json','r'))
+
     config['numbers'] = manager.list()
 
     services = []
@@ -73,10 +77,11 @@ def premain():
     import multiprocessing,os
     multiprocessing.freeze_support()
     import argparse
+    import json
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
     parser.add_argument('--config-dir', nargs='?', help='Config dir')
-    parser.add_argument('--reindex', help='Ensure indexes')
+    parser.add_argument('--reindex', action='store_true', help='Ensure indexes')
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
@@ -87,9 +92,12 @@ def premain():
         import utils.procutil
         utils.procutil.chdir(args.config_dir)
 
+    config = json.load(open('config.json','r'))
+    setup_log(config)
+
     if args.reindex:
         import reindex
-        reindex.index(json.load(open('config.json','r')))
+        reindex.index(config)
         return
 
     if os.name == 'nt':

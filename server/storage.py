@@ -30,12 +30,16 @@ def setup(mongo_uri,db_name):
 
 
 async def create_capped(db,name,size):
+    from bson import SON
     try:
-        if name in await db.collection_names():
-            await db.command("convertToCapped", name, size=size)
+        info = await db.command(SON([('listCollections',1),('filter',{'name':name})]))
+        info = info['cursor'].get('firstBatch')
+        if info:
+            opts = info[0]
+            if abs( size - opts['options'].get('size',0)) > 4096 :
+                await db.command("convertToCapped", name, size=size)
         else:
             await db.create_collection(name,capped=True,size=size)
     except Exception as error:
         logger.error(error.__repr__())
 
-    

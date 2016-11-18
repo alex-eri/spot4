@@ -1,10 +1,5 @@
 from multiprocessing import Process, current_process
 import logging
-import os
-from utils import procutil
-import asyncio
-import socket
-from literadius.protocol import RadiusProtocol
 import literadius.constants as rad
 
 logger = logging.getLogger('radius')
@@ -12,7 +7,20 @@ debug = logger.debug
 TTL = 56
 BILLING = False
 
+async def close_sessions(db):
+    await db.accounting.find_and_modify(
+                {'termination_cause':{'$exists': False}},
+                {'$set':{'termination_cause': rad.TCAdminReboot}}
+            )
+
+
 def setup_radius(config,PORT):
+    import asyncio
+    from literadius.protocol import RadiusProtocol
+    from utils import procutil
+    import socket
+    import os
+    import storage
 
     name = current_process().name
     procutil.set_proc_name(name)
@@ -20,22 +28,20 @@ def setup_radius(config,PORT):
 
     loop = asyncio.get_event_loop()
 
-    import storage
+
     db = storage.setup(
         config['DB']['SERVER'],
         config['DB']['NAME']
     )
 
-    db.accounting.find_and_modify(
-                {'termination_cause':{'$exists': False}},
-                {'$set':{'termination_cause': rad.TCAdminReboot}},
-                callback=storage.index_cb
-            )
+    t = asyncio.Task(close_sessions(db))
+    loop.run_until_complete(t)
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 
     RadiusProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
     RadiusProtocol.db = db
+    RadiusProtocol.loop = loop
 
     t = asyncio.Task(loop.create_datagram_endpoint(
         RadiusProtocol, local_addr=(HOST,PORT)))
