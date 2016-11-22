@@ -3,9 +3,9 @@ from .decorators import check_auth
 
 def index_factory(path,filename):
     async def static_view(request):
-        route = web.StaticRoute(None, '/', path)
+        route = web.StaticResource('/', path)
         request.match_info['filename'] = filename
-        return await route.handle(request)
+        return await route._handle(request)
     return static_view
 
 
