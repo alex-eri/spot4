@@ -152,7 +152,11 @@ class Client(object):
         for m in messages:
             phone = trydecodeHexUcs2(m.get('number'))
             text = trydecodeHexUcs2(m.get('content'))
+
             logger.info('SMS: %s >>> %s', phone,text)
+
+            await db.sms_received.insert({'phone':phone,'text':text, 'raw': m})
+
             t = retoken.match(text)
             if t:
                 q = dict(
@@ -238,7 +242,6 @@ async def recieve_loop(clients):
     procutil.set_proc_name(name)
 
     while clients:
-
         try:
             tasks = [ asyncio.ensure_future(client.worker()) for client in clients ]
             await asyncio.wait(tasks)
@@ -252,18 +255,23 @@ async def send_loop(clients,db):
     if not clients: return
 
     from pymongo.cursor import CursorType
+
+    last = await db.sms_sent.find().sort([('_id' , -1)]).to_list(1)
+    if last: last = last[0].get('_id')
+    q = None
+
     while True:
-        skip = await db.sms_sent.count()
-        cursor = db.sms_sent.find(cursor_type=CursorType.TAILABLE_AWAIT,skip=skip)
+        if last: q = {"_id":{'$gt':last}}
+        cursor = db.sms_sent.find(q,cursor_type=CursorType.TAILABLE_AWAIT)
         while cursor.alive:
             for client in clients:
                 if (await cursor.fetch_next):
                         sms = cursor.next_object()
+                        last = sms.get('_id')
                         try:
                             await client.send_sms(**sms)
                         except Exception as e:
                             self.logger.error(e)
-                debug('next')
             await asyncio.sleep(INTERVAL)
 
 
@@ -319,6 +327,35 @@ def setup_loop(config):
     finally:
         loop.close()
 
+'''
+def setup_reader(config):
+    executor = None
+    name = current_process().name
+    procutil.set_proc_name(name)
+
+    loop = asyncio.get_event_loop()
+    import storage
+
+    db = storage.setup(
+        config['DB']['SERVER'],
+        config['DB']['NAME']
+    )
+
+    from pymongo.cursor import CursorType
+
+    while True:
+
+        cursor = db.sms_received.find(cursor_type=CursorType.TAILABLE_AWAIT)
+        while cursor.alive:
+            for client in clients:
+                if (await cursor.fetch_next):
+                        sms = cursor.next_object()
+                        try:
+                            await client.send_sms(**sms)
+                        except Exception as e:
+                            self.logger.error(e)
+            await asyncio.sleep(INTERVAL)
+'''
 
 def setup(config):
     smsd = Process(target=setup_loop,args=(config,))
