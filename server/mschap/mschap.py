@@ -1,8 +1,7 @@
-from . import des
+from . import des #!
 import hashlib
 
-
-def generate_nt_response_mschap(challenge,password):
+def generate_nt_response_mschap(challenge,password): #!
     """
    NtChallengeResponse(
    IN  8-octet               Challenge,
@@ -83,7 +82,7 @@ def challenge_hash(peer_challenge,authenticator_challenge,username):
     sha_hash.update(username)
     return sha_hash.digest()[:8]
 
-def nt_password_hash(passwd,pad_to_21_bytes=True):
+def nt_password_hash(passwd,pad_to_21_bytes=True): #!
     """
    NtPasswordHash(
    IN  0-to-256-unicode-char Password,
@@ -95,7 +94,6 @@ def nt_password_hash(passwd,pad_to_21_bytes=True):
        * including any terminating 0.
        */
     """
-    #res = hashlib.new('md4', passwd.encode('utf-16le')).digest()
     res = hashlib.new('md4', passwd.encode('utf-16le')).digest()
 
     if pad_to_21_bytes:
@@ -105,7 +103,7 @@ def nt_password_hash(passwd,pad_to_21_bytes=True):
     return res
 
 
-def challenge_response(challenge,password_hash):
+def challenge_response(challenge,password_hash): #!
     """
    ChallengeResponse(
    IN  8-octet  Challenge,
@@ -140,6 +138,7 @@ def challenge_response(challenge,password_hash):
 
     des_obj=des.DES(zpassword_hash[14:21])
     response+=des_obj.encrypt(challenge)
+
     return response
 
 
@@ -217,7 +216,7 @@ def generate_authenticator_response(password,nt_response,peer_challenge,authenti
     password_hash=nt_password_hash(password,False)
     password_hash_hash=hash_nt_password_hash(password_hash)
 
-    sha_hash=sha.new()
+    sha_hash=hashlib.sha1()
     sha_hash.update(password_hash_hash)
     sha_hash.update(nt_response)
     sha_hash.update(Magic1)
@@ -225,22 +224,14 @@ def generate_authenticator_response(password,nt_response,peer_challenge,authenti
 
     challenge=challenge_hash(peer_challenge,authenticator_challenge,username)
 
-    sha_hash=sha.new()
+    sha_hash=hashlib.sha1()
     sha_hash.update(digest)
     sha_hash.update(challenge)
     sha_hash.update(Magic2)
-    digest=sha_hash.digest()
+    hexdigest=sha_hash.hexdigest()
 
-    return "S="+convert_to_hex_string(digest)
+    return "\x01S="+hexdigest.upper()
 
-def convert_to_hex_string(string):
-    hex_str=""
-    for c in string:
-        hex_tmp=hex(ord(c))[2:]
-        if len(hex_tmp)==1:
-            hex_tmp="0"+hex_tmp
-        hex_str+=hex_tmp
-    return hex_str.upper()
 
 def hash_nt_password_hash(password_hash):
     """

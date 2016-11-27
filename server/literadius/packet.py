@@ -14,6 +14,7 @@ logger = logging.getLogger('packet')
 debug = logger.debug
 
 class Packet(defaultdict):
+    _reply = None
     def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None, authenticator=None):
         super().__init__(bytes)
 
@@ -33,12 +34,14 @@ class Packet(defaultdict):
             authenticator = authenticator or bytearray(random.getrandbits(8) for _ in range(16))
             self.header = bytearray(struct.pack('!BBH16s', code, id, 20,authenticator))
 
-    def reply(self,code):
-        return Packet(
-            secret=self.secret,
-            id=self.id,
-            code=code,
-            authenticator=self.authenticator)
+    def reply(self,code=AccessReject):
+        if not self._reply:
+            self._reply = Packet(
+                secret=self.secret,
+                id=self.id,
+                code=code,
+                authenticator=self.authenticator)
+        return self._reply
 
 
     @property
@@ -132,16 +135,16 @@ class Packet(defaultdict):
     def check_password(self, cleartext=""):
         debug(cleartext)
 
-        if self[UserPassword]:
+        if UserPassword in self.keys():
             try:
                 return (self.pw_decrypt(self[UserPassword]) == cleartext)
             except UnicodeDecodeError:
                 return
 
-        chap_challenge = self[CHAPChallenge]
-        chap_password  = self[CHAPPassword]
+        if CHAPPassword in self.keys():
 
-        if chap_password:
+            chap_challenge = self[CHAPChallenge]
+            chap_password  = self[CHAPPassword]
 
             chap_id = bytes([chap_password[0]])
             chap_password = chap_password[1:]
@@ -155,13 +158,37 @@ class Packet(defaultdict):
             debug(chap_password)
             return chap_password == m.digest()
 
-        if self[MSCHAPResponse] and self[MSCHAPChallenge]:
-            return mschap.generate_nt_response_mschap(
-                self[MSCHAPChallenge],cleartext
-            ) == self[MSCHAPResponse][26:]
+        if MSCHAPChallenge in self.keys():
 
-        if self[MSCHAP2Response] and self[MSCHAPChallenge]:
-            raise NotImplementedError
+            if MSCHAPResponse in self.keys():
+                return mschap.generate_nt_response_mschap(
+                    self[MSCHAPChallenge],cleartext
+                ) == self[MSCHAPResponse][26:]
 
-        #TODO: MSCHAP2 EAP
+            if MSCHAP2Response in self.keys():
+                ms_chap_response = self[MSCHAP2Response]
+                if 50 == len(ms_chap_response):
+                    nt_response = ms_chap_response[26:50]
+                    peer_challenge = ms_chap_response[2:18]
+                    authenticator_challenge = self[MSCHAPChallenge]
+                    user = self[UserName]
+
+                    success = mschap.generate_nt_response_mschap2(
+                        authenticator_challenge,
+                        peer_challenge,
+                        user,
+                        cleartext) == nt_response
+
+                    auth_resp = mschap.generate_authenticator_response(
+                        cleartext,
+                        nt_response,
+                        peer_challenge,
+                        authenticator_challenge,
+                        user)
+                    reply = self.reply()
+                    with reply.lock:
+                        reply[MSCHAP2Success] = auth_resp
+                    return success
+
+        #TODO: EAP
 

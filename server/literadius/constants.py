@@ -133,6 +133,7 @@ MSCHAPResponse = (Microsoft,1)
 MSCHAPChallenge  = (Microsoft,11)
 MSCHAPMPPEKeys =  (Microsoft,12)
 MSCHAP2Response = (Microsoft,25)
+MSCHAP2Success= (Microsoft,26)
 MSMPPEEncryptionPolicy = (Microsoft,7)
 
 #Acct-Terminate-Cause

@@ -266,8 +266,8 @@ class Auth:
             'username':user['_id'],
             'mac':req.decode(rad.CallingStationId)
              }
-
-        if user.get('password') and req.check_password(user.get('password')):
+        psw = user.get('password')
+        if psw and req.check_password(psw):
             self.db.devices.find_and_modify(
                 q,
                 {'$currentDate':{'seen':True},'$set':{'checked':True}},
