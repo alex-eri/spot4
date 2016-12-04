@@ -12,6 +12,14 @@ def peap_request(i,data,more,start):
     ret += data
     return ret
 
+def mschapv2_challenge(i,name):
+    challenge = uuid.uuid4().bytes
+    l = 21 + len(name)
+    #ret = struct.pack('!BBHBBBHB', Request, i, l, MSCHAPV2, Challenge, i,l-5,16)
+    ret = struct.pack('!BBBHB', MSCHAPV2, Challenge, i,l,16)
+    ret += challenge
+    ret += name
+    return ret
 
 class eap_message(dict):
     def __init__(self,data):

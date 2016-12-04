@@ -64,5 +64,5 @@ opera:
 
 
 IPonAS:
-	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' | aggregate > /home/eri/Projects/Spot4/$$AS-ip
+	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' | aggregate > ./$$AS-ip
 

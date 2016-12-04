@@ -1,5 +1,8 @@
 from .message import *
 import ssl
+import logging
+logger = logging.getLogger('eap.session')
+debug = logger.debug
 
 path = '/home/eri/Projects/CA/eap/'
 
@@ -15,6 +18,25 @@ class peap_session():
         self.i = ssl.MemoryBIO()
         self.o = ssl.MemoryBIO()
         self.ssl = ssl_context.wrap_bio(self.i,self.o,True)
+
+    def read(self):
+        try:
+            data = self.ssl.read()
+        except ssl.SSLWantReadError:
+            pass
+        else:
+            debug(data)
+            return eap_message(data)
+
+    def s2challenge(self,mes):
+        i = mes.id + 1
+        data = mschapv2_challenge(i,name)
+        self.ssl.write(data)
+
+    def s2identity(self):
+        #data = struct.pack('!BBHB', Request, self.id+1, 5, Identity)
+        data = bytes([Identity])
+        self.ssl.write(data)
 
 
     def next(self):

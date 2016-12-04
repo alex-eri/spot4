@@ -29,6 +29,7 @@ class BaseRadius(asyncio.DatagramProtocol):
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
+                break
                 debug('{} :\t{}'.format(attr,resp.decode(attr)))
 
     def respond_cb(self,caller):
@@ -60,6 +61,7 @@ class BaseRadius(asyncio.DatagramProtocol):
             raise Exception('Packet is not request')
         if logger.isEnabledFor(logging.DEBUG):
             for attr in req.keys():
+                break
                 debug('{} :\t{}'.format(attr,req.decode(attr)))
 
         #f = asyncio.ensure_future(
@@ -162,7 +164,7 @@ class Accounting:
         return req.reply(rad.AccountingResponse)
 
 from collections import defaultdict
-from eap.session import peap_session
+from eap.session import peap_session , PEAP
 
 class Auth:
     peap = defaultdict(peap_session)
@@ -261,22 +263,24 @@ class Auth:
         ses.feed(req[rad.EAPMessage])
 
         if ses.handshaked:
-            pass
-            try:
-                debug('--->>>')
-                debug(ses.ssl.read())
-            except:
-                pass
+            debug('--->>>')
+            stage2 = ses.read()
+            debug(stage2)
+            if stage2:
+                ses.s2challenge(stage2)
+            else:
+                ses.s2identity()
+
         else:
             ses.do_handshake()
-            reply.code = rad.AccessChallenge
+
+        reply.code = rad.AccessChallenge
 
         with reply.lock:
             reply[rad.State] = state
             reply[rad.EAPMessage] = ses.next()
             reply[rad.MessageAuthenticator] = True
 
-        debug(reply[rad.EAPMessage])
         return reply.code
 
 
