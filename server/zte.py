@@ -23,7 +23,7 @@ from itertools import cycle
 
 TZ = format(-time.timezone//3600,"+d")
 
-INTERVAL = 4
+INTERVAL = 5
 
 async def get_json(fu,*a,**kw):
     c = await fu(*a,**kw)
@@ -155,7 +155,7 @@ class Client(object):
 
             logger.info('SMS: %s >>> %s', phone,text)
 
-            await db.sms_received.insert({'phone':phone,'text':text, 'raw': m})
+            await self.db.sms_received.insert({'phone':phone,'text':text, 'to': self.callie , 'raw': m})
 
             t = retoken.match(text)
             if t:
@@ -216,8 +216,6 @@ class Client(object):
             #debug('worker_done')
 
 
-
-
     def send_sms(self,phone,text,**kw):
         uri = "{base}/goform/goform_set_cmd_process".format(
                 base=self.base_url
@@ -253,6 +251,7 @@ async def recieve_loop(clients):
 async def send_loop(clients,db):
     clients = list(filter(lambda x: x.sender, clients))
     if not clients: return
+    roundrobin = cycle(clients)
 
     from pymongo.cursor import CursorType
 
@@ -264,14 +263,13 @@ async def send_loop(clients,db):
         if last: q = {"_id":{'$gt':last}}
         cursor = db.sms_sent.find(q,cursor_type=CursorType.TAILABLE_AWAIT)
         while cursor.alive:
-            for client in clients:
-                if (await cursor.fetch_next):
-                        sms = cursor.next_object()
-                        last = sms.get('_id')
-                        try:
-                            await client.send_sms(**sms)
-                        except Exception as e:
-                            self.logger.error(e)
+            async for sms in cursor:
+                client = next(roundrobin)
+                last = sms.get('_id') or last
+                try:
+                    await client.send_sms(**sms)
+                except Exception as e:
+                    self.logger.error(e)
             await asyncio.sleep(INTERVAL)
 
 
@@ -313,7 +311,6 @@ def setup_loop(config):
     loop.run_until_complete(t)
 
     clients = setup_clients(db, config)
-
 
 
     try:

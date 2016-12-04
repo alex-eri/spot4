@@ -4,6 +4,7 @@ from collections import defaultdict
 from .constants import *
 
 from mschap import mschap
+import hmac
 
 import random
 #random_generator = random.SystemRandom()
@@ -12,6 +13,8 @@ import threading
 import logging
 logger = logging.getLogger('packet')
 debug = logger.debug
+
+import os
 
 class Packet(defaultdict):
     _reply = None
@@ -22,16 +25,16 @@ class Packet(defaultdict):
         self.header = bytearray()
         self.body = bytearray()
         self.secret = secret
+        self.ma = None
 
         if data:
             self.header = bytearray(data[:20])
             self.body = data[20:]
             self.parse()
         elif secret:
-
-            self.header = bytearray(struct.pack('!BBH', code, id, 0))
+            #self.header = bytearray(struct.pack('!BBH', code, id, 0))
             if id is None: id = random.randrange(0, 256)
-            authenticator = authenticator or bytearray(random.getrandbits(8) for _ in range(16))
+            authenticator = authenticator or os.urandom(16)
             self.header = bytearray(struct.pack('!BBH16s', code, id, 20,authenticator))
 
     def reply(self,code=AccessReject):
@@ -64,13 +67,21 @@ class Packet(defaultdict):
     def authenticator(self):
         return self.header[4:20]
 
+    def get_message_authenticator(self,cursor):
+        m = hmac.HMAC(key=self.secret)
+        m.update(self.header)
+        m.update(self.body[:cursor])
+        m.update(bytes(16))
+        m.update(self.body[cursor+16:])
+        return m.digest()
+
     def parse(self):
         cursor = 0
-
         while cursor < len(self.body):
 
             k,l = struct.unpack_from('!BB', self.body, cursor)
             cursor += 2
+
 
             if k == 26:
                 v, t, l = struct.unpack_from('!LBB', self.body, cursor)
@@ -80,6 +91,11 @@ class Packet(defaultdict):
             l2 = l-2
 
             v = self.body[cursor:cursor+l2]
+
+            if k == MessageAuthenticator:
+                d = self.get_message_authenticator(cursor)
+                assert d == v, 'MessageAuthenticator not valid'
+
             self[k] = v
             cursor += l2
 
@@ -92,30 +108,68 @@ class Packet(defaultdict):
     def encode(self,v):
         if isinstance(v, bytes):
             return v
+        elif isinstance(v, bytearray):
+            return bytes(v)
         elif isinstance(v, int):
             return struct.pack("!L",v)
         elif isinstance(v, str):
             return v.encode('utf8')
 
-    @property
     def data(self):
         with self.lock:
             resp = self.header.copy()
-
+            body = bytearray()
             for k,v in self.items():
+                if k == MessageAuthenticator:
+                    continue
                 v = self.encode(v)
-                l = len(v)+2
-                if isinstance(k,int):
-                    key = [k,l]
-                elif isinstance(k, tuple):
-                    key = struct.pack("!BBLBB",26,l+6,k[0],k[1],l)
-                resp.extend(key)
-                resp.extend(v)
+                length = len(v)
 
-            struct.pack_into("!H",resp,2,len(resp))
+                while length > 0:
+                    if isinstance(k,int):
+                        if length > 253: cut = 253
+                        else: cut = length
+                        key = (k,cut+2)
+                    elif isinstance(k, tuple):
+                        if length > 249: cut = 249
+                        else: cut = length
+                        key = struct.pack("!BBLBB",26,cut+8,k[0],k[1],cut+2)
+
+                    body.extend(key)
+                    body.extend(v[:cut])
+                    v=v[cut:]
+                    length -= cut
+
+
+            ma_cursor = 0
+            if MessageAuthenticator in self.keys():
+                ma_cursor = len(body)+2
+                body.extend((MessageAuthenticator,18))
+                body.extend(bytes(16))
+
+            struct.pack_into("!H",resp,2,20+len(body))
+
+            if ma_cursor \
+                  and self.code in (AccessRequest,AccessAccept,AccessReject,AccessChallenge):
+
+                self.header = resp
+                self.body = body
+
+                self[MessageAuthenticator] = message_authenticator = self.get_message_authenticator(ma_cursor)
+                body[ma_cursor:ma_cursor+16] = message_authenticator
+                #struct.pack_into("!16s",resp,ma_cursor+20,message_authenticator)
+
+                #self.body = body
+                #debug(self.body)
+                #debug(message_authenticator)
+                #debug(self.get_message_authenticator(ma_cursor))
+
+            resp.extend(body)
+
             authenticator = hashlib.md5(resp+self.secret).digest()
             struct.pack_into("!16s",resp,4,authenticator)
-            return resp
+
+            return bytes(resp)
 
     def pw_decrypt(self,v):
         last = self.authenticator.copy()

@@ -68,5 +68,6 @@ decoders = defaultdict(default_decoder, {
     MikrotikHostIP: ipaddr,
     WISPrLocationName: string,
     ChilliSpotVersion: ascii,
-    MSMPPEEncryptionPolicy: int
+    MSMPPEEncryptionPolicy: int,
+    FramedMTU: int
 })

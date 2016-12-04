@@ -78,6 +78,7 @@ CHAPChallenge = 60
 NASPortType = 61
 PortLimit = 62
 
+EAPMessage = 79
 MessageAuthenticator = 80
 
 NASPortId = 87

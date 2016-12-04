@@ -1,6 +1,6 @@
 import logging,sys
 
-sys.path.insert(0, '.')
+#sys.path.insert(0, '.')
 
 from multiprocessing import Manager, Queue
 
@@ -73,7 +73,7 @@ def main():
 
 
 def premain():
-
+    print('starting spot4')
     import multiprocessing,os
     multiprocessing.freeze_support()
     import argparse
@@ -118,9 +118,7 @@ def premain():
     else:
         main()
 
-
-
-if __name__ == "__main__":
+if "__main__" in __name__ :
     premain()
 
 

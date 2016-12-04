@@ -3,16 +3,18 @@ USE_CYTHON = False
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
-packages = ["os","utils","struct","mschap","pytz","motor"]
+packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio"]
+
+excludes = ["tkinter","tornado","zope","twisted","xmlrpc"]
 
 build_exe_options = {
     "packages": packages,
-    "excludes": ["tkinter","tornado","zope","twisted","xmlrpc"],
+    "excludes": excludes,
     "includes": packages,
     'include_files': [],
-    'create_shared_zip': True, #не запускается если отключить library.zip
-    'append_script_to_exe':True,
-    'include_in_shared_zip': False
+    'zip_include_packages': packages,
+    'zip_exclude_packages': None,
+    'include_msvcr': True
 }
 
 import os
@@ -29,7 +31,8 @@ base_service = base
 #    base_service = 'Win32Service'
 
 executables = [Executable(
-    "main.py",
+    script="server.py",
+    initScript="ConsoleSetLibPath",
     base=base_service,
     targetName='spot4.exe'
     ),
@@ -93,5 +96,5 @@ cx_setup(  name = "spot4",
         description = "Spot 4",
         options = {"build_exe": build_exe_options},
         executables = executables,
-        data_files = ['config.json','dictionary']
+        data_files = ['config.json']
         )

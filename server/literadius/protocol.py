@@ -25,7 +25,7 @@ class BaseRadius(asyncio.DatagramProtocol):
         self.transport = transport
 
     def respond(self, resp, caller):
-        self.transport.sendto(resp.data, caller)
+        self.transport.sendto(resp.data(), caller)
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
@@ -161,7 +161,11 @@ class Accounting:
 
         return req.reply(rad.AccountingResponse)
 
+from collections import defaultdict
+from eap.session import peap_session
+
 class Auth:
+    peap = defaultdict(peap_session)
 
     def get_type(self,req):
         nas = 0
@@ -248,19 +252,50 @@ class Auth:
                             reply[jk] = v
                         elif isinstance(jk,list):
                             reply[tuple(jk)] = v
-
         return reply
+
+    async def handle_eap(self,req,reply):
+        state = req.get(rad.State,uuid4().bytes)
+
+        ses = self.peap[state]
+        ses.feed(req[rad.EAPMessage])
+
+        if ses.handshaked:
+            pass
+            try:
+                debug('--->>>')
+                debug(ses.ssl.read())
+            except:
+                pass
+        else:
+            ses.do_handshake()
+            reply.code = rad.AccessChallenge
+
+        with reply.lock:
+            reply[rad.State] = state
+            reply[rad.EAPMessage] = ses.next()
+            reply[rad.MessageAuthenticator] = True
+
+        debug(reply[rad.EAPMessage])
+        return reply.code
+
+
 
 
     async def handle_auth(self,req,caller):
         code = rad.AccessReject
         reply = req.reply(code)
+
         user = await self.db.users.find_one({'_id':req.decode(rad.UserName)})
 
         if not user:
             return  reply
 
-        reply[rad.Class]=uuid4().bytes
+
+        if rad.EAPMessage in req.keys():
+            code = await self.handle_eap(req,reply)
+            if code == rad.AccessChallenge:
+                return reply
 
         q = {
             'username':user['_id'],
@@ -280,10 +315,12 @@ class Auth:
                 if req.check_password(psw):
                     code = rad.AccessAccept
                     break
+
         if code == rad.AccessReject:
             asyncio.sleep(1)
-            return reply
-        else:
+
+        elif code == rad.AccessAccept:
+            reply[rad.Class]=uuid4().bytes
             q['checked'] = True
             device = await self.db.devices.find_one(q)
             if device:
