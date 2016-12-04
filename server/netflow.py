@@ -56,25 +56,25 @@ class Netflow5(asyncio.DatagramProtocol):
 
         if len(self.flows) > FLUSHLEVEL:
             self._waiter.set()
-            #loop = asyncio.get_event_loop()
-            #loop.call_soon(self.store_once)
 
-    def store_once(self):
+    async def store_once(self):
         with self.flowslock:
             flows = self.flows[:]
             del self.flows[:]
         if len(flows):
-            self.collector.insert(flows, callback=insert_cb)
-        debug('inserted {}'.format(len(flows)))
+            a = await self.collector.insert(flows)
+            debug('inserted {}'.format(len(a)))
 
     async def store(self):
-        debug("flusher started")
         while True:
             try:
                 await asyncio.wait_for(self._waiter.wait(), timeout=FLUSHINTERVAL)
             except asyncio.TimeoutError:
                 pass
-            self.store_once()
+            try:
+                await self.store_once()
+            except Exception as e:
+                logger.error(e)
             self._waiter.clear()
 
 
@@ -116,7 +116,8 @@ def run5(config):
     except Exception as e:
         logger.error(repr(e))
     finally:
-        server.store_once()
+        t = server.store_once()
+        loop.run_until_complete(t)
         transport.close()
         loop.close()
 
