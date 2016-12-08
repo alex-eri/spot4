@@ -232,17 +232,18 @@ class Packet(defaultdict):
                         peer_challenge,
                         user,
                         cleartext) == nt_response
+                    if success:
+                        auth_resp = mschap.generate_authenticator_response(
+                            cleartext,
+                            nt_response,
+                            peer_challenge,
+                            authenticator_challenge,
+                            user)
+                        return auth_resp
 
-                    auth_resp = mschap.generate_authenticator_response(
-                        cleartext,
-                        nt_response,
-                        peer_challenge,
-                        authenticator_challenge,
-                        user)
-                    reply = self.reply()
-                    with reply.lock:
-                        reply[MSCHAP2Success] = auth_resp
-                    return success
+#                    reply = self.reply()
+#                    with reply.lock:
+#                        reply[MSCHAP2Success] = auth_resp
+#                    return success
 
-        #TODO: EAP
 

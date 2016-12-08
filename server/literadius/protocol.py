@@ -29,7 +29,7 @@ class BaseRadius(asyncio.DatagramProtocol):
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
-                break
+                #break
                 debug('{} :\t{}'.format(attr,resp.decode(attr)))
 
     def respond_cb(self,caller):
@@ -164,10 +164,12 @@ class Accounting:
         return req.reply(rad.AccountingResponse)
 
 from collections import defaultdict
-from eap.session import peap_session , PEAP
+from eap.session import peap_session
+import eap.session as eap
+from mschap import mschap
 
 class Auth:
-    peap = defaultdict(peap_session)
+    peap = defaultdict(eap.peap_session)
 
     def get_type(self,req):
         nas = 0
@@ -256,25 +258,59 @@ class Auth:
                             reply[tuple(jk)] = v
         return reply
 
-    async def handle_eap(self,req,reply):
+    async def handle_eap(self,req,reply,psw):
         state = req.get(rad.State,uuid4().bytes)
 
         ses = self.peap[state]
         ses.feed(req[rad.EAPMessage])
 
-        if ses.handshaked:
-            debug('--->>>')
-            stage2 = ses.read()
-            debug(stage2)
-            if stage2:
-                ses.s2challenge(stage2)
-            else:
-                ses.s2identity()
-
-        else:
-            ses.do_handshake()
-
+        debug('---')
         reply.code = rad.AccessChallenge
+
+        try:
+            if ses.handshaked:
+                debug('--->>>')
+                stage2 = ses.read()
+                debug(stage2)
+                if stage2.get('type'):
+                    if stage2['type'] == eap.Identity:
+                        ses.s2challenge(stage2)
+                    elif stage2['type'] == eap.MSCHAPV2:
+                        debug('MSCHAPV2 !!!')
+                        debug(ses.challenge)
+                        debug('MSCHAPV2 !!!')
+                        if stage2['ChapType'] == eap.Response:
+                            success = mschap.generate_nt_response_mschap2(
+                                ses.challenge,
+                                stage2['PeerChallenge'],
+                                stage2['Identity'],
+                                psw) == stage2['NTResponse']
+
+                            if success:
+                                debug('success')
+                                auth_resp = mschap.generate_authenticator_response(
+                                    psw,
+                                    stage2['NTResponse'],
+                                    stage2['PeerChallenge'],
+                                    ses.challenge,
+                                    stage2['Identity'])
+
+                                ses.s2success(stage2,auth_resp)
+                                reply.code = rad.AccessAccept
+                            else:
+                                debug('fail')
+                                reply.code = rad.AccessReject
+                elif ses.o.pending:
+                    pass
+                else:
+                    ses.s2challenge(stage2)
+            else:
+                ses.do_handshake()
+
+
+        except Exception as e:
+            logging.error(e)
+            reply.code = rad.AccessReject
 
         with reply.lock:
             reply[rad.State] = state
@@ -284,34 +320,46 @@ class Auth:
         return reply.code
 
 
+    def mark_device(self,q):
+        return self.db.devices.find_and_modify(
+                q,
+                {'$currentDate':{'seen':True},'$set':{'checked':True}},
+                upsert=True
+            )
 
 
     async def handle_auth(self,req,caller):
         code = rad.AccessReject
         reply = req.reply(code)
-
+        device = None
         user = await self.db.users.find_one({'_id':req.decode(rad.UserName)})
 
         if not user:
             return  reply
 
-
-        if rad.EAPMessage in req.keys():
-            code = await self.handle_eap(req,reply)
-            if code == rad.AccessChallenge:
-                return reply
-
         q = {
             'username':user['_id'],
             'mac':req.decode(rad.CallingStationId)
              }
+
         psw = user.get('password')
-        if psw and req.check_password(psw):
-            self.db.devices.find_and_modify(
-                q,
-                {'$currentDate':{'seen':True},'$set':{'checked':True}},
-                upsert=True
-            )
+
+        if rad.EAPMessage in req.keys():
+            code = await self.handle_eap(req,reply,psw)
+            if code == rad.AccessChallenge:
+                return reply
+            elif code == rad.AccessAccept:
+                device = self.mark_device(q)
+
+        elif rad.MSCHAP2Response in req.keys():
+            success = req.check_password(psw)
+            if success:
+                device = self.mark_device(q)
+                code = rad.AccessAccept
+                reply[rad.MSCHAP2Success] = success
+
+        elif psw and req.check_password(psw):
+            device = self.mark_device(q)
             code = rad.AccessAccept
         else:
             for n in [0,-1]:
@@ -326,7 +374,7 @@ class Auth:
         elif code == rad.AccessAccept:
             reply[rad.Class]=uuid4().bytes
             q['checked'] = True
-            device = await self.db.devices.find_one(q)
+            device = device or await self.db.devices.find_one(q)
             if device:
                 reply.code = code
                 reply = await self.set_limits(user,req,reply)
