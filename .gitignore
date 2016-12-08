@@ -8,3 +8,4 @@ dist/*
 */ht_docs/*
 mikrotik/hotspot/*
 *.c
+*.pem
