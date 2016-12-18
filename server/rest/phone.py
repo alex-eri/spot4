@@ -62,6 +62,8 @@ async def phone_handler(request):
             device['password'] = getpassw(device.get('username'), device.get('mac'))
         elif (now - device.get('registred',now)) > REREG:
             reg = True
+        elif not device.get('sms_sent'):
+            reg = True
     else:
         reg = True
         upd['username'] = (await setuser(request.app['db'],phone))

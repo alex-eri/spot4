@@ -1,0 +1,8 @@
+<h1>SMS</h1>
+<h2>Входящие</h2>
+  <table class="table table-hover table-condensed table-bordered">
+    <tr ng-repeat="a in sms_received">
+<td title="To: {{a.to}}">{{a.phone}}</td>
+<td>{{a.text}}</td>
+</tr>
+  </table>

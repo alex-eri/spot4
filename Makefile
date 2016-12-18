@@ -1,8 +1,8 @@
-all: clean buildall config
+all: clean buildall build/config
 
 dist:
 	mkdir -p ./dist/
-	cd ./build; tar cz -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
+	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
 
 buildall:
 	make -C ./server
@@ -19,11 +19,10 @@ buildall:
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/
 
-config:
+build/config:
 	mkdir -p ./build/{config,systemd}/
 	cp ./systemd/spot.service ./build/systemd/
-	install ./server/config.json ./build/config/config.json
-	ln -s ../config/config.json ./build/$(shell (ls ./build/ |grep exe))/config.json
+	install -m 664 ./config/config.json ./build/config/config.json.example
 	ln -s ../uam/config/ ./build/config/uam
 
 

@@ -34,10 +34,8 @@ def setup():
     import radius
     import json
     manager = Manager()
-    smsq = Queue()
 
-
-    config = json.load(open('config.json','r'))
+    config = json.load(open('../config/config.json','r'))
 
     config['numbers'] = manager.list()
 
@@ -92,7 +90,7 @@ def premain():
         import utils.procutil
         utils.procutil.chdir(args.config_dir)
 
-    config = json.load(open('config.json','r'))
+    config = json.load(open('../config/config.json','r'))
     setup_log(config)
 
     if args.reindex:

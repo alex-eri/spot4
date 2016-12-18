@@ -18,12 +18,16 @@ def add_cmd(pipe,command,args):
     elif type(args) == list:
         a = args
         kw = dict()
+    else:
+        a = []
+        kw = dict()
     try:
         r = getattr(pipe, command)
     except AttributeError as e:
         logger.error(e)
-    ret = r(*a,**kw)
-    return ret
+    else:
+        ret = r(*a,**kw)
+        return ret
 
 @json
 async def db_handler(request):

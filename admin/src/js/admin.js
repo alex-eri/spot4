@@ -41,11 +41,34 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/top.html',
         controller: 'Top'
       }).
+      when('/sms/', {
+        templateUrl: '/static/admin-forms/sms.html',
+        controller: 'Sms'
+      }).
       otherwise({
         redirectTo: '/online/'
       });
   }
 ]);
+
+
+
+app.controller('Sms',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.label = "в сети"
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+        $resource('/db/sms_received').save(
+            [
+            {find:{}},
+            {sort:["_id",-1]},
+        ]
+        , function(response){
+            $scope.sms_received = response.response;
+        }
+        )
+    }]);
+
 
 function pad(num) {
     var s = "0" + num;

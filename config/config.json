@@ -17,12 +17,26 @@
 },
 "SMS": {
 	"enabled": true,
-	"ZTE": [
+	"#ZTE": [
 			{
 			"url":"http://192.168.0.1",
 			"number": "+79158190408",
 			"sender": true
 			}
+		],
+	"#SMSTOOLS3":{
+			"numbers": ["+79158190408"],
+			"sender": true,
+			"outgoing": "/var/spool/sms/outgoing",
+			"incoming": "/var/spool/sms/incoming"
+		},
+	"AT":	[
+		{
+			"uiport":"/dev/serial/by-id/usb-HUAWEI_Technology_HUAWEI_Mobile-if02-port0",
+			"baudrate":115200,
+			"number": "+79158190408",
+			"sender": true
+		}
 		]
-	}
+}
 }

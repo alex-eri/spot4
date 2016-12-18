@@ -21,7 +21,19 @@ Flow5Fields =  [
     'srcport','dstport','tcp_flags','prot','tos','src_as','dst_as','src_mask','dst_mask'
 ]
 
+Fields =  ['sensor','sequence'] + Flow5Fields
+
 insert_cb = None
+
+import pandas as pd
+import numpy as np
+
+
+def aggregate(flows):
+    return flows
+
+    df.to_dict('records')
+
 
 class Netflow5(asyncio.DatagramProtocol):
 
@@ -34,7 +46,7 @@ class Netflow5(asyncio.DatagramProtocol):
         self._flush_future = loop.create_task(self.store())
 
     def datagram_received(self, data, addr):
-        debug(addr)
+
         assert data[1] == 5
         ver,count,uptime,timestamp,nanosecs,sequence = struct.unpack_from(FLOW5HEADER, data)
 
@@ -43,16 +55,18 @@ class Netflow5(asyncio.DatagramProtocol):
         def flow_gen():
             for i in range(count):
                 x = struct.unpack_from(FLOW5DATA, data, i*48 + 24)
+                x[7] += delta
+                x[8] += delta
                 flow = dict(zip(Flow5Fields,x))
-                flow['first'] += delta
-                flow['last'] += delta
+                #flow['first'] += delta
+                #flow['last'] += delta
                 flow.update({'sensor': addr[0] , 'sequence': sequence + i })
                 yield flow
 
         with  self.flowslock:
             self.flows.extend(flow_gen())
 
-        debug('collected {}'.format(len(self.flows)))
+        #debug('{} collected {}'.format(addr[0],len(self.flows)))
 
         if len(self.flows) > FLUSHLEVEL:
             self._waiter.set()
@@ -61,7 +75,10 @@ class Netflow5(asyncio.DatagramProtocol):
         with self.flowslock:
             flows = self.flows[:]
             del self.flows[:]
-        if len(flows):
+        l = len(flows)
+        debug('colected {}'.format(l))
+        if l:
+            flows = aggregate(flows)
             a = await self.collector.insert(flows)
             debug('inserted {}'.format(len(a)))
 

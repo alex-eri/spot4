@@ -163,13 +163,13 @@ class Accounting:
 
         return req.reply(rad.AccountingResponse)
 
-from collections import defaultdict
-from eap.session import peap_session
-import eap.session as eap
+#from collections import defaultdict
+#from eap.session import peap_session
+#import eap.session as eap
 from mschap import mschap
 
 class Auth:
-    peap = defaultdict(eap.peap_session)
+#    peap = defaultdict(eap.peap_session)
 
     def get_type(self,req):
         nas = 0
@@ -344,7 +344,7 @@ class Auth:
 
         psw = user.get('password')
 
-        if rad.EAPMessage in req.keys():
+        if False and rad.EAPMessage in req.keys():
             code = await self.handle_eap(req,reply,psw)
             if code == rad.AccessChallenge:
                 return reply
