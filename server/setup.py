@@ -3,8 +3,7 @@ USE_CYTHON = False
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
-packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio"]
-
+packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","pandas"]
 excludes = ["tkinter","tornado","zope","twisted","xmlrpc"]
 
 build_exe_options = {
@@ -21,7 +20,10 @@ import os
 if os.name == 'posix':
     build_exe_options['include_files'].extend(
 
-        ['/usr/lib/libssl.so.1.0.0','/usr/lib/libcrypto.so.1.0.0']
+        [
+            '/usr/lib/libssl.so.1.0.0',
+            '/usr/lib/libcrypto.so.1.0.0'
+        ]
     )
 
 base = None

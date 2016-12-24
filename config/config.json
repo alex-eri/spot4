@@ -17,11 +17,12 @@
 },
 "SMS": {
 	"enabled": true,
-	"#ZTE": [
+	"ZTE": [
 			{
-			"url":"http://192.168.0.1",
+			"url":"http://localhost:8000",
 			"number": "+79158190408",
-			"sender": true
+			"sender": true,
+			"notCallback": true
 			}
 		],
 	"#SMSTOOLS3":{
@@ -30,7 +31,7 @@
 			"outgoing": "/var/spool/sms/outgoing",
 			"incoming": "/var/spool/sms/incoming"
 		},
-	"AT":	[
+	"#AT":	[
 		{
 			"uiport":"/dev/serial/by-id/usb-HUAWEI_Technology_HUAWEI_Mobile-if02-port0",
 			"baudrate":115200,

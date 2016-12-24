@@ -137,9 +137,9 @@ def setup_loop(config):
     debug(id(db))
 
 
-    t = asyncio.Task(storage.create_capped(db,"sms_sent",2<<10))
+    t = asyncio.Task(storage.create_capped(db,"sms_sent",2<<20))
     loop.run_until_complete(t)
-    t = asyncio.Task(storage.create_capped(db,"sms_received",2<<10))
+    t = asyncio.Task(storage.create_capped(db,"sms_received",2<<20))
     loop.run_until_complete(t)
 
     clients = setup_clients(db, config)

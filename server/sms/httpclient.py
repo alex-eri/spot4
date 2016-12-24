@@ -16,8 +16,9 @@ def get_json(fu):
 class Client(sms.Client):
     def __init__(self,*a,**kw):
 
-        self.get_headers = kw.pop('get_headers',{})
-        self.post_headers = kw.pop('post_headers',{})
+        headers = kw.pop('headers',{})
+        self.get_headers = kw.pop('get_headers',headers)
+        self.post_headers = kw.pop('post_headers',headers)
 
         self.sema = asyncio.Lock()
         super(Client,self).__init__(*a,**kw)
@@ -29,7 +30,8 @@ class Client(sms.Client):
     def post(self,uri,data):
         data = urllib.parse.urlencode(data)
         data = data.encode('ascii')
-        req = urllib.request.Request(uri, data=data, headers=self.post_headers, method='POST')
+        req = urllib.request.Request(uri, data=data,
+                                     headers=self.post_headers, method='POST')
         return self.urlopen(req)
 
     async def urlopen(self,req):

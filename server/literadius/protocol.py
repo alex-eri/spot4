@@ -8,6 +8,7 @@ from datetime import datetime
 from utils.password import getsms, getpassw
 import pytz
 from bson.json_util import dumps, loads
+from utils.codecs import ip2int
 
 logger = logging.getLogger('protocol')
 debug = logger.debug
@@ -96,8 +97,7 @@ class Accounting:
     async def handle_acct(self,req,caller):
         q = {
                 'auth_class': req.decode(rad.Class),
-                'session_id': req.decode(rad.AcctSessionId),
-                #'sensor': self.caller[0]
+                'session_id': req.decode(rad.AcctSessionId)
             }
         account = {}
 
@@ -149,10 +149,7 @@ class Accounting:
         if account :
             account.update({
                 'stop_date':datetime.utcnow(),
-                'sensor':{
-                    'ip':caller[0],
-                    'port':caller[1]
-                    }
+                'sensor':ip2int(caller[0])
                 })
             upd={
             '$setOnInsert':{'start_date':datetime.utcnow()},

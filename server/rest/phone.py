@@ -8,6 +8,7 @@ from .logger import *
 from datetime import datetime, timedelta
 
 REREG = timedelta(days=3)
+DEVMAX = 4
 
 async def nextuser(db):
     n = await db.counters.find_and_modify({'_id':'userid'},{ '$inc': { 'seq': 1 } }, new=True)
@@ -56,13 +57,19 @@ async def phone_handler(request):
 
     upd = {'try': 0 }
 
+    smsmode = DATA.get('smsmode','wait')
+
+    count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-REREG)}} ).count()
+    if count >= DEVMAX:
+        smsmode = 'wait'
+
     if device.get('username'):
         reg = False
         if device.get('checked'):
             device['password'] = getpassw(device.get('username'), device.get('mac'))
         elif (now - device.get('registred',now)) > REREG:
             reg = True
-        elif not device.get('sms_sent'):
+        elif smsmode == "send" and not device.get('sms_sent'):
             reg = True
     else:
         reg = True
@@ -70,14 +77,13 @@ async def phone_handler(request):
 
 
     if reg:
-        smsmode = DATA.get('smsmode','wait')
         numbers = request.app['config'].get('numbers')
         if numbers:
             code = getsms(**q)
             upd['sms_waited'] = code
             upd['sms_callie'] = random.choice(numbers)
 
-            if smsmode == "send" and not device.get('sms_sent'):
+            if smsmode == "send":
                 code = getsms(**q)
                 upd['sms_sent'] = code
 
@@ -106,8 +112,8 @@ async def sms_handler(request):
     POST = await request.post()
 
     q = dict(
-        phone = POST.get('phone'),
-        sms_waited = POST.get('sms_waited')
+        phone = POST.get('from'),
+        sms_waited = POST.get('sms')
         )
     device = await request.app['db'].devices.update(q, {'$set':{'checked':True}})
     debug(device)

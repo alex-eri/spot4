@@ -1,11 +1,13 @@
-all: clean buildall build/config
+all: clean build build/config
 
-dist:
+dist: build
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
 
-buildall:
+server/build:
 	make -C ./server
+
+build: server/build
 	make -C ./static
 	make -C ./uam
 	make -C ./mikrotik
@@ -27,12 +29,19 @@ build/config:
 
 
 clean:
-	rm -rf ./build/*
+	rm -rf ./server/build
+	rm -rf ./build*
 	rm -rf ./dist
 
 start:
 	cd ./build/exe.* ; ./spot4.exe
 
+numpy:
+	git submodule init
+	git submodule update
+
+numpy/build: numpy
+	cd ./numpy && BLAS=None python setup.py build
 
 mikrobr:
 	ip link add link net1 name net1.3 type vlan id 3

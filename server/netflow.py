@@ -21,25 +21,34 @@ Flow5Fields =  [
     'srcport','dstport','tcp_flags','prot','tos','src_as','dst_as','src_mask','dst_mask'
 ]
 
-Fields =  ['sensor','sequence'] + Flow5Fields
+Fields =  set(['sensor','sequence'] + Flow5Fields)
 
 insert_cb = None
 
-import pandas as pd
+from utils.codecs import ip2int
+
 import numpy as np
+import pandas as pd
+
+
+#TODO year 2038 problem
 
 
 def aggregate(flows):
-    return flows
+    #return flows
+    df = pd.DataFrame(flows,columns=Fields)
+    return df.to_dict('records')
 
-    df.to_dict('records')
 
 
 class Netflow5(asyncio.DatagramProtocol):
 
     def __init__(self,*a,**kw):
         super(Netflow5,self).__init__(*a,**kw)
-        self.flows = []
+        #self.flows = []
+
+        self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
+
         self.flowslock = threading.Lock()
         self._waiter = asyncio.Event()
         loop = asyncio.get_event_loop()
@@ -54,27 +63,30 @@ class Netflow5(asyncio.DatagramProtocol):
 
         def flow_gen():
             for i in range(count):
-                x = struct.unpack_from(FLOW5DATA, data, i*48 + 24)
-                x[7] += delta
-                x[8] += delta
+                x = list(struct.unpack_from(FLOW5DATA, data, i*48 + 24))
+                x[7] = (x[7] + delta) // 1000
+                x[8] = (x[8] + delta) // 1000
                 flow = dict(zip(Flow5Fields,x))
                 #flow['first'] += delta
                 #flow['last'] += delta
-                flow.update({'sensor': addr[0] , 'sequence': sequence + i })
+                sensor = ip2int(addr[0])
+                flow.update({'sensor': sensor , 'sequence': sequence + i })
                 yield flow
 
         with  self.flowslock:
-            self.flows.extend(flow_gen())
+            self.flows = self.flows.append(list(flow_gen()), ignore_index=True)
+            #self.flows.extend(flow_gen())
 
-        #debug('{} collected {}'.format(addr[0],len(self.flows)))
+        debug('{} collected {}'.format(addr[0],len(self.flows)))
 
         if len(self.flows) > FLUSHLEVEL:
             self._waiter.set()
 
     async def store_once(self):
         with self.flowslock:
-            flows = self.flows[:]
-            del self.flows[:]
+            flows = self.flows
+            #del self.flows[:]
+            self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
         l = len(flows)
         debug('colected {}'.format(l))
         if l:

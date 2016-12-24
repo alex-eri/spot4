@@ -10,14 +10,19 @@ class Client(httpclient.Client):
 
     def __init__(self,*a,**kw):
         self.logger = logging.getLogger('zte')
-
+        self.notCallback = kw.pop('notCallback',None)
         self.base_url = kw.pop('url')
         headers = {
             'Referer':self.base_url+"/index.html",
-            'X-Requested-With':'XMLHttpRequest'
+            'X-Requested-With':'XMLHttpRequest',
+            'Accept': 'application/json, text/javascript, */*; q=0.01',
+            'Pragma': 'no-cache',
+            'Origin': self.base_url,
+            #'Host': self.base_url.split('/')[2]
         }
+
         self.callie = kw.get('number','')
-        super(Client,self).__init__(get_headers=headers, *a, **kw)
+        super(Client,self).__init__(get_headers=headers,post_headers=headers, *a, **kw)
 
     @httpclient.get_json
     def _send_sms(self,phone,text,**kw):
@@ -28,12 +33,13 @@ class Client(httpclient.Client):
         postdata = dict(isTest="false",
                 goformId="SEND_SMS",
                 Number=phone,
-                notCallback="true",
                 sms_time=time.strftime("%y;%m;%d;%H;%M;%S;")+TZ,
                 MessageBody=encodeUcs2(text),
                 encode_type="UNICODE",
                 ID=-1
             )
+        if self.notCallback:
+            postdata['notCallback'] = "true"
         self.logger.debug(uri)
         self.logger.debug(postdata)
 
@@ -105,7 +111,7 @@ class Client(httpclient.Client):
             ]
             }
         """
-
+        #TODO: urlencode вместо format
         uri = "{base}/goform/goform_get_cmd_process?"\
             "isTest=false&cmd=sms_data_total&page=0&data_per_page={max}&mem_store=1&tags={tags}&"\
             "order_by=order+by+id+desc&_={date}".format(
@@ -125,9 +131,11 @@ class Client(httpclient.Client):
         postdata = dict(isTest="false",
                     goformId="SET_MSG_READ",
                     msg_id=to_mark,
-                    notCallback="true",
                     tag=0
             )
+        if self.notCallback:
+            postdata['notCallback'] = "true"
+
         self.logger.debug(uri)
         self.logger.debug(postdata)
         return self.post(uri,data=postdata)
@@ -141,8 +149,9 @@ class Client(httpclient.Client):
         postdata = dict(isTest="false",
                     goformId="DELETE_SMS",
                     msg_id=to_mark,
-                    notCallback="true"
             )
+        if self.notCallback:
+            postdata['notCallback'] = "true"
         return self.post(uri,data=postdata)
 
     async def send(self,phone,text,*a,**kw):
@@ -157,13 +166,13 @@ class Client(httpclient.Client):
 
     def unread(self):
         '''
-           returns async generator
+           returns async
         '''
         return self.messages(tags=1)
 
     async def messages(self,tags=10):
         '''
-        generates messages from modem
+        messages from modem
         '''
 
         msgs = await self._get_messages(tags=tags)
@@ -209,3 +218,5 @@ class Client(httpclient.Client):
         async for m in self.messages(tags=2):
             ids.append(m['id'])
         return await self.delete(ids)
+
+
