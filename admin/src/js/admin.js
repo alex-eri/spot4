@@ -37,6 +37,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/limits.html',
         controller: 'Limit'
       }).
+      when('/top/:year/:month/', {
+        templateUrl: '/static/admin-forms/top.html',
+        controller: 'Top'
+      }).
       when('/top/', {
         templateUrl: '/static/admin-forms/top.html',
         controller: 'Top'
@@ -58,15 +62,26 @@ app.controller('Sms',  ['$scope','$resource',
         $scope.label = "в сети"
         $scope.interval = intervalt;
         $scope.t = datefymd;
-        $resource('/db/sms_received').save(
+        $resource('/db/sms_received/0/23').save(
             [
             {find:{}},
-            {sort:["_id",-1]},
+            {sort:["_id",-1]}
         ]
         , function(response){
             $scope.sms_received = response.response;
         }
+        );
+
+        $resource('/db/sms_sent/0/23').save(
+            [
+            {find:{}},
+            {sort:["_id",-1]}
+        ]
+        , function(response){
+            $scope.sms_sent = response.response;
+        }
         )
+
     }]);
 
 
@@ -188,16 +203,18 @@ app.controller('Regs',  ['$scope','$resource',
             [
 
             {aggregate:[[
-                {'$sort':{ 'seen': -1}},
+                {'$sort':{ 'registred': -1}},
                 {'$group': {_id: {
                         username:"$username",
                         },
                         devs :{'$push':'$$CURRENT'},
                         count: {'$sum':1},
-                        seen: {'$max':"$seen"}
+                        seen: {'$max':"$seen"},
+                        registred: {'$min':"$registred"},
                     }
 
-                }
+                },
+                {'$sort':{ 'registred': -1}}
                 ]]
             }
         ], function(response){
@@ -305,7 +322,8 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
 
                         session_time: {'$sum':"$session_time"},
                         output_bytes: {'$sum':'$output_bytes'},
-                        input_bytes: {'$sum':'$input_bytes'}
+                        input_bytes: {'$sum':'$input_bytes'},
+                        count: { $sum: 1 }
                     }
 
                 },

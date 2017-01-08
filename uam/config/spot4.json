@@ -1,1 +1,5 @@
-nas01.json
+{
+"smsmode":"send",
+"password_auth":true,
+"theme":"default"
+}

@@ -2,7 +2,7 @@
   <table class="table table-hover table-condensed table-bordered">
   <thead>
     <tr>
-      <th>Пользователь / Устройство</th>
+      <th colspan=2>Пользователь / Устройство</th>
       <th>Регистрация</th>
       <th>Последний визит</th>
     </tr>
@@ -11,12 +11,24 @@
 <tbody ng-repeat="n in registred track by n._id.username">
 
   <tr>
-    <th>{{n._id.username}} <a ng-if="n.devs[0].phone" href="tel:{{n.devs[0].phone}}">{{n.devs[0].phone}}</a></th>
-    <th>{{n.count}} шт.</th>
+    <th>{{n._id.username}} </th>
+    <th>
+      <a ng-if="n.devs[0].phone" href="tel:{{n.devs[0].phone}}">{{n.devs[0].phone}}</a>
+
+      <a target=_blank class="hidden pull-right" href="https://phonenumber.to/search?text={{n.devs[0].phone}}"><i class="glyphicon glyphicon-search" ></i></a>
+
+    </th>
+
+    <th>{{n.registred.$date| date: 'mediumDate'}} / {{n.count}} шт. </th>
     <th>{{n.seen.$date| date: 'medium'}}</th>
   </tr>
   <tr ng-repeat="a in n.devs">
-    <td><i ng-if="a.checked" class="glyphicon glyphicon-ok"></i> {{a.mac}} </td>
+    <td>
+      <i ng-if="a.checked" class="glyphicon glyphicon-ok" ></i>
+    </td>
+    <td>
+      {{a.mac}}
+    </td>
     <td>{{a.registred.$date| date: 'mediumDate'}}</td>
     <td>{{a.seen.$date| date: 'medium'}}</td>
   </tr>

@@ -91,7 +91,10 @@ async def send_loop(clients,db):
                     await client.send(**sms)
                 except Exception as e:
                     logger.error(e)
-            await asyncio.sleep(INTERVAL)
+                else:
+                    await asyncio.sleep(INTERVAL)
+            #debug(time.time())
+            #
 
 
 def setup_clients(db, config):

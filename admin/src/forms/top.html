@@ -22,13 +22,15 @@
 <thead>
   <tr>
     <th>Роутер</th>
+    <th>Сессии</th>
     <th>Получено</th>
     <th>Отправлено</th>
-    <th>Время в сети</th>
+    <th>Суммарное время в сети</th>
   </tr>
 </thead>
 <tr ng-repeat="a in nases">
 <td>{{a._id.nas}}</td>
+<td>{{a.count}}</td>
 <td>{{a.input_bytes|mega}}</td>
 <td>{{a.output_bytes|mega}}</td>
 <td>{{a.session_time| interval}}</td>

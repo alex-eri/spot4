@@ -23,7 +23,7 @@
   <tr ng-repeat="a in n.accts">
     <td>
       {{a.username}} / {{a.caller}}
-      <span class="badge" ng-if="! a.termination_cause">
+      <span class="pull-right" ng-if="! a.termination_cause">
         <i class="glyphicon glyphicon-transfer"></i>
       </span>
     </td>

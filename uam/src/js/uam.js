@@ -20,7 +20,10 @@ app.directive('phoneValidation', function(){
 
          if (transformedInput!=inputValue) {
            modelCtrl.$setViewValue(transformedInput);
-           modelCtrl.$render();
+           element.val('');
+           element.val(transformedInput);
+           //modelCtrl.$render();
+//           setCaretPosition(element,len(transformedInput));
          }
 
          return transformedInput;

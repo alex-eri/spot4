@@ -47,7 +47,10 @@ async def phone_handler(request):
         )
 
     updq = {
-        '$set':{'seen':now},
+        '$set':{
+            'seen':now,
+            'ua': request.headers.get('User-Agent','')
+            },
         '$setOnInsert':{'registred': now},
         #, "$set" {'sensor': request.ip }
         }

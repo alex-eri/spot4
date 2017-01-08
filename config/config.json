@@ -17,7 +17,7 @@
 },
 "SMS": {
 	"enabled": true,
-	"ZTE": [
+	"#ZTE": [
 			{
 			"url":"http://localhost:8000",
 			"number": "+79158190408",

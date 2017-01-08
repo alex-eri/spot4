@@ -4,7 +4,7 @@ dist: build
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
 
-server/build:
+server/build: numpy/build
 	make -C ./server
 
 build: server/build
@@ -16,7 +16,7 @@ build: server/build
 	cp -R ./server/build/exe* ./build
 	mkdir -p ./build/mikrotik
 	mkdir -p ./build/uam/{config,theme}/
-	cp -R ./uam/config/* ./build/uam/config/
+	cp -R ./uam/config/spot4.json ./build/uam/config/spot4.json.example
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/
