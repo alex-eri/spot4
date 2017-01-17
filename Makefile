@@ -36,12 +36,19 @@ clean:
 start:
 	cd ./build/exe.* ; ./spot4.exe
 
-numpy:
+
+
+submodule:
 	git submodule init
-	git submodule update
+	git submodule update --remote
+
+numpy: submodule
 
 numpy/build: numpy
 	cd ./numpy && BLAS=None python setup.py build
+	cd ./numpy && python setup.py install --user
+
+
 
 mikrobr:
 	ip link add link net1 name net1.3 type vlan id 3
