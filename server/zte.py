@@ -46,7 +46,7 @@ async def worker(client,db):
 
         cap = await client.capacity()
         if cap and cap['total'] > (cap['capacity'] * 0.8) :
-            client.clean()
+            await client.clean()
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())

@@ -90,7 +90,7 @@ async def phone_handler(request):
                 code = getsms(**q)
                 upd['sms_sent'] = code
 
-                text = "Код подтвеждения {code}.".format(code=code)
+                text = "Код подтверждения {code}.".format(code=code)
                 debug(phone)
                 debug(text)
                 #request.app['config']['smsq'].put((phone,text))

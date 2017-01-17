@@ -36,7 +36,7 @@ import pandas as pd
 
 def aggregate(flows):
     #return flows
-    df = pd.DataFrame(flows,columns=Fields)
+    df = pd.DataFrame(flows,columns=Fields,dtype='uint32')
     return df.to_dict('records')
 
 

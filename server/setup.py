@@ -4,7 +4,7 @@ from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
 packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","pandas"]
-excludes = ["tkinter","tornado","zope","twisted","xmlrpc"]
+excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy"]
 
 build_exe_options = {
     "packages": packages,

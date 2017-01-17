@@ -6,6 +6,9 @@ from utils.codecs import trydecodeHexUcs2,encodeUcs2
 
 TZ = format(-time.timezone//3600,"+d")
 
+RECIEVED = 10
+SENT = 2
+
 class Client(httpclient.Client):
 
     def __init__(self,*a,**kw):
@@ -20,7 +23,7 @@ class Client(httpclient.Client):
             'Origin': self.base_url,
             #'Host': self.base_url.split('/')[2]
         }
-
+        self.max = 100
         self.callie = kw.get('number','')
         super(Client,self).__init__(get_headers=headers,post_headers=headers, *a, **kw)
 
@@ -170,12 +173,12 @@ class Client(httpclient.Client):
         '''
         return self.messages(tags=1)
 
-    async def messages(self,tags=10):
+    async def messages(self,tags=10,limit=100):
         '''
         messages from modem
         '''
 
-        msgs = await self._get_messages(tags=tags)
+        msgs = await self._get_messages(tags=tags,limit=limit)
         msgs = msgs.get('messages',[])
 
         read = []
@@ -192,8 +195,11 @@ class Client(httpclient.Client):
         return self._set_msg_read(ids)
 
 
-    def delete(self,ids):
-        return self._delete_msg(ids)
+    async def delete(self,ids_to_delete):
+        ids = ids_to_delete[:]
+        while ids:
+            to,ids = ids[:100],ids[100:]
+            await self._delete_msg(to)
 
 
     async def capacity(self):
@@ -209,13 +215,16 @@ class Client(httpclient.Client):
             'capacity': capacity or 100
         }
 
+        self.total_count = inbox + sent
+        self.max = capacity or 100
+        self.logger.debug(ret)
         return ret
 
     async def clean(self):
         ids = []
-        async for m in self.messages(tags=10):
+        for m in await self.messages(tags=10, limit=limit):
             ids.append(m['id'])
-        async for m in self.messages(tags=2):
+        for m in await self.messages(tags=2, limit=limit):
             ids.append(m['id'])
         return await self.delete(ids)
 
