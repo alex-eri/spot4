@@ -7,8 +7,8 @@ BindsTo=mongod.service
 [Service]
 Type=simple
 ExecStartPre=/bin/sleep 1
-ExecStart=/opt/spot4/exe.linux-x86_64-3.5/spot4.exe
-WorkingDirectory=/opt/spot4/exe.linux-x86_64-3.5/
+ExecStart=/opt/spot4/exe.linux-x86_64-3.6/spot4.exe
+WorkingDirectory=/opt/spot4/exe.linux-x86_64-3.6/
 Restart=always
 RestartSec=30
 

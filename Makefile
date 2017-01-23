@@ -4,7 +4,7 @@ dist: build
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
 
-server/build: numpy/build ctypescrypto/build
+server/build: ctypescrypto/build
 	make -C ./server
 
 build: server/build

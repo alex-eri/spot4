@@ -9,7 +9,7 @@ logger = logging.getLogger('netflow')
 debug = logger.debug
 
 FLUSHINTERVAL = 300
-FLUSHLEVEL = 4096
+FLUSHLEVEL = 16<<10
 
 FLOW5HEADER = "!HHIIII"
 FLOW5DATA = "!IIIHHIIIIHHxBBBHHBBxx"
@@ -35,9 +35,9 @@ import pandas as pd
 
 
 def aggregate(flows):
-    #return flows
-    df = pd.DataFrame(flows,columns=Fields,dtype='uint32')
-    return df.to_dict('records')
+    return flows
+    #df = pd.DataFrame(flows,columns=Fields,dtype='uint32')
+    #return df.to_dict('records')
 
 
 
@@ -45,9 +45,9 @@ class Netflow5(asyncio.DatagramProtocol):
 
     def __init__(self,*a,**kw):
         super(Netflow5,self).__init__(*a,**kw)
-        #self.flows = []
+        self.flows = []
 
-        self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
+        #self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
 
         self.flowslock = threading.Lock()
         self._waiter = asyncio.Event()
@@ -74,8 +74,8 @@ class Netflow5(asyncio.DatagramProtocol):
                 yield flow
 
         with  self.flowslock:
-            self.flows = self.flows.append(list(flow_gen()), ignore_index=True)
-            #self.flows.extend(flow_gen())
+            #self.flows = self.flows.append(list(flow_gen()), ignore_index=True)
+            self.flows.extend(flow_gen())
 
         #debug('{} collected {}'.format(addr[0],len(self.flows)))
 
@@ -85,8 +85,8 @@ class Netflow5(asyncio.DatagramProtocol):
     async def store_once(self):
         with self.flowslock:
             flows = self.flows
-            #del self.flows[:]
-            self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
+            del self.flows[:]
+            #self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
         l = len(flows)
         debug('colected {}'.format(l))
         if l:
