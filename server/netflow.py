@@ -8,7 +8,7 @@ import time
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
-FLUSHINTERVAL = 300
+FLUSHINTERVAL = 30
 FLUSHLEVEL = 16<<10
 
 FLOW5HEADER = "!HHIIII"
@@ -27,8 +27,8 @@ insert_cb = None
 
 from utils.codecs import ip2int
 
-import numpy as np
-import pandas as pd
+#import numpy as np
+#import pandas as pd
 
 
 #TODO year 2038 problem
@@ -77,19 +77,19 @@ class Netflow5(asyncio.DatagramProtocol):
             #self.flows = self.flows.append(list(flow_gen()), ignore_index=True)
             self.flows.extend(flow_gen())
 
-        #debug('{} collected {}'.format(addr[0],len(self.flows)))
+        debug('{} collected {}'.format(addr[0],len(self.flows)))
 
         if len(self.flows) > FLUSHLEVEL:
             self._waiter.set()
 
     async def store_once(self):
         with self.flowslock:
-            flows = self.flows
-            del self.flows[:]
+            flows,self.flows = self.flows, []
+            #del self.flows[:]
             #self.flows = pd.DataFrame([],columns=Fields,dtype='uint32')
-        l = len(flows)
-        debug('colected {}'.format(l))
-        if l:
+        #l = len(flows)
+        #debug('colected {}'.format(l))
+        if flows:
             flows = aggregate(flows)
             a = await self.collector.insert(flows)
             debug('inserted {}'.format(len(a)))
