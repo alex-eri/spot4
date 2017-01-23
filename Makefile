@@ -4,7 +4,7 @@ dist: build
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell (ls ./build/ |grep exe)).tar.gz ./
 
-server/build: numpy/build
+server/build: numpy/build ctypescrypto/build
 	make -C ./server
 
 build: server/build
@@ -41,6 +41,13 @@ start:
 submodule:
 	git submodule init
 	git submodule update --remote
+
+
+ctypescrypto: submodule
+
+ctypescrypto/build: ctypescrypto
+	cd ./ctypescrypto && python setup.py build
+	cd ./ctypescrypto && python setup.py install --user
 
 numpy: submodule
 

@@ -19,7 +19,7 @@
 	"enabled": true,
 	"ZTE": [
 			{
-			"url":"http://localhost:8000",
+			"url":"http://192.168.0.1",
 			"number": "+79158190408",
 			"sender": true,
 			"notCallback": true
