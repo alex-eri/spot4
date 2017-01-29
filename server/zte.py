@@ -57,8 +57,10 @@ async def worker(client,db):
 
 
 async def recieve_loop(clients,db):
+    debug('starting reciever')
     name = current_process().name
     procutil.set_proc_name(name)
+    clients = list(filter(lambda x: x.reciever, clients))
 
     while clients:
         try:
@@ -70,6 +72,7 @@ async def recieve_loop(clients,db):
         await asyncio.sleep(INTERVAL)
 
 async def send_loop(clients,db):
+    debug('starting sender')
     clients = list(filter(lambda x: x.sender, clients))
     if not clients: return
     roundrobin = cycle(clients)
@@ -98,10 +101,33 @@ async def send_loop(clients,db):
 
 
 def setup_clients(db, config):
-    from sms import zte, at
-    ztes = config['SMS'].get('ZTE',[])
+    #from sms import zte, at
+    #ztes = config['SMS'].get('ZTE',[])
+
+    import sms
+    import importlib
 
     clients = []
+    pool =  config['SMS'].get('pool',[])
+
+    for modem in pool:
+        driver = modem.get('driver', None)
+        if driver:
+            try:
+                module = importlib.import_module('sms.'+ driver)
+            except:
+                logger.error('driver load failed')
+                continue
+        else:
+            logger.error('driver not specified')
+            continue
+
+        clients.append( module.Client(**modem ))
+        if modem.get('number'):
+            config['numbers'].append(modem['number'])
+
+
+    """
     for modem in ztes:
         clients.append( zte.Client(**modem ))
         config['numbers'].append(modem['number'])
@@ -121,7 +147,7 @@ def setup_clients(db, config):
     for modem in gsm:
         clients.append( at.Client(**modem ))
         config['numbers'].append(modem['number'])
-
+    """
     return clients
 
 def setup_loop(config):

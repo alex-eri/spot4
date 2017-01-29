@@ -13,7 +13,7 @@ build: server/build
 	make -C ./mikrotik
 	make -C ./admin
 	mkdir -p ./build/static/ht_docs
-	cp -R ./server/build/exe* ./build
+	cp -R ./server/build/exe* ./build/bin
 	mkdir -p ./build/mikrotik
 	mkdir -p ./build/uam/{config,theme}/
 	cp -R ./uam/config/spot4.json ./build/uam/config/spot4.json.example

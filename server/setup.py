@@ -3,7 +3,7 @@ USE_CYTHON = False
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
-packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio"]#,"pandas"]
+packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms"]#,"pandas"]
 excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses"]
 
 build_exe_options = {
@@ -42,12 +42,7 @@ executables = [Executable(
     "migrate.py",
     base=base,
     targetName='migrate.exe'
-    ),
-    Executable(
-    "demo.py",
-    base=base_service,
-    targetName='spot4demo.exe'
-    ),
+    )
     ]
 
 

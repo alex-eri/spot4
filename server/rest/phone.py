@@ -86,15 +86,15 @@ async def phone_handler(request):
             upd['sms_waited'] = code
             upd['sms_callie'] = random.choice(numbers)
 
-            if smsmode == "send":
-                code = getsms(**q)
-                upd['sms_sent'] = code
+        if smsmode == "send":
+            code = getsms(**q)
+            upd['sms_sent'] = code
 
-                text = "Код подтверждения {code}.".format(code=code)
-                debug(phone)
-                debug(text)
-                #request.app['config']['smsq'].put((phone,text))
-                request.app['db'].sms_sent.insert({'phone':phone,'text':text,'sent':now})
+            text = "Код подтверждения {code}.".format(code=code)
+            debug(phone)
+            debug(text)
+            #request.app['config']['smsq'].put((phone,text))
+            request.app['db'].sms_sent.insert({'phone':phone,'text':text,'sent':now})
 
         updq = {
             '$set': upd,
