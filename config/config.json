@@ -17,27 +17,31 @@
 },
 "SMS": {
 	"enabled": true,
-	"ZTE": [
+	"pool": [
 			{
+			"driver":"huawei",
+			"url":"http://192.168.8.1",
+			"number": "+79158190408",
+			"sender": false,
+			"reciever": true
+			},
+			{
+			"driver":"zte",
 			"url":"http://192.168.0.1",
 			"number": "+79158190408",
-			"sender": true,
+			"sender": false,
+			"reciever": false,
 			"notCallback": true
-			}
-		],
-	"#SMSTOOLS3":{
-			"numbers": ["+79158190408"],
+			},
+			{
+			"driver":"http",
+			"method":"get",
+			"url":"http://localhost:8000/sms/send_hotspot/",
 			"sender": true,
-			"outgoing": "/var/spool/sms/outgoing",
-			"incoming": "/var/spool/sms/incoming"
-		},
-	"#AT":	[
-		{
-			"uiport":"/dev/serial/by-id/usb-HUAWEI_Technology_HUAWEI_Mobile-if02-port0",
-			"baudrate":115200,
-			"number": "+79158190408",
-			"sender": true
-		}
+			"reciever": false,
+			"query":"tel={phone}&text={text}",
+			"encoding":"utf-8"
+			}
 		]
 }
 }

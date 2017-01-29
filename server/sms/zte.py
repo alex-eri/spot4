@@ -1,4 +1,4 @@
-from . import httpclient
+from . import _httpclient
 
 import logging
 import time
@@ -8,8 +8,9 @@ TZ = format(-time.timezone//3600,"+d")
 
 RECIEVED = 10
 SENT = 2
+UNREAD = 1
 
-class Client(httpclient.Client):
+class Client(_httpclient.Client):
 
     def __init__(self,*a,**kw):
         self.logger = logging.getLogger('zte')
@@ -27,7 +28,7 @@ class Client(httpclient.Client):
         self.callie = kw.get('number','')
         super(Client,self).__init__(get_headers=headers,post_headers=headers, *a, **kw)
 
-    @httpclient.get_json
+    @_httpclient.get_json
     def _send_sms(self,phone,text,**kw):
         uri = "{base}/goform/goform_set_cmd_process".format(
                 base=self.base_url
@@ -49,7 +50,7 @@ class Client(httpclient.Client):
         return self.post(uri,data=postdata)
 
 
-    @httpclient.get_json
+    @_httpclient.get_json
     def _get_count(self,*a,**kw):
 
         """
@@ -67,7 +68,7 @@ class Client(httpclient.Client):
             )
         return self.get(uri,*a,**kw)
 
-    @httpclient.get_json
+    @_httpclient.get_json
     def _capacity_info(self,*a,**kw):
 
         """
@@ -92,7 +93,7 @@ class Client(httpclient.Client):
         return self.get(uri,*a,**kw)
 
 
-    @httpclient.get_json
+    @_httpclient.get_json
     def _get_messages(self,tags=1,limit=100, *a,**kw):
 
         """
@@ -125,7 +126,7 @@ class Client(httpclient.Client):
             )
         return self.get(uri,*a,**kw)
 
-    @httpclient.get_json
+    @_httpclient.get_json
     def _set_msg_read(self,msg_id,*a,**kw):
         to_mark = ';'.join(msg_id)+';'
         uri = "{base}/goform/goform_set_cmd_process".format(
@@ -143,7 +144,7 @@ class Client(httpclient.Client):
         self.logger.debug(postdata)
         return self.post(uri,data=postdata)
 
-    @httpclient.get_json
+    @_httpclient.get_json
     def _delete_msg(self,msg_id,*a,**kw):
         to_mark = ';'.join(msg_id)
         uri = "{base}/goform/goform_set_cmd_process".format(
@@ -173,7 +174,7 @@ class Client(httpclient.Client):
         '''
         return self.messages(tags=1)
 
-    async def messages(self,tags=10,limit=100):
+    async def messages(self,tags=RECIEVED,limit=100):
         '''
         messages from modem
         '''

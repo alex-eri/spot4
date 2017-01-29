@@ -1,8 +1,8 @@
-from . import sms
+from . import _sms
 import uuid
 import os.path
 
-class Client(sms.Client):
+class Client(_sms.Client):
     def __init__(self,*a, **kw):
         self.incomming = kw.pop('incomming',"/var/spool/sms/incoming")
         self.outgoing = kw.pop('outgoing', "/var/spool/sms/outgoing")
