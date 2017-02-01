@@ -8,7 +8,7 @@ import time
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
-FLUSHINTERVAL = 30
+FLUSHINTERVAL = 60
 FLUSHLEVEL = 16<<10
 
 FLOW5HEADER = "!HHIIII"
