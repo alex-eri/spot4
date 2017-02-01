@@ -199,7 +199,7 @@ class Client(_httpclient.Client):
     async def delete(self,ids_to_delete):
         ids = ids_to_delete[:]
         while ids:
-            to,ids = ids[:100],ids[100:]
+            to,ids = ids[:50],ids[50:]
             await self._delete_msg(to)
 
 
@@ -221,7 +221,7 @@ class Client(_httpclient.Client):
         self.logger.debug(ret)
         return ret
 
-    async def clean(self):
+    async def clean(self,limit=100):
         ids = []
         for m in await self.messages(tags=10, limit=limit):
             ids.append(m['id'])

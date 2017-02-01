@@ -5,6 +5,7 @@ all:
 	rm -rf build
 	install -d build
 	install src/rlogin.html build/rlogin.html
+	install src/rlogin.html build/login.html
 	install src/rlogin.html build/falogin.html
 	install src/rlogin.html build/fstatus.html
 	install src/rlogin.html build/flogout.html

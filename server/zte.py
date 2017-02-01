@@ -117,13 +117,15 @@ def setup_clients(db, config):
                 module = importlib.import_module('sms.'+ driver)
             except:
                 logger.error('driver load failed')
+                logger.error(traceback.format_exc())
                 continue
         else:
             logger.error('driver not specified')
             continue
 
         clients.append( module.Client(**modem ))
-        if modem.get('number'):
+
+        if modem.get('number',False) and modem.get('reciever',True):
             config['numbers'].append(modem['number'])
 
 
