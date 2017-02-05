@@ -1,6 +1,7 @@
 SALT = '441dbf23b4d344f19b89c76fd65cc75c'
 SMSSENT = 1
 SMSWAIT = 2
+SMSLEN = 4
 
 import random
 
@@ -12,7 +13,7 @@ import base64, pyotp,time
 #    return (otp.at(SMSSENT), otp.at(SMSWAIT))
 
 def getsms(phone,mac):
-    return str(random.randrange(0,9999)).zfill(4)
+    return str(random.randrange(0,10**SMSLEN-1)).zfill(SMSLEN)
 
 def getpassw(username, mac, n=None):
     base = base64.b32encode(":".join([username, mac, SALT]).encode('ascii'))

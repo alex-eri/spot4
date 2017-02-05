@@ -15,7 +15,7 @@
   </head>
   <body>
     <div class="container">
-      <div ng-include="'/uam/theme/' + (theme||'default') + '/login.tpl.html'">
+      <div ng-if="config.theme" ng-include="'/uam/theme/' + (config.theme||'default') + '/login.tpl.html'">
         <center>
           <div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div>
         </center>

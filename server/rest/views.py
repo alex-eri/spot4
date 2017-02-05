@@ -7,6 +7,9 @@ import logging
 logger = logging.getLogger('http')
 debug = logger.debug
 from bson.json_util import dumps, loads
+import asyncio
+import motor
+import motor.core
 
 def add_cmd(pipe,command,args):
     if type(args) == dict:
@@ -15,11 +18,16 @@ def add_cmd(pipe,command,args):
     elif type(args) == list:
         a = args
         kw = dict()
+    else:
+        a = []
+        kw = dict()
     try:
         r = getattr(pipe, command)
     except AttributeError as e:
         logger.error(e)
-    return r(*a,**kw)
+    else:
+        ret = r(*a,**kw)
+        return ret
 
 @json
 async def db_handler(request):
@@ -36,7 +44,7 @@ async def db_handler(request):
         for c,a in cmd.items():
             cursor = add_cmd(cursor,c,a)
 
-    if cursor.__motor_class_name__ == "MotorCollection":
+    if hasattr(cursor,'find'):
         cursor = cursor.find()
 
     c = None
@@ -46,7 +54,10 @@ async def db_handler(request):
     if hasattr(cursor,'skip'):
         cursor = cursor.skip(skip).limit(limit)
 
-    r = await cursor.to_list(limit)
+    if hasattr(cursor,'to_list'):
+        r = await cursor.to_list(limit)
+    else:
+        r = await cursor
 
     return {'response': r, 'total':c}
 
@@ -57,15 +68,10 @@ async def db_options(request):
     return resp
 
 
-async def uam_index(request):
-    #sender = FileSender()
-    #return await sender.send(request,'../static/ht_docs/uam.html')
+async def generate_204(request):
+    raise web.HTTPNoContent()
 
-    #должен быть небольшой..
-    with open('../static/ht_docs/uam.html','rb') as f:
-        return aiohttp.web.Response(body=f.read(),content_type='text/html', charset='utf-8')
-    #return aiohttp.web.HTTPFound('/static/uam.html')
-
-async def admin_index(request):
-    with open('../static/ht_docs/admin.html','rb') as f:
-        return aiohttp.web.Response(body=f.read(),content_type='text/html', charset='utf-8')
+async def hotspot_detect(request):
+    return web.Response(
+        body=b"<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>",
+        content_type='text/html')

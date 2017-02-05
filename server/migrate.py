@@ -20,4 +20,7 @@ if __name__ == "__main__":
         logger.critical(e.__repr__())
         raise e
     finally:
+
+        import reindex
+        reindex.index(config)
         loop.close()

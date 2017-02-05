@@ -1,4 +1,7 @@
 import logging,sys
+
+#sys.path.insert(0, '.')
+
 from multiprocessing import Manager, Queue
 
 logger = logging.getLogger('main')
@@ -11,27 +14,29 @@ def modem_setup(config):
     return zte.setup(config)
     return procs
 
-def setup():
-    import api
-    import radius
-    import json
-    manager = Manager()
-    smsq = Queue()
 
+def setup_log(config):
 
-    config = json.load(open('config.json','r'))
     if config.get('LOGFILE'):
         FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
     else:
         FORMAT = '%(processName)s\%(name)-8s %(levelname)s: %(message)s'
 
-    level = logging.WARNING
+    level = logging.INFO
     if config.get('DEBUG'):
         level = logging.DEBUG
 
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
-    config['smsq'] = smsq
+
+def setup():
+    import api
+    import radius
+    import json
+    manager = Manager()
+
+    config = json.load(open('../config/config.json','r'))
+
     config['numbers'] = manager.list()
 
     services = []
@@ -66,21 +71,32 @@ def main():
 
 
 def premain():
-
+    print('starting spot4')
     import multiprocessing,os
     multiprocessing.freeze_support()
     import argparse
+    import json
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
-    parser.add_argument('--config-dir', nargs='?', help='config dir')
+    parser.add_argument('--config-dir', nargs='?', help='Config dir')
+    parser.add_argument('--reindex', action='store_true', help='Ensure indexes')
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
     args,argv = parser.parse_known_args()
 
+
     if args.config_dir:
         import utils.procutil
         utils.procutil.chdir(args.config_dir)
+
+    config = json.load(open('../config/config.json','r'))
+    setup_log(config)
+
+    if args.reindex:
+        import reindex
+        reindex.index(config)
+        return
 
     if os.name == 'nt':
         import utils.win32
@@ -100,9 +116,7 @@ def premain():
     else:
         main()
 
-
-
-if __name__ == "__main__":
+if "__main__" in __name__ :
     premain()
 
 

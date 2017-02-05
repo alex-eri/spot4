@@ -1,31 +1,41 @@
-<h1>Сессии {{label}}</h1>
-  <table class=table>
+<h1>Сессии {{label}} <small>{{startdate| date}} - {{stopdate|date}}</small></h1>
+  <table class="table table-hover table-condensed table-bordered">
   <thead>
     <tr>
       <th>Пользователь / Устройство</th>
-      <th>Роутер</th>
+      <th>Роутер / Хотспот</th>
       <th>Начало</th>
       <th>Время в сети</th>
-      <th>Получено / Передано</th>
+      <th>Передано</th>
+      <th>Получено</th>
     </tr>
   </thead>
 
 <tbody ng-repeat="n in online.response track by t(n._id)">
 
   <tr>
-    <th colspan=2>День</th>
+    <th colspan=2>Всего сессий: {{n.count}}</th>
     <th>{{t(n._id) | date}}</th>
-    <th>{{days(n.session_time)}}d&nbsp;{{(n.session_time*1000)| date: 'hh:mm:ss': 'UTC'}}</th>
-    <th>{{n.input_bytes}} / {{n.output_bytes}}</th>
+    <th class="text-right"> {{n.session_time| interval}} </th>
+    <th class="text-right">{{n.input_bytes| mega}}</th>
+      <th class="text-right">{{n.output_bytes| mega}}</th>
   </tr>
   <tr ng-repeat="a in n.accts">
-    <td>{{a.username}} / {{a.caller}}</td>
+    <td>
+      {{a.username}} / {{a.caller}}
+      <span class="pull-right" ng-if="! a.termination_cause">
+        <i class="glyphicon glyphicon-transfer"></i>
+      </span>
+    </td>
     <td>{{a.nas}} / {{a.callee}}</td>
-    <td>{{a.start_date.$date | date: 'hh:mm:ss'}}</td>
-    <td>{{days(n.session_time)}}d&nbsp;{{(n.session_time*1000)| date: 'hh:mm:ss': 'UTC'}}</td>
-    <td>{{a.input_bytes}} / {{a.output_bytes}}</td>
+    <td class="text-right">{{a.start_date.$date | date: 'HH:mm:ss' }}</td>
+    <td class="text-right"> {{a.session_time| interval:a.start_date.$date }} </td>
+    <td class="text-right">{{a.input_bytes| mega}}</td>
+    <td class="text-right">{{a.output_bytes| mega}}</td>
   </tr>
 
 </tbody>
 
 </table>
+
+

@@ -9,7 +9,7 @@ def check_auth(handler):
             raise web.HTTPUnauthorized(headers={'WWW-Authenticate':'Basic realm="Spot4 API"'})
         else:
             method, secret = request.headers.get('AUTHORIZATION').split()
-            login, password = base64.b64decode(secret).decode('ascii').split(':')
+            login, password = base64.b64decode(secret).decode('utf-8').split(':')
             if request.app['config']['API_SECRET'].get(login) != password:
                 raise web.HTTPForbidden()
         return await handler(request)

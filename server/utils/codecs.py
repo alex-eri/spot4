@@ -1,12 +1,21 @@
 import codecs
+import socket
+import struct
+
+def ip2int(addr):
+    return struct.unpack("!I", socket.inet_aton(addr))[0]
+
+def int2ip(addr):
+    return socket.inet_ntoa(struct.pack("!I", addr))
+
 
 def trydecodeHexUcs2(a):
-    if len(a) > 6 and len(a)%2 == 0 and a[0]=='0':
-        try:
-            a = codecs.decode(a, "hex")
-            return decodeUcs2(iter(a),len(a))
-        except:
-            pass
+    try:
+        a = codecs.decode(a, "hex")
+        return a.decode('utf-16be')
+        #return decodeUcs2(iter(a),len(a))
+    except:
+        pass
     return a
 
 

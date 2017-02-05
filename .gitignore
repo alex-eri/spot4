@@ -1,5 +1,6 @@
 */build/*
 build/*
+dist/*
 *.pyc
 */__pycache__
 */node_modules/*
@@ -7,3 +8,4 @@ build/*
 */ht_docs/*
 mikrotik/hotspot/*
 *.c
+*.pem

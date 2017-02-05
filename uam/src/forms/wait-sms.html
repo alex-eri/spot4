@@ -1,12 +1,15 @@
-<p>
+<p ng-if="device.sms_waited">
   <label>
     Отправьте SMS с кодом {{device.sms_waited}}
     на номер <a href="tel:{{device.sms_callie}}">{{device.sms_callie}}</a>.
   </label>
 </p>
-<p>
+<p ng-if="device.sms_waited">
 Интернет включится после доставки кода. Стоимость согласно Вашему тарифу.
 </p>
+
+<p  ng-if="!device.sms_waited">
+  <label>На данный момент получение SMS не возможно по техническим причинам.</label></p>
 <p>
   <a href=check/sms/ ng-if="(device.sms_sent)">Пришло SMS</a>
   <!--a href=register/>Другой номер</a-->

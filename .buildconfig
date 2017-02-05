@@ -4,3 +4,4 @@ device=local
 runtime=host
 prefix=/home/eri/.cache/gnome-builder/install/Spot4/host
 default=true
+config-opts=

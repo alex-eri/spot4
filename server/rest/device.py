@@ -60,6 +60,7 @@ async def device_handler(request):
                 r = await coll.update(q, {'$set':{'sms_callie': callie}})
                 request.app.logger.debug(r)
         device['sms_sent']=device.get('sms_sent') and True
+        device['phone'] = 'saved'
 
         debug(device.__repr__())
         return device

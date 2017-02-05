@@ -11,11 +11,19 @@ app.directive('phoneValidation', function(){
 
        modelCtrl.$parsers.push(function (inputValue) {
 
-         var transformedInput = inputValue.replace(/[^\d+]/g,'').replace(/^89/g,'+79');
+         var transformedInput = inputValue
+            .replace(/[^\d+]/g,'')
+            .replace(/^89/g,'+79')
+            .replace(/^79/g,'+79')
+            .replace(/^9/g,'+79')
+            ;
 
          if (transformedInput!=inputValue) {
            modelCtrl.$setViewValue(transformedInput);
-           modelCtrl.$render();
+           element.val('');
+           element.val(transformedInput);
+           //modelCtrl.$render();
+//           setCaretPosition(element,len(transformedInput));
          }
 
          return transformedInput;
@@ -145,13 +153,16 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
 
         function onerror(error){
             console.log('login failed');
+           
             $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
         }
 
         function onchillilogin(response) {
+
             console.log(response)
                 if (response.redir.redirectionURL) {
                     console.log(response.redir.redirectionURL)
+
                     $window.location.href=response.redir.redirectionURL
                 }
                 else if (response.redir.originalURL) {
@@ -163,6 +174,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
         }
 
         function onchillistatus(response) {
+
+            console.log(response)
 
             var challenge = hex2bin(response.challenge);
             var chapid = '\x00';
@@ -180,17 +193,17 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                     callback:"JSON_CALLBACK"
                 },
                 {get:{ method: 'JSONP'}}
-            ).get(onchillilogin)
+            ).get(onchillilogin);
             if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
 
         function onmikrotikstatus(response){
-
+                var dst = $cookies.get('linkorig') || "/uam/status/";
                 var charpassw = hexMD5(response.chapid + password + response.challenge);
                 $resource($cookies.get('linklogin'),
                 {
                     target:'jsonp',
-                    dst:$cookies.get('linkorig'),
+                    dst:dst,
                     username:username,
                     password:charpassw,
                     var:"JSON_CALLBACK"
@@ -212,11 +225,10 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 $resource($cookies.get('linklogin'),
                 {
                     target:'jsonp',
-                    var:"JSON_CALLBACK"
+                    var:"JSON_CALLBACK",
+
                 },
                 {get:{ method: 'JSONP'}}).get(onmikrotikstatus,onerror)
-
-
             }
         } else {
             onerror({})
@@ -225,8 +237,9 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
 }]);
 
 
-app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$window',
-    function ( $scope, $resource, $cookies ,$location,$window){
+
+app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$window','$interval',
+    function ( $scope, $resource, $cookies ,$location,$window,$interval){
         $scope.wrongcode = false;
         $scope.code = null;
         var oid = $location.$$search.device || $cookies.get('device');
@@ -236,6 +249,7 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
             console.log(response);
             $scope.device = response;
             if (response.password) {
+                $interval.cancel($scope.checker)
                 $location.search('password', response.password);
                 $location.search('username', response.username);
                 $location.path('/login/')
@@ -249,14 +263,21 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
                         $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
                 }
 
-        if ($scope.device) {
-        } else {
-             $resource('/device/:oid').get({
-                    'oid': oid
-                },
-                prelogin,onerror
-             )
+        if ($scope.checker) {
+            $interval.cancel($scope.checker)
         }
+
+        function getdevice(){
+                 $resource('/device/:oid').get({
+                        'oid': oid
+                    },
+                    prelogin,onerror
+                 )
+            }
+
+        $scope.checker = $interval(
+            getdevice, 4000)
+
 
         $scope.confirm = function(form) {if (form.$valid) {
 
@@ -315,6 +336,9 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
     console.log($location);
     console.log($route);
 
+    $scope.$location = $location;
+    $scope.$cookies = $cookies;
+
     for (var key in $location.$$search){
         $cookies.put(key, $location.$$search[key]);
         console.log(key);
@@ -327,10 +351,13 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
         }
     }
 
+    if ( $location.$$search.nasid && ! $location.$$search.called )
+        $cookies.put('called', $location.$$search.nasid);
+
     console.log($cookies.getAll())
 
-    $resource('/uam/config/:nasid.json').get(
-    {nasid:$cookies.get('nasid')},
+    $resource('/uam/config/:called.json').get(
+    {called:$cookies.get('called')},
     function(response){
         $scope.config = response
     },

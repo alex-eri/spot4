@@ -1,0 +1,39 @@
+<h1>Топ {{label}}<small>{{startdate| date}} - {{stopdate|date}}</small></h1>
+<h2>Пользователи</h2>
+<table class="table  table-hover table-condensed table-bordered">
+  <thead>
+  <tr>
+    <th>Пользователь</th>
+    <th>Передано</th>
+    <th>Получено</th>
+    <th>Время в сети</th>
+  </tr>
+    </thead>
+<tr ng-repeat="a in users">
+<td>{{a._id.username}}</td>
+<td>{{a.input_bytes|mega}}</td>
+<td>{{a.output_bytes|mega}}</td>
+<td>{{a.session_time| interval}}</td>
+</tr>
+</table>
+
+<h2>Роутеры</h2>
+<table class="table  table-hover table-condensed table-bordered">
+<thead>
+  <tr>
+    <th>Роутер</th>
+    <th>Сессии</th>
+    <th>Получено</th>
+    <th>Отправлено</th>
+    <th>Суммарное время в сети</th>
+  </tr>
+</thead>
+<tr ng-repeat="a in nases">
+<td>{{a._id.nas}}</td>
+<td>{{a.count}}</td>
+<td>{{a.input_bytes|mega}}</td>
+<td>{{a.output_bytes|mega}}</td>
+<td>{{a.session_time| interval}}</td>
+</tr>
+</table>
+

@@ -1,6 +1,9 @@
 all: clean build
 
-build:
+bower_components:
+	npm install
+
+build: bower_components
 	install -d ./ht_docs/js
 	install -d ./ht_docs/css
 	install -d ./ht_docs/fonts
@@ -11,7 +14,6 @@ build:
 	cp bower_components/bootstrap/dist/css/*.min* ./ht_docs/css/
 	cp bower_components/bootstrap/dist/fonts/* ./ht_docs/fonts/
 
-	npm install
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/angular/angular.min.js \
 		bower_components/angular-route/angular-route.min.js \
@@ -21,6 +23,7 @@ build:
 		> ./ht_docs/js/libuam.js
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/jquery/dist/jquery.min.js \
+		bower_components/moment/moment.js \
 		bower_components/angular/angular.min.js \
 		bower_components/angular-resource/angular-resource.min.js \
 		bower_components/angular-animate/angular-animate.min.js \

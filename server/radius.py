@@ -1,207 +1,26 @@
-import literadius as rad
 from multiprocessing import Process, current_process
-from uuid import uuid4
-import hashlib
 import logging
-import os
-from utils import procutil
-import asyncio
-import time, base64, pyotp
-import netflow
-import socket
+import literadius.constants as rad
+
 logger = logging.getLogger('radius')
 debug = logger.debug
+TTL = 56
+BILLING = False
 
-from utils.password import getsms, getpassw
-
-
-class RadiusProtocol:
-    radsecret = None
-    db = None
-    ttl = 60
-
-    def __getitem__(self,y):
-        r = self.pkt.decode(y)
-        return r
-
-    def connection_made(self, transport):
-        debug('start'+ transport.__repr__())
-        #sock = transport.get_extra_info('socket')
-        #sock.setsockopt(socket.SOL_IP, socket.IP_TTL, self.ttl)
-        self.transport = transport
-
-    def datagram_received(self, data, addr):
-        debug('From {} data received: '.format(addr))
-        self.caller = addr
-        self.pkt = rad.Packet(data, self.radsecret)
-
-        debug(self.pkt.authenticator)
-        debug(self.pkt.secret)
-
-        if self.pkt.code == rad.AccessRequest:
-            self.handle_auth()
-        elif self.pkt.code == rad.AccountingRequest:
-            self.handle_acct()
-        else:
-            raise Exception('Packet is not request')
-        if logger.isEnabledFor(logging.DEBUG):
-            for attr in self.pkt.keys():
-                debug('{} :\t{}\t{}'.format(attr,self.pkt[attr],self.pkt.decode(attr)))
-
-
-    def respond(self,resp):
-        self.transport.sendto(resp.data, self.caller)
-        print(resp.data)
-
-        if logger.isEnabledFor(logging.DEBUG):
-            for attr in resp.keys():
-                debug('{} :\t{}'.format(attr,resp.decode(attr)))
-
-    def error_received(self, exc):
-        debug('Error received:', exc)
-
-    def connection_lost(self, exc):
-        debug('stop', exc)
-
-
-    def handle_auth(self):
-
-        reply_attributes=dict(Class=uuid4().hex.encode('ascii'))
-        self.reply = self.pkt.reply(rad.AccessReject)
-
-        self.db.users.find_one({'_id':self[rad.UserName]},callback=self.got_user)
-        debug('user was {}'.format(self[rad.UserName]))
-
-    def got_user(self,response,error):
-        if error:
-            logger.error(error.__repr__())
-        if response:
-            q = {
-                'username':response['_id'],
-                'mac':self[rad.CallingStationId]
-                 }
-            if response.get('password') and self.check_password(response.get('password')):
-                self.db.devices.find_and_modify(q,
-                    {'$currentDate':{'seen':True},'$set':{'checked':True}},
-                    upsert=True, new=True,
-                    callback=self.got_device
-                    )
-                return
-            else:
-                for n in [0,-1]:
-                    psw = getpassw(n=n, **q)
-                    if self.check_password(psw):
-                        q['checked']=True
-                        self.db.devices.find_one(q,callback=self.got_device)
-                        return
-                    else:
-                        debug('otp was {}'.format(psw))
-        #reject
-        self.respond( self.reply )
-
-
-    def got_device(self,response,error):
-        if error:
-            logger.error(error.__repr__())
-        if response:
-            self.reply.code = rad.AccessAccept
-        self.respond( self.reply )
-
-    def check_password(self, cleartext=""):
-        if not cleartext: return
-
-        pkt = self.pkt
-        debug(pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
-
-        if pkt[rad.UserPassword]:
-            try:
-                return (pkt.pw_decrypt(pkt[rad.UserPassword]) == cleartext)
-            except UnicodeDecodeError:
-                return
-
-        chap_challenge = pkt[rad.CHAPChallenge]
-        chap_password  = pkt[rad.CHAPPassword]
-
-        if chap_challenge and chap_password:
-
-            chap_id = bytes([chap_password[0]])
-            chap_password = chap_password[1:]
-
-            m = hashlib.md5()
-            m.update(chap_id)
-            m.update(cleartext.encode(encoding='utf_8', errors='strict'))
-            m.update(chap_challenge)
-
-            return chap_password == m.digest()
-        """
-        if self['MS-CHAP-Response'] and self['MS-CHAP-Challenge']:
-            #https://github.com/mehulsbhatt/freeIBS/blob/master/radius_server/pyrad/packet.py
-            raise NotImplementedError
-
-        if self['MS-CHAP2-Response'] and self['MS-CHAP-Challenge']:
-            raise NotImplementedError
-        """
-
-    def handle_acct(self):
-        q = {
-                'auth_class': self[rad.Class],
-                'session_id': self[rad.AcctSessionId],
-                'sensor': self.caller
-            }
-        upd = {}
-
-        if self[rad.AcctStatusType] == rad.AccountingStart:
-            upd = {
-                '$currentDate':{'start_date':True},
-                '$set':{
-                    'ip': self[rad.FramedIPAddress],
-                    'nas': self[rad.NASIdentifier],
-                    'callee': self[rad.CalledStationId],
-                    'caller': self[rad.CallingStationId],
-                    'username': self[rad.UserName],
-                    'start_time': self[rad.EventTimestamp]
-                }
-            }
-
-        elif self[rad.AcctStatusType] in [rad.AccountingUpdate, rad.AccountingStop] :
-
-            account = {
-                'session_time': self[rad.AcctSessionTime],
-                'input_bytes': self[rad.AcctInputGigawords] or 0 << 32 | self[rad.AcctInputOctets],
-                'input_packets': self[rad.AcctInputPackets],
-                'output_bytes': self[rad.AcctOutputGigawords] or 0 << 32 | self[rad.AcctOutputOctets],
-                'output_packets': self[rad.AcctOutputPackets],
-                'delay':self[rad.AcctDelayTime],
-                'event_time': self[rad.EventTimestamp]
-            }
-            if self[rad.AcctStatusType] == rad.AccountingUpdate:
-                upd={ '$set': account }
-
-            elif self[rad.AcctStatusType] == rad.AccountingStop:
-                account['termination_cause'] =  self[rad.AcctTerminateCause]
-                upd = {
-                        '$set': account,
-                        '$currentDate':{'stop_date':True}
-                    }
-        if upd :
-            self.db.accounting.find_and_modify(q,upd,upsert=True,new=True,callback=self.accounting_cb)
-        debug('accounting respond')
-        self.respond( self.pkt.reply(rad.AccountingResponse) )
-
-    def accounting_cb(self,r,e,*a,**kw):
-        #debug(r)
-        #if r and r.get('termination_cause'):
-        #    loop = asyncio.get_event_loop()
-        #    asyncio.run_coroutine_threadsafe(
-        #        netflow.aggregate(self.db, r),
-        #        loop)
-
-        if e:
-            logger.error('accounting callback')
-            logger.error(e.__repr__())
+async def close_sessions(db):
+    await db.accounting.find_and_modify(
+                {'termination_cause':{'$exists': False}},
+                {'$set':{'termination_cause': rad.TCAdminReboot}}
+            )
 
 
 def setup_radius(config,PORT):
+    import asyncio
+    from literadius.protocol import RadiusProtocol
+    from utils import procutil
+    import socket
+    import os
+    import storage
 
     name = current_process().name
     procutil.set_proc_name(name)
@@ -209,27 +28,29 @@ def setup_radius(config,PORT):
 
     loop = asyncio.get_event_loop()
 
-    import storage
+
     db = storage.setup(
         config['DB']['SERVER'],
         config['DB']['NAME']
     )
 
-    #db.accounting.ensure_index(
-    #    [ ("auth_class",1), ("session_id",1) ],
-    #    unique=True, dropDups=True ,callback=storage.index_cb)
-
-    db.accounting.ensure_index([ ("username",1) ], unique=False, callback=storage.index_cb)
+    t = asyncio.Task(close_sessions(db))
+    loop.run_until_complete(t)
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 
     RadiusProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
     RadiusProtocol.db = db
+    RadiusProtocol.loop = loop
 
     t = asyncio.Task(loop.create_datagram_endpoint(
         RadiusProtocol, local_addr=(HOST,PORT)))
 
     transport, server = loop.run_until_complete(t)
+
+    sock = transport.get_extra_info('socket')
+    sock.setsockopt(socket.SOL_IP, socket.IP_TTL, TTL)
+
     try:
         loop.run_forever()
     finally:

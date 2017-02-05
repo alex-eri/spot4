@@ -13,6 +13,9 @@
     "angular-i18n": "1.5.x",
     "bootstrap": "3.3.x",
     "forge": "0.6.x",
-    "jquery": "2.2.x"
+    "jquery": "2.2.x",
+    "moment": "2.x",
+    "moment-timezone": "0.5.x",
+    "ua-parser-js": "0.7.x"
   }
 }

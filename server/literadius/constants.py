@@ -1,3 +1,10 @@
+class typeofNAS():
+    accend = 1
+    wispr = 2
+    mikrotik = 4
+    chilli = 8
+
+
 AccessRequest = 1
 AccessAccept = 2
 AccessReject = 3
@@ -71,9 +78,13 @@ CHAPChallenge = 60
 NASPortType = 61
 PortLimit = 62
 
+EAPMessage = 79
 MessageAuthenticator = 80
 
 NASPortId = 87
+
+AscendDataRate = 197
+AscendXmitRate = 255
 
 AccountingStart	=		1
 AccountingStop	=		2
@@ -81,17 +92,67 @@ AccountingUpdate	=	3
 AccountingOn	=	7
 AccountingOff	=	8
 
+
 ChilliSpot = 14559
+ChilliSpotMaxInputOctets = (ChilliSpot, 1)
+ChilliSpotMaxOutputOctets = (ChilliSpot, 2)
+ChilliSpotMaxTotalOctets = (ChilliSpot, 3)
 ChilliSpotVersion = (ChilliSpot, 8)
+
+CoovaChilliAcctViewPoint = (ChilliSpot, 10)
+
+CoovaChilliNASViewPoint = NASViewPoint = 1
+CoovaChilliClientViewPoint = ClientViewPoint = 2
+
+CoovaChilliBandwidthMaxUp = (ChilliSpot, 4)
+CoovaChilliBandwidthMaxDown = (ChilliSpot, 5)
+
+
+
 
 WISPr = 14122
 WISPrLocationName = (WISPr,2)
 WISPrLogoffURL = (WISPr,3)
 WISPrRedirectionURL = (WISPr,4)
 
+WISPrBandwidthMaxUp = (WISPr, 7)
+WISPrBandwidthMaxDown = (WISPr,8)
 
-Mikrotik = 14988
+MT = Mikrotik = 14988
+MikrotikRecvLimit = (Mikrotik,1)
+MikrotikXmitLimit = (Mikrotik,2)
+MikrotikRateLimit = (Mikrotik,8)
 MikrotikHostIP = (Mikrotik,10)
+MikrotikRecvLimitGigawords = (Mikrotik,14)
+MikrotikXmitLimitGigawords = (Mikrotik,15)
 MikrotikWirelessPSK = (Mikrotik, 16)
+MikrotikAddressList = (Mikrotik,19 )
 
-MSMPPE = 311
+
+MS = Microsoft = 311
+MSCHAPResponse = (Microsoft,1)
+MSCHAPChallenge  = (Microsoft,11)
+MSCHAPMPPEKeys =  (Microsoft,12)
+MSCHAP2Response = (Microsoft,25)
+MSCHAP2Success= (Microsoft,26)
+MSMPPEEncryptionPolicy = (Microsoft,7)
+
+#Acct-Terminate-Cause
+TCUserRequest   =         1
+TCLostCarrier   =         2
+TCLostService   =         3
+TCIdleTimeout   =         4
+TCSessionTimeout=         5
+TCAdminReset    =         6
+TCAdminReboot   =         7
+TCPortError     =         8
+TCNASError      =         9
+TCNASRequest    =         10
+TCNASReboot     =         11
+TCPortUnneeded  =         12
+TCPortPreempted =         13
+TCPortSuspended =         14
+TCServiceUnavailable =    15
+TCCallback      =          16
+TCUserError     =         17
+TCHostRequest   =         18
