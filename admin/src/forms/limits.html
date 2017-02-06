@@ -3,7 +3,7 @@
 <table class=table>
 
 <tbody ng-repeat="(id,router) in limits">
-<tr data-target="#form{{router._id}}" data-toggle="collapse">
+<tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
 <i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
 </th>
@@ -24,7 +24,7 @@
 </td>
 
 </tr>
-<tr id="form{{router._id}}" class="collapse"><td colspan=4>
+<tr id="form{{id}}" class="collapse"><td colspan=4>
   <form class="form-horizontal" >
   <div class="form-group">
     <label class="col-sm-2 control-label">Скорость</label>

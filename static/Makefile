@@ -12,6 +12,7 @@ build: bower_components
 	install ./css/animations.css ./ht_docs/css/
 
 	cp bower_components/bootstrap/dist/css/*.min* ./ht_docs/css/
+	cp bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.css ./ht_docs/css/
 	cp bower_components/bootstrap/dist/fonts/* ./ht_docs/fonts/
 
 	node_modules/uglify-js/bin/uglifyjs \
@@ -31,6 +32,7 @@ build: bower_components
 		bower_components/angular-i18n/angular-locale_ru.js \
 		bower_components/angular-i18n/angular-locale_ru-ru.js \
 		bower_components/bootstrap/dist/js/bootstrap.min.js \
+		bower_components/angular-bootstrap-toggle/dist/angular-bootstrap-toggle.min.js \
 		> ./ht_docs/js/libadmin.js
 
 clean:

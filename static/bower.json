@@ -16,6 +16,7 @@
     "jquery": "2.2.x",
     "moment": "2.x",
     "moment-timezone": "0.5.x",
-    "ua-parser-js": "0.7.x"
+    "ua-parser-js": "0.7.x",
+    "angular-bootstrap-toggle": "0.x"
   }
 }

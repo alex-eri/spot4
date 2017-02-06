@@ -1,5 +1,16 @@
-<h1>SMS</h1>
-<h2>Принятые</h2>
+
+<ul class="nav nav-pills" role="tablist" >
+<li><h2 style="margin-top: 0px;">SMS&nbsp;&nbsp;</h2></li>
+<li role="presentation" ng-class="{active:smstab==1 || ! smstab}">
+  <a ng-click="smstab=1">Принятые</a></li>
+<li role="presentation" ng-class="{active:smstab==2}">
+  <a ng-click="smstab=2">Отправленные</a></li>
+<li role="presentation" class=disabled ng-class="{active:smstab==3}">
+  <a ng-click="smstab=2">Рассылка</a></li>
+</ul>
+
+<div class="tab-content">
+<div role="tabpanel" ng-show="smstab==1 || ! smstab" >
   <table class="table table-hover table-condensed table-bordered">
     <tr>
       <th>Время</th>
@@ -7,12 +18,16 @@
       <th>Текст</th>
     </tr>
     <tr ng-repeat="a in sms_received">
-    <td>{{a.date | date: 'medium'}}</td>
+    <td>{{a.date.$date | date: 'medium' || a.date}}</td>
 <td title="To: {{a.to}}">{{a.phone}}</td>
 <td>{{a.text}}</td>
 </tr>
   </table>
-<h2>Отправленные</h2>
+
+</div>
+
+<div role="tabpanel"  ng-show="smstab==2">
+
   <table class="table table-hover table-condensed table-bordered">
     <tr>
       <th>Время</th>
@@ -25,3 +40,6 @@
 <td>{{a.text}}</td>
 </tr>
   </table>
+
+</div></div>
+

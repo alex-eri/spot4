@@ -1,0 +1,64 @@
+<h1>Настройки порталов</h1>
+
+<table class=table>
+
+<tbody ng-repeat="(id,router) in limits">
+<tr data-target="#form{{id}}" data-toggle="collapse">
+<th>
+<i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
+</th>
+
+<!--
+  {
+"smsmode":"send",
+"password_auth":true,
+"theme":"default"
+}
+  -->
+
+
+</tr>
+<tr id="form{{id}}" class="collapse"><td colspan=4>
+  <form class="form-horizontal" >
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Тема</label>
+    <div class="col-sm-4">
+      <select class="form-control" ng-model="router.theme" ng-options="theme for theme in themes" >
+      </select>
+
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">имя шаблона</p></div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label">Пароль</label>
+    <div class="col-sm-4">
+
+    <toggle type="checkbox" data-toggle="toggle" class="" ng-model="router.password"></toggle>
+
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+          разрешит вход по паролю
+    </p></div>
+  </div>
+  <div class="form-group">
+    <label class="col-sm-2 control-label" >Форма SMS</label>
+    <div class="col-sm-4">
+      <select class="form-control" ng-model="router.smsmode">
+          <option value=send>Отправлять</option>
+          <option value=wait>Принимать</option>
+      </select>
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+           кто отправляет смс.
+    </p>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+    <input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
+    </div>
+  </div>
+</form>
+</td></tr>
+</tbody>
+</table>

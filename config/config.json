@@ -23,11 +23,11 @@
 			"url":"http://192.168.8.1",
 			"number": "+79158190408",
 			"sender": false,
-			"reciever": true
+			"reciever": false
 			},
 			{
 			"driver":"zte",
-			"url":"http://192.168.0.1",
+			"url":"http://192.168.8.1",
 			"number": "+79158190408",
 			"sender": false,
 			"reciever": false,
@@ -37,7 +37,7 @@
 			"driver":"http",
 			"method":"get",
 			"url":"http://localhost:8000/sms/send_hotspot/",
-			"sender": true,
+			"sender": false,
 			"reciever": false,
 			"query":"tel={phone}&text={text}",
 			"encoding":"utf-8"
