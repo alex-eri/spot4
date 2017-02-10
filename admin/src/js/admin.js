@@ -53,6 +53,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/uam.html',
         controller: 'Uam'
       }).
+      when('/modem/', {
+        templateUrl: '/static/admin-forms/modem.html',
+        controller: 'Modem'
+      }).
       otherwise({
         redirectTo: '/online/'
       });
@@ -245,7 +249,7 @@ app.controller('Limit',  ['$scope','$resource',
 
             response.response.forEach( function(item){
                 var id = item;
-                var item_name=item.replace(/\./g,"_");
+                var item_name=item.replace(/[.:-]/g,"_");
                 $scope.limits[item_name]={_id:id};
             })
             }
@@ -258,7 +262,7 @@ app.controller('Limit',  ['$scope','$resource',
         ], function(response){
             response.response.forEach( function(item){
                 var id = item._id;
-                var item_name=id.replace(/\./g,"_");
+                var item_name=id.replace(/[.:-]/g,"_");
                 $scope.limits[item_name]=item;
             })
 
@@ -275,7 +279,7 @@ app.controller('Limit',  ['$scope','$resource',
             }], function(response){
                 console.log(response)
                 var id = response.response._id;
-                var item_name=id.replace(/\./g,"_");
+                var item_name=id.replace(/[.:-]/g,"_");
                 $scope.limits[item_name] = response.response;
             })
         }
@@ -406,7 +410,7 @@ app.controller('Uam',  ['$scope','$resource',
         $scope.t = datefymd;
 
 
-    $resource('/config/themes.json').query(
+    $resource('/admin/themes.json').query(
     function(response){
         $scope.themes = response
     },
@@ -425,8 +429,8 @@ app.controller('Uam',  ['$scope','$resource',
 
             response.response.forEach( function(item){
                 var id = item;
-                var item_name=item.replace(/\./g,"_");
-                $scope.limits[item_name]={_id:id};
+                var item_name=item.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]={_id:id,newbie:true};
             })
             }
         )
@@ -438,7 +442,7 @@ app.controller('Uam',  ['$scope','$resource',
         ], function(response){
             response.response.forEach( function(item){
                 var id = item._id;
-                var item_name=id.replace(/\./g,"_");
+                var item_name=id.replace(/[.:-]/g,"_");
                 $scope.limits[item_name]=item;
             })
 
@@ -455,10 +459,15 @@ app.controller('Uam',  ['$scope','$resource',
             }], function(response){
                 console.log(response)
                 var id = response.response._id;
-                var item_name=id.replace(/\./g,"_");
+                var item_name=id.replace(/[.:-]/g,"_");
                 $scope.limits[item_name] = response.response;
 
             })
         }
     }]);
 
+
+
+app.controller('Modem',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        }]);

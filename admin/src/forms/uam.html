@@ -6,6 +6,7 @@
 <tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
 <i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
+<i class="glyphicon glyphicon-time" ng-if=router.newbie></i>
 </th>
 
 <!--
@@ -23,11 +24,12 @@
   <div class="form-group">
     <label class="col-sm-2 control-label">Тема</label>
     <div class="col-sm-4">
-      <select class="form-control" ng-model="router.theme" ng-options="theme for theme in themes" >
+      <select class="form-control"
+        ng-model="router.theme" ng-options="theme for theme in themes">
       </select>
 
     </div>
-    <div class="col-sm-6"><p class="form-control-static">имя шаблона</p></div>
+    <div class="col-sm-6"><p class="form-control-static">имя шаблона в uam/theme/</p></div>
   </div>
   <div class="form-group">
     <label class="col-sm-2 control-label">Пароль</label>
@@ -40,8 +42,31 @@
           разрешит вход по паролю
     </p></div>
   </div>
+      <div class="form-group">
+    <label class="col-sm-2 control-label">Отправлять SMS</label>
+    <div class="col-sm-4">
+
+    <toggle type="checkbox" data-toggle="toggle" class="" ng-model="router.smssend"></toggle>
+
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+от сервера пользователю
+    </p></div>
+  </div>
+      <div class="form-group">
+    <label class="col-sm-2 control-label">Принимать SMS</label>
+    <div class="col-sm-4">
+
+    <toggle type="checkbox" data-toggle="toggle" class=""
+      ng-model="router.smsrecieve"></toggle>
+
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+от пользователя серверу
+    </p></div>
+  </div>
   <div class="form-group">
-    <label class="col-sm-2 control-label" >Форма SMS</label>
+    <label class="col-sm-2 control-label" >Первая форма</label>
     <div class="col-sm-4">
       <select class="form-control" ng-model="router.smsmode">
           <option value=send>Отправлять</option>
@@ -49,7 +74,7 @@
       </select>
     </div>
     <div class="col-sm-6"><p class="form-control-static">
-           кто отправляет смс.
+           предпочитаемый вариант доставки кода подтверждения
     </p>
     </div>
   </div>

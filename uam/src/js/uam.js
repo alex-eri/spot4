@@ -60,8 +60,20 @@ app.directive('codeValidation', function(){
 var waittemplate = '<center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>';
 
 
+app.config( [
+    '$compileProvider',
+    function( $compileProvider )
+    {
+        $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|tel|sms|mailto):/);
+        // Angular before v1.2 uses $compileProvider.urlSanitizationWhitelist(...)
+    }
+]);
+
 app.config(['$routeProvider','$locationProvider',
   function($routeProvider, $locationProvider) {
+
+
+
     $locationProvider.html5Mode(
         {
         enabled: true,

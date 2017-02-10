@@ -1,4 +1,4 @@
-<h1>Ограничения</h1>
+<h1>Ограничения на портале</h1>
 
 <table class=table>
 
@@ -73,12 +73,24 @@
     </div>
     <div class="col-sm-6"><p class="form-control-static">имя цепочки в фаерволе</p></div>
   </div>
+      <div class="form-group">
+    <label class="col-sm-2 control-label">Платный доступ</label>
+    <div class="col-sm-4">
+
+    <toggle type="checkbox" data-toggle="toggle" class="" ng-model="router.payable"></toggle>
+
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+          проверка оплаты по билингу.
+          Если существует подходящая оплата, то ограничения с неё перекрывают данные.
+    </p></div>
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
     <input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
     </div>
   </div>
 </form>
+
 </td></tr>
 </tbody>
 </table>
