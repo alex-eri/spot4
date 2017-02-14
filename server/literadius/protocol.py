@@ -181,7 +181,7 @@ class Auth:
         return nas
 
 
-    def billing(self,user,limit):
+    async def billing(self,user,limit):
         now = datetime.utcnow()
 
         tarif = await self.db.invoice.find_one( {
@@ -190,11 +190,12 @@ class Auth:
             'start':{'$lte':now},
             'stop':{'$gt':now},
             })
-        for k,v in tarif.items():
-            if v == 0:
-                limit.pop(k)
-            if v:
-                limit[k] = v
+        if tarif:
+            for k,v in tarif.items():
+                if v in [0,"0"]:
+                    limit.pop(k)
+                if v:
+                    limit[k] = v
         return limit
 
 
@@ -213,14 +214,14 @@ class Auth:
         limit = {}
         for l in ordered:
             for k,v in l.items():
-                if v == 0:
+                if v in [0,"0"]:
                     limit.pop(k)
                 if v:
                     limit[k] = v
         limit.pop('_id')
 
         if limit.pop('payable',False):
-            limit = self.billing(user,limit)
+            limit = await self.billing(user,limit)
 
         with reply.lock:
             for k,v in limit.items():

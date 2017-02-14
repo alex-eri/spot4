@@ -5,7 +5,7 @@
 <tbody ng-repeat="(id,router) in limits">
 <tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
-<i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
+<i class="glyphicon glyphicon-menu-hamburger"></i>&nbsp; {{router._id}}
 </th>
   <td>
   <i class="glyphicon glyphicon-download"></i>
@@ -77,8 +77,7 @@
     <label class="col-sm-2 control-label">Платный доступ</label>
     <div class="col-sm-4">
 
-    <toggle type="checkbox" data-toggle="toggle" class="" ng-model="router.payable"></toggle>
-
+    <nz-toggle ng-model="router.payable" tri-toggle val-false=0></nz-toggle>
     </div>
     <div class="col-sm-6"><p class="form-control-static">
           проверка оплаты по билингу.

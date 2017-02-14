@@ -1,22 +1,24 @@
 {
   "name": "spot4",
   "description": "Spot4 AngularJS",
-  "version": "0.0.0",
+  "version": "4.1.0",
   "private": true,
   "dependencies": {
-    "angular": "1.5.x",
-    "angular-animate": "1.5.x",
-    "angular-mocks": "1.5.x",
-    "angular-resource": "1.5.x",
-    "angular-route": "1.5.x",
-    "angular-cookies": "1.5.x",
-    "angular-i18n": "1.5.x",
+    "angular": "1.6.x",
+    "angular-animate": "1.6.x",
+    "angular-mocks": "1.6.x",
+    "angular-resource": "1.6.x",
+    "angular-route": "1.6.x",
+    "angular-cookies": "1.6.x",
+    "angular-i18n": "1.6.x",
     "bootstrap": "3.3.x",
     "forge": "0.6.x",
     "jquery": "2.2.x",
     "moment": "2.x",
     "moment-timezone": "0.5.x",
     "ua-parser-js": "0.7.x",
-    "angular-bootstrap-toggle": "0.x"
+    "nz-toggle": "2.x.x",
+    "html5shiv":"3.x.x",
+    "json2":""
   }
 }

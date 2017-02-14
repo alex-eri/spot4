@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('admin',['ngRoute', 'ngResource','ui.toggle'])
+var app = angular.module('admin',['ngRoute', 'ngResource','nzToggle'])
 window.app = app;
 var waittemplate = '<center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>';
 
@@ -54,14 +54,21 @@ app.config(['$routeProvider','$locationProvider',
         controller: 'Uam'
       }).
       when('/modem/', {
-        templateUrl: '/static/admin-forms/modem.html',
-        controller: 'Modem'
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
+      when('/config/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
+      when('/users/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
       }).
       otherwise({
         redirectTo: '/online/'
       });
   }
 ]);
+
+
 
 
 
@@ -403,12 +410,21 @@ switch(input) {
 
 
 
-app.controller('Uam',  ['$scope','$resource',
-    function ( $scope, $resource ){
+app.controller('Uam',  ['$scope','$resource','$timeout',
+    function ( $scope, $resource,$timeout){
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
 
+    function removePropertyAndApply(obj, prop) {
+          obj[prop] = null;
+
+          $timeout(function () {
+            obj[prop] = undefined;
+          });
+        };
+
+      $scope.removePropertyAndApply =  removePropertyAndApply;
 
     $resource('/admin/themes.json').query(
     function(response){
@@ -449,6 +465,7 @@ app.controller('Uam',  ['$scope','$resource',
         })
         $scope.update = function(router){
             var id = router._id
+            router.newbie = undefined;
             $resource('/db/uamconfig').save([{
             find_and_modify:{
                 query:{_id:id},

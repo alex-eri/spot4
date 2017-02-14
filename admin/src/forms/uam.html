@@ -5,84 +5,115 @@
 <tbody ng-repeat="(id,router) in limits">
 <tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
-<i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
-<i class="glyphicon glyphicon-time" ng-if=router.newbie></i>
+<i class="glyphicon glyphicon-menu-hamburger"></i>
+   {{router._id}}<span ng-if="router._id=='default'">&nbsp;-&nbsp;По умолчанию</span>
+
 </th>
 
 <!--
-  {
+{
 "smsmode":"send",
 "password_auth":true,
 "theme":"default"
 }
-  -->
+-->
 
 
 </tr>
 <tr id="form{{id}}" class="collapse"><td colspan=4>
-  <form class="form-horizontal" >
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Тема</label>
-    <div class="col-sm-4">
-      <select class="form-control"
-        ng-model="router.theme" ng-options="theme for theme in themes">
-      </select>
+<form class="form-horizontal" >
+<div class="form-group">
+<label class="col-sm-2 control-label">Тема</label>
+<div class="col-sm-4" ng-switch on="id">
+<div ng-switch-when="default" >
+<select class="form-control"
+ng-model="router.theme" ng-options="theme for theme in themes">
+</select>
+</div>
+<div ng-switch-default>
+<select class="form-control"
+ng-model="router.theme" ng-options="theme for theme in themes">
+<option value="">По умолчанию</option>
+</select>
+</div>
+</div>
+<div class="col-sm-6"><p class="form-control-static">имя шаблона в uam/theme/</p></div>
+</div>
+<div class="form-group">
+<label class="col-sm-2 control-label">Пароль</label>
+<div class="col-sm-4">
+       <nz-toggle  tri-toggle
+        val-null=undefined
+        ng-model="router.password"></nz-toggle>
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+разрешит вход по паролю
+</p></div>
+</div>
 
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">имя шаблона в uam/theme/</p></div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Пароль</label>
-    <div class="col-sm-4">
+<div class="form-group">
+<label class="col-sm-2 control-label">Не проверять номер</label>
+<div class="col-sm-4">
 
-    <toggle type="checkbox" data-toggle="toggle" class="" ng-model="router.password"></toggle>
+<nz-toggle tri-toggle
+        val-null=undefined ng-model="router.nosms"></nz-toggle>
 
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">
-          разрешит вход по паролю
-    </p></div>
-  </div>
-      <div class="form-group">
-    <label class="col-sm-2 control-label">Отправлять SMS</label>
-    <div class="col-sm-4">
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+регистрация пользователя по номеру телефона, но без проверок
+</p></div>
+</div>
 
-    <toggle type="checkbox" data-toggle="toggle" class="" ng-model="router.smssend"></toggle>
 
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">
-от сервера пользователю
-    </p></div>
-  </div>
-      <div class="form-group">
-    <label class="col-sm-2 control-label">Принимать SMS</label>
-    <div class="col-sm-4">
+<div class="form-group" ng-if=!router.nosms >
+<label class="col-sm-2 control-label">Принимать SMS</label>
+<div class="col-sm-4">
 
-    <toggle type="checkbox" data-toggle="toggle" class=""
-      ng-model="router.smsrecieve"></toggle>
+<nz-toggle tri-toggle
+        val-null=undefined
+ng-model="router.smsrecieve"></nz-toggle>
 
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">
+</div>
+<div class="col-sm-6"><p class="form-control-static">
 от пользователя серверу
-    </p></div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label" >Первая форма</label>
-    <div class="col-sm-4">
-      <select class="form-control" ng-model="router.smsmode">
-          <option value=send>Отправлять</option>
-          <option value=wait>Принимать</option>
-      </select>
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">
-           предпочитаемый вариант доставки кода подтверждения
-    </p>
-    </div>
-  </div>
-  <div class="form-group">
-    <div class="col-sm-offset-2 col-sm-10">
-    <input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
-    </div>
-  </div>
+</p></div>
+</div>
+
+
+<div class="form-group" ng-if=!router.nosms >
+<label class="col-sm-2 control-label">Отправлять SMS</label>
+<div class="col-sm-4">
+
+<nz-toggle tri-toggle
+        val-null=undefined  ng-model="router.smssend"></nz-toggle>
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+от сервера пользователю
+</p></div>
+</div>
+
+<div class="form-group" ng-if="router.smssend && !router.nosms" >
+<label class="col-sm-2 control-label">Шаблон SMS</label>
+<div class="col-sm-4">
+
+<input type="text" class="form-control" ng-model="router.smstmpl"
+  placeholder="{{limits.default.smstmpl || 'Код подтверждения {code}.'}}"
+pattern=".*\{code\}.*" />
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+{code} - заменяется на код
+</p></div>
+</div>
+
+
+
+<div class="form-group">
+<div class="col-sm-offset-2 col-sm-10">
+<input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
+</div>
+</div>
 </form>
 </td></tr>
 </tbody>
