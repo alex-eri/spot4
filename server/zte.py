@@ -25,7 +25,7 @@ INTERVAL = 5
 
 
 async def handle(m,db):
-    t = retoken.match(m['text'])
+    t = retoken.search(m['text'])
     if t:
         q = dict(phone=m['phone'], sms_waited=t.group())
         await db.devices.update(q, {
