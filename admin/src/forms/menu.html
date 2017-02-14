@@ -77,17 +77,21 @@ border-radius: 2px;
       class="btn btn-default pull-right">
       <span ><i class="glyphicon glyphicon-menu-hamburger"></i>Меню</span>
     </button>
-  <h1>Spot 4</h1>
+  <h1>Spot 4.1</h1>
 
 </div>
 
 <div id="navbarCollapse" class="navbar-collapse collapse nav-sidebar">
 <ul class="nav nav-stacked">
+  <li ng-class="menuClass('config/')"><a href="config/">Конфигурация</a></li>
+  <li ng-class="menuClass('users/')"><a href="users/">Пользователи</a></li>
   <li ng-class="menuClass('registrations/')"><a href="registrations/">Регистрации</a></li>
   <li ng-class="menuClass('top/')"><a href="top/">Топ</a></li>
-    <li ng-class="menuClass('online/')"><a href="online/">Онлайн</a></li>
+  <li ng-class="menuClass('online/')"><a href="online/">Онлайн</a></li>
   <li ng-class="menuClass('accounting/')"><a href="accounting/">Аккаунтинг</a></li>
+  <li ng-class="menuClass('uam/')"><a href="uam/">Настройки</a></li>
   <li ng-class="menuClass('limits/')"><a href="limits/">Ограничения</a></li>
+  <li ng-class="menuClass('modem/')"><a href="modem/">Модемы и шлюзы</a></li>
   <li ng-class="menuClass('sms/')"><a href="sms/">SMS</a></li>
 </ul>
 </div>

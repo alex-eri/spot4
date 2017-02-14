@@ -1,9 +1,12 @@
-all: clean build
+all: clean ht_docs
 
 bower_components:
 	npm install
 
-build: bower_components
+node_modules:
+	npm install
+
+ht_docs: bower_components
 	install -d ./ht_docs/js
 	install -d ./ht_docs/css
 	install -d ./ht_docs/fonts
@@ -12,7 +15,13 @@ build: bower_components
 	install ./css/animations.css ./ht_docs/css/
 
 	cp bower_components/bootstrap/dist/css/*.min* ./ht_docs/css/
+	cp bower_components/nz-toggle/dist/nz-toggle.min.css ./ht_docs/css/
 	cp bower_components/bootstrap/dist/fonts/* ./ht_docs/fonts/
+
+	node_modules/uglify-js/bin/uglifyjs \
+		bower_components/html5shiv/dist/html5shiv.min.js \
+		bower_components/json2/json2.js \
+		> ./ht_docs/js/compat.js
 
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/angular/angular.min.js \
@@ -31,11 +40,20 @@ build: bower_components
 		bower_components/angular-i18n/angular-locale_ru.js \
 		bower_components/angular-i18n/angular-locale_ru-ru.js \
 		bower_components/bootstrap/dist/js/bootstrap.min.js \
+		bower_components/nz-toggle/dist/nz-toggle.min.js \
 		> ./ht_docs/js/libadmin.js
 
 clean:
-	rm -rf ht_docs/*
+	rm -rf ht_docs
 
 fullclean:
 	rm -rf bower_components node_modules
 
+compress: ht_docs node_modules
+	./node_modules/.bin/html-minifier --html5 --keep-closing-slash \
+		--collapse-whitespace \
+		--conservative-collapse \
+		--collapse-inline-tag-whitespace \
+		--remove-tag-whitespace \
+		--sort-attributes --minify-css --file-ext html \
+		--input-dir ./ht_docs/ --output-dir ./ht_docs/

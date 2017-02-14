@@ -8,9 +8,10 @@ TTL = 56
 BILLING = False
 
 async def close_sessions(db):
-    await db.accounting.find_and_modify(
+    return await db.accounting.update(
                 {'termination_cause':{'$exists': False}},
-                {'$set':{'termination_cause': rad.TCAdminReboot}}
+                {'$set':{'termination_cause': rad.TCAdminReboot}},
+                multi=True
             )
 
 
@@ -35,7 +36,9 @@ def setup_radius(config,PORT):
     )
 
     t = asyncio.Task(close_sessions(db))
-    loop.run_until_complete(t)
+    closed = loop.run_until_complete(t)
+
+    logger.info('{nModified}/{n} sessions closed'.format(**closed))
 
     HOST = config.get('RADIUS_IP','0.0.0.0')
 

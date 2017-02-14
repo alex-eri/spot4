@@ -1,7 +1,8 @@
 <p ng-if="device.sms_waited">
   <label>
-    Отправьте SMS с кодом {{device.sms_waited}}
-    на номер <a href="tel:{{device.sms_callie}}">{{device.sms_callie}}</a>.
+    Отправьте <a href="sms:{{device.sms_callie}}">SMS с кодом</a> {{device.sms_waited}}
+    <!--<a href="sms:{{device.sms_callie}};?&body={{device.sms_waited}}">SMS с кодом</a> {{device.sms_waited}}-->
+    на номер <a href="sms:{{device.sms_callie}}">{{device.sms_callie}}</a>.
   </label>
 </p>
 <p ng-if="device.sms_waited">

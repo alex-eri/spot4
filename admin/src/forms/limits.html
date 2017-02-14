@@ -1,11 +1,11 @@
-<h1>Ограничения</h1>
+<h1>Ограничения на портале</h1>
 
 <table class=table>
 
 <tbody ng-repeat="(id,router) in limits">
-<tr data-target="#form{{router._id}}" data-toggle="collapse">
+<tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
-<i class="glyphicon glyphicon-menu-hamburger"></i> {{router._id}}
+<i class="glyphicon glyphicon-menu-hamburger"></i>&nbsp; {{router._id}}
 </th>
   <td>
   <i class="glyphicon glyphicon-download"></i>
@@ -24,7 +24,7 @@
 </td>
 
 </tr>
-<tr id="form{{router._id}}" class="collapse"><td colspan=4>
+<tr id="form{{id}}" class="collapse"><td colspan=4>
   <form class="form-horizontal" >
   <div class="form-group">
     <label class="col-sm-2 control-label">Скорость</label>
@@ -73,12 +73,23 @@
     </div>
     <div class="col-sm-6"><p class="form-control-static">имя цепочки в фаерволе</p></div>
   </div>
+      <div class="form-group">
+    <label class="col-sm-2 control-label">Платный доступ</label>
+    <div class="col-sm-4">
+
+    <nz-toggle ng-model="router.payable" tri-toggle val-false=0></nz-toggle>
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+          проверка оплаты по билингу.
+          Если существует подходящая оплата, то ограничения с неё перекрывают данные.
+    </p></div>
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
     <input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
     </div>
   </div>
 </form>
+
 </td></tr>
 </tbody>
 </table>

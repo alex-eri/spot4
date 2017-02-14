@@ -1,4 +1,5 @@
 <p>
-  <label>В сети: {{status.clientState}}</label>
+  <label>В сети: {{status.clientState}}</label><br/>
+  <label ng-if="status.error" >Ошибка: {{status.error}}</label>
 </p>
-<p><a href=register/ >Регистрация</a> <a href="{{status.redir.logoutURL}}">Выход</a> </p>
+<p><a href=register/ >Регистрация</a> / <a href="{{status.redir.logoutURL}}">Выход</a> </p>

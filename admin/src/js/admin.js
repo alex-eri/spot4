@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('admin',['ngRoute', 'ngResource'])
+var app = angular.module('admin',['ngRoute', 'ngResource','nzToggle'])
 window.app = app;
 var waittemplate = '<center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>';
 
@@ -49,11 +49,26 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/sms.html',
         controller: 'Sms'
       }).
+      when('/uam/', {
+        templateUrl: '/static/admin-forms/uam.html',
+        controller: 'Uam'
+      }).
+      when('/modem/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
+      when('/config/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
+      when('/users/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
       otherwise({
         redirectTo: '/online/'
       });
   }
 ]);
+
+
 
 
 
@@ -129,6 +144,8 @@ var accounting_group = {'$group': {_id: {
                         month :{'$month': "$start_date"},
                         day: {'$dayOfMonth': "$start_date"}
                         },
+                        start: {'$min':"$start_time"},
+                        stop: {'$max':"$event_time"},
                         count : {'$sum':1},
                         accts :{'$push':'$$CURRENT'},
                         session_time: {'$sum':'$session_time'},
@@ -149,7 +166,7 @@ app.controller('Online',  ['$scope','$resource',
             {aggregate:[[
                 {'$match': {'termination_cause':{$exists: false}} },
                 accounting_group,
-                {'$sort':{  '_id.day': -1, '_id.year': -1,'_id.month': -1 }}
+                {'$sort':{  'start': -1 }}
                 ]]
             }
         ], function(response){
@@ -165,7 +182,7 @@ app.controller('Accs',  ['$scope','$resource','$routeParams',
         $scope.t = datefymd;
 
         if ($routeParams.month) {
-            var y = $routeParams.year , m= $routeParams.month - 1;
+            var y = $routeParams.year , m = $routeParams.month - 1;
         }   else {
             var date = new Date(), y = date.getFullYear(), m = date.getMonth();
         }
@@ -185,7 +202,7 @@ app.controller('Accs',  ['$scope','$resource','$routeParams',
                 }}},
                 {'$sort':{ 'start_date': -1}},
                 accounting_group,
-                {'$sort':{'_id.day': -1}}
+                {'$sort':{'start': -1}}
                 ]]
             }
         ], function(response){
@@ -238,7 +255,9 @@ app.controller('Limit',  ['$scope','$resource',
         ], function(response){
 
             response.response.forEach( function(item){
-                $scope.limits[item]={_id:item};
+                var id = item;
+                var item_name=item.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]={_id:id};
             })
             }
         )
@@ -249,7 +268,9 @@ app.controller('Limit',  ['$scope','$resource',
             {find: {} }
         ], function(response){
             response.response.forEach( function(item){
-                $scope.limits[item._id]=item;
+                var id = item._id;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]=item;
             })
 
         })
@@ -264,8 +285,9 @@ app.controller('Limit',  ['$scope','$resource',
                 }
             }], function(response){
                 console.log(response)
-                $scope.limits[response.response._id] = response.response;
-
+                var id = response.response._id;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.limits[item_name] = response.response;
             })
         }
     }]);
@@ -385,3 +407,84 @@ switch(input) {
   };
 })
 
+
+
+
+app.controller('Uam',  ['$scope','$resource','$timeout',
+    function ( $scope, $resource,$timeout){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+
+    function removePropertyAndApply(obj, prop) {
+          obj[prop] = null;
+
+          $timeout(function () {
+            obj[prop] = undefined;
+          });
+        };
+
+      $scope.removePropertyAndApply =  removePropertyAndApply;
+
+    $resource('/admin/themes.json').query(
+    function(response){
+        $scope.themes = response
+    },
+    function(error){
+        $scope.themes =["default"]
+    }
+    )
+
+        $scope.limits = { default:{_id:'default'}}
+
+        $resource('/db/accounting').save(
+
+        [
+            {distinct:['callee']}
+        ], function(response){
+
+            response.response.forEach( function(item){
+                var id = item;
+                var item_name=item.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]={_id:id,newbie:true};
+            })
+            }
+        )
+
+
+        $resource('/db/uamconfig').save(
+            [
+            {find: {} }
+        ], function(response){
+            response.response.forEach( function(item){
+                var id = item._id;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]=item;
+            })
+
+        })
+        $scope.update = function(router){
+            var id = router._id
+            router.newbie = undefined;
+            $resource('/db/uamconfig').save([{
+            find_and_modify:{
+                query:{_id:id},
+                update:router,
+                upsert:true,
+                new:true
+                }
+            }], function(response){
+                console.log(response)
+                var id = response.response._id;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.limits[item_name] = response.response;
+
+            })
+        }
+    }]);
+
+
+
+app.controller('Modem',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        }]);

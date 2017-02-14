@@ -12,6 +12,7 @@ build: server/build
 	make -C ./uam
 	make -C ./mikrotik
 	make -C ./admin
+	make -C ./static compress
 	mkdir -p ./build/static/ht_docs
 	cp -R ./server/build/exe* ./build/bin
 	mkdir -p ./build/mikrotik
@@ -30,8 +31,9 @@ build/config:
 
 clean:
 	rm -rf ./server/build
-	rm -rf ./build*
+	rm -rf ./build
 	rm -rf ./dist
+	make -C ./static clean
 
 start:
 	cd ./build/exe.* ; ./spot4.exe

@@ -181,27 +181,47 @@ class Auth:
         return nas
 
 
+    async def billing(self,user,limit):
+        now = datetime.utcnow()
+
+        tarif = await self.db.invoice.find_one( {
+            'user_id': user['_id'],
+            'paid':True,
+            'start':{'$lte':now},
+            'stop':{'$gt':now},
+            })
+        if tarif:
+            for k,v in tarif.items():
+                if v in [0,"0"]:
+                    limit.pop(k)
+                if v:
+                    limit[k] = v
+        return limit
+
+
     async def set_limits(self,user,req,reply):
         nas = self.get_type(req)
 
         profiles = [
             'default',
-            req.decode(rad.NASIdentifier),
             req.decode(rad.CalledStationId),
             user['_id']
             ]
-        limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(4)
+        limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(3)
         if len(limits) == 0:
             return reply
         ordered = sorted(limits,key=lambda l:profiles.index(l['_id'])) #TODO: enum style
         limit = {}
         for l in ordered:
             for k,v in l.items():
-                if v == 0:
+                if v in [0,"0"]:
                     limit.pop(k)
                 if v:
                     limit[k] = v
         limit.pop('_id')
+
+        if limit.pop('payable',False):
+            limit = await self.billing(user,limit)
 
         with reply.lock:
             for k,v in limit.items():

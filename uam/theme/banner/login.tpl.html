@@ -1,0 +1,56 @@
+<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css" />
+
+<style>
+  body {
+    background-image:url(/uam/theme/{{config.them||'banner'}}/img/banner.jpg?for={{$cookies.get('called')}}&router={{$cookies.get('nasid')}});
+    background-attachment: fixed;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-color:#121238;
+  }
+
+  .pulse {
+    -webkit-animation: pulsate 1s ease-out;
+    -webkit-animation-iteration-count: infinite;
+}
+@-webkit-keyframes pulsate {
+    0% {-webkit-transform: scale(1.0, 1.0);}
+    70% {-webkit-transform: scale(0.8, 0.8); }
+    100% {-webkit-transform: scale(1.0, 1.0);}
+}
+#regwindow {
+  background-color: rgba(230,220,200,0.8);
+  border: 1px dashed rgba(100,100,100,0.8);
+  border-top: none;
+
+
+  box-shadow: 0 0 0 3px rgba(230,220,200,0.8), 1px 1px 3px 4px rgba(70,70,70,0.8);
+
+  padding:20px;
+  border-bottom-right-radius:8px;
+  border-bottom-left-radius:8px;
+  }
+
+</style>
+
+<div class="pull-right col-sm-4" ng-click="goform=true" ng-hide="goform">
+  <h1 class="pulse" style="margin:30px"><img src="/static/icons/apple-touch-favicon.png" /></h1>
+</div>
+
+<div ng-if="goform" class="pull-right" id="regwindow">
+<center>
+  <h1><img src="/uam/theme/{{config.them||'banner'}}/img/logo.png"  width=64 height=64></h1>
+</center>
+<center ng-show="($location.$$path != '/register/') || $root.comfirmed">
+    <div ng-view></div>
+</center>
+<div ng-if="goform && ($location.$$path == '/register/') && ! $root.comfirmed">
+<p>Уважаемый пользователь!</p>
+<p>В соответствии с действующим законодательством Российской Федерации в области связи, при предоставлении услуг передачи данных и доступа к информационно-телекоммуникационной сети «Интернет» Оператором осуществляется идентификация пользователя и используемого им оконечного оборудования.</p>
+<p>Просим Вас ввести в специальное поле Ваш мобильный номер (например: +79031234567) и следовать инструкциям.</p>
+<label><input type=checkbox ng-model=$root.comfirmed></input> Согласен с правилами предоставления услуг</label>
+</div>
+</div>
+
+

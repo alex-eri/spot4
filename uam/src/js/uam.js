@@ -60,8 +60,20 @@ app.directive('codeValidation', function(){
 var waittemplate = '<center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>';
 
 
+app.config( [
+    '$compileProvider','$sceProvider',
+    function( $compileProvider, $sceProvider)
+    {
+        $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|tel|sms|mailto):/);
+        $sceProvider.enabled(false);
+    }
+]);
+
 app.config(['$routeProvider','$locationProvider',
   function($routeProvider, $locationProvider) {
+
+
+
     $locationProvider.html5Mode(
         {
         enabled: true,
@@ -108,7 +120,7 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
             if (form.$valid) {
                 $resource('/register/').save(
 
-                    {phone:form.phone.$modelValue, mac: mac, smsmode: form.smsmode.$modelValue},
+                    {phone:form.phone.$modelValue, mac: mac, profile:$cookies.get('called')},
 
                 function(response) {
                     $scope.device = response;
@@ -153,6 +165,7 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
 
         function onerror(error){
             console.log('login failed');
+            console.log(error)
            
             $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
         }
@@ -190,9 +203,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 {
                     username:username,
                     response:charpassw,
-                    callback:"JSON_CALLBACK"
                 },
-                {get:{ method: 'JSONP'}}
+                {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
             ).get(onchillilogin);
             if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
@@ -206,9 +218,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                     dst:dst,
                     username:username,
                     password:charpassw,
-                    var:"JSON_CALLBACK"
                 },
-                {get:{ method: 'JSONP'}}).get(onchillilogin)
+                {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onchillilogin)
                 if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
 
@@ -216,8 +227,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
         if (username && password) {
             if(ischilli) {
                 //chilli
-                $resource(chilli+'status', { callback:"JSON_CALLBACK"},
-                {get:{ method: 'JSONP'}}
+                $resource(chilli+'status', { },
+                {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
                 ).get(onchillistatus,onerror)
             } else {
                 //mikrotik
@@ -225,10 +236,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 $resource($cookies.get('linklogin'),
                 {
                     target:'jsonp',
-                    var:"JSON_CALLBACK",
-
                 },
-                {get:{ method: 'JSONP'}}).get(onmikrotikstatus,onerror)
+                {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onmikrotikstatus,onerror)
             }
         } else {
             onerror({})
@@ -253,11 +262,17 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
                 $location.search('password', response.password);
                 $location.search('username', response.username);
                 $location.path('/login/')
-            } else {
-                $scope.wrongcode = true;
-                $scope.code = null;
             }
         }
+
+        function confirm_cb(response){
+          prelogin(response);
+          if (!response.password) {
+                  $scope.wrongcode = true;
+                  $scope.code = null;
+            }
+        }
+
         function onerror(error) {
                         $window.alert('Не сработало...Попробуйте с начала. Похоже Сервер Вас не помнит.');
                         $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
@@ -266,7 +281,6 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
         if ($scope.checker) {
             $interval.cancel($scope.checker)
         }
-
         function getdevice(){
                  $resource('/device/:oid').get({
                         'oid': oid
@@ -277,7 +291,6 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
 
         $scope.checker = $interval(
             getdevice, 4000)
-
 
         $scope.confirm = function(form) {if (form.$valid) {
 
@@ -292,7 +305,7 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
                     'oid': oid,
                     'sms_sent': form.code.$viewValue
                 },
-                prelogin,onerror
+                confirm_cb,onerror
 
             );
 
@@ -313,18 +326,17 @@ app.controller('Status',  ['$rootScope','$resource','$cookies',
     if(ischilli) {
         //chilli
         var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
-        $resource(chilli+'status', { callback:"JSON_CALLBACK"},
-        {get:{ method: 'JSONP'}}
+        $resource(chilli+'status', { },
+        {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
         ).get(onstatus)
     } else {
         //mikrotik
 
         $resource($cookies.get('linklogin').replace('login','status'),
         {
-            target:'jsonp',
-            var:"JSON_CALLBACK"
+            target:'jsonp'
         },
-        {get:{ method: 'JSONP'}}).get(onstatus)
+        {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onstatus)
 
     }
 
@@ -363,7 +375,6 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
     },
     function(error){
         $scope.config ={
-            smsmode:'wait',
             password_auth:true,
             theme:"default"
             }

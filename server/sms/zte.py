@@ -2,7 +2,10 @@ from . import _httpclient
 
 import logging
 import time
+import datetime
+from dateutil.tz import tzlocal
 from utils.codecs import trydecodeHexUcs2,encodeUcs2
+import pytz
 
 TZ = format(-time.timezone//3600,"+d")
 
@@ -187,6 +190,13 @@ class Client(_httpclient.Client):
             m['phone'] = trydecodeHexUcs2(m.get('number'))
             m['text'] = trydecodeHexUcs2(m.get('content'))
             m['to'] = self.callie
+            try:
+                date = pytz.datetime.datetime.strptime(m['date'].rsplit(',',1)[0], '%y,%m,%d,%H,%M,%S' )
+                date = date.replace(tzinfo=tzlocal())
+            except Exception as e:
+                self.logger.warning(e)
+            else:
+                m['rawdate'],m['date'] = m['date'],date
             read.append(m['id'])
         if read:
             await self.mark_read(read)

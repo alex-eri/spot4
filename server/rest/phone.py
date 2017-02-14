@@ -6,6 +6,7 @@ import random
 from .logger import *
 #from .device import FIELDS
 from datetime import datetime, timedelta
+from .front import get_uam_config
 
 REREG = timedelta(days=3)
 DEVMAX = 4
@@ -60,11 +61,13 @@ async def phone_handler(request):
 
     upd = {'try': 0 }
 
-    smsmode = DATA.get('smsmode','wait')
+    uam = await get_uam_config(request, DATA.get('profile','default'))
+
+    debug(uam)
 
     count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-REREG)}} ).count()
     if count >= DEVMAX:
-        smsmode = 'wait'
+        uam['smssend'] = False
 
     if device.get('username'):
         reg = False
@@ -72,7 +75,7 @@ async def phone_handler(request):
             device['password'] = getpassw(device.get('username'), device.get('mac'))
         elif (now - device.get('registred',now)) > REREG:
             reg = True
-        elif smsmode == "send" and not device.get('sms_sent'):
+        elif uam['smssend'] and not device.get('sms_sent'):
             reg = True
     else:
         reg = True
@@ -80,21 +83,24 @@ async def phone_handler(request):
 
 
     if reg:
-        numbers = request.app['config'].get('numbers')
-        if numbers:
-            code = getsms(**q)
-            upd['sms_waited'] = code
-            upd['sms_callie'] = random.choice(numbers)
+        if uam['nosms']:
+            upd['checked'] = True
+        else:
+            numbers = request.app['config'].get('numbers')
+            if uam['smsrecieve'] and numbers:
+                code = getsms(**q)
+                upd['sms_waited'] = code
+                upd['sms_callie'] = random.choice(numbers)
 
-        if smsmode == "send":
-            code = getsms(**q)
-            upd['sms_sent'] = code
+            if uam['smssend']:
+                code = getsms(**q)
+                upd['sms_sent'] = code
 
-            text = "Код подтверждения {code}.".format(code=code)
-            debug(phone)
-            debug(text)
-            #request.app['config']['smsq'].put((phone,text))
-            request.app['db'].sms_sent.insert({'phone':phone,'text':text,'sent':now})
+                tmpl = uam.get('smstmpl',"Код подтверждения {code}.")
+                text = tmpl.format(code=code)
+
+                #request.app['config']['smsq'].put((phone,text))
+                request.app['db'].sms_sent.insert({'phone':phone,'text':text,'sent':now})
 
         updq = {
             '$set': upd,
