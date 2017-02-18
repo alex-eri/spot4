@@ -77,7 +77,7 @@ class Netflow5(asyncio.DatagramProtocol):
             #self.flows = self.flows.append(list(flow_gen()), ignore_index=True)
             self.flows.extend(flow_gen())
 
-        #debug('{} collected {}'.format(addr[0],len(self.flows)))
+        debug('{} collected {}'.format(addr[0],len(self.flows)))
 
         if len(self.flows) > FLUSHLEVEL:
             self._waiter.set()

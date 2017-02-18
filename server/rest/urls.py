@@ -41,7 +41,7 @@ def routers(app):
     app.router.add_static('/static/', path='../static/ht_docs/', name='static')
 
 
-    app.router.add_route('*', '/billing/voucher', voucher)
+    app.router.add_route('POST', '/billing/voucher', voucher)
 
 
     #app.router.add_route('OPTIONS', '/{path:.*}', db_options)
