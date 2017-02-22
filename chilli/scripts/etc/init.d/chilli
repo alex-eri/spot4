@@ -1,0 +1,99 @@
+#!/bin/sh /etc/rc.common
+
+START=30
+STOP=90
+PROG=/usr/sbin/chilli
+NAME=chilli
+EXTRA_COMMANDS="start_chilli stop_chilli reload_chilli"
+
+
+config_cb() {
+    chilli_inst=$2
+    mkdir -p /var/run/chilli/
+    if [ "$chilli_inst" != "" ]
+    then
+       rm -f /var/run/chilli/${chilli_inst}.conf
+       chilli_conf=/var/run/chilli/${chilli_inst}.conf
+       eval "start_chilli_$chilli_inst=1"
+    fi
+}
+
+option_cb() {
+    case "$1" in
+        # UCI settings
+       network)
+           . /lib/functions/network.sh
+           local ifname
+           network_get_device ifname $2
+           echo "dhcpif=\"$ifname\"" >> $chilli_conf
+           ;;
+       disabled)
+           eval "start_chilli_$chilli_inst=0"
+           ;;
+        # boolean settings
+       dhcpbroadcast|nodynip|vlanlocation|locationstopstart|locationcopycalled|locationimmediateupdate|locationopt82|coanoipcheck|noradallow|proxymacaccept|proxyonacct|dhcpmacset|dhcpradius|noc2c|eapolenable|uamanydns|uamanyip|uamnatanyip|nouamsuccess|nowispr1|nowispr2|domaindnslocal|radsec|macauth|macreauth|macauthdeny|macallowlocal|strictmacauth|strictdhcp|ieee8021q|only8021q|radiusoriginalurl|swapoctets|statusfilesave|wpaguests|openidauth|papalwaysok|mschapv2|chillixml|acctupdate|dnsparanoia|seskeepalive|usetap|noarpentries|framedservice|scalewin|redir|injectwispr|redirurl|routeonetone|nousergardendata|uamgardendata|uamotherdata|withunixipc|uamallowpost|redirssl|uamuissl|layer3|patricia|redirdnsreq|dhcpnotidle|ipv6|ipv6only)
+           [ "$2" = "true" -o "$2" = "1" ] && echo "$1" >> $chilli_conf
+           ;;
+       *)
+           echo "$1=\"$2\"" >> $chilli_conf
+           ;;
+    esac
+}
+
+start_chilli() {
+    local cfg="$1"
+    local start_chilli=$(eval "echo \$start_chilli_$cfg")
+    [ "$start_chilli" = "1" ] || return
+    local base=/var/run/chilli/${cfg}
+    mkdir -p ${base}-statedir/
+
+    local ARGS="-c ${base}.conf \
+        --pidfile ${base}.pid \
+        --cmdsocket ${base}.sock \
+        --unixipc ${base}.ipc \
+        --statedir ${base}-statedir/
+        "
+    start-stop-daemon -S -x $PROG -p ${base}.pid -- $ARGS
+}
+
+start() {
+    config_load chilli
+    local cfg="$1"
+    if [ -n "$cfg" ] ; then
+        start_chilli $@
+    else
+        config_foreach start_chilli chilli
+    fi
+}
+
+stop_chilli() {
+    local cfg="$1"
+    local base=/var/run/chilli/${cfg}
+    start-stop-daemon -K -x $PROG -p ${base}.pid
+    sleep 1
+    start-stop-daemon -K -x $PROG -p ${base}.pid -s 9
+    rm -f /var/run/chilli.$(cat ${base}.pid).cfg.bin
+    rm -rf ${base}-statedir/
+    rm -f ${base}.pid ${base}.sock ${base}.ipc
+}
+
+stop() {
+    local cfg="$1"
+    if [ -n "$cfg" ] ; then
+        stop_chilli $@
+    else
+        config_foreach stop_chilli chilli
+    fi
+}
+
+reload_chilli() {
+    config_load chilli
+    local cfg="$1"
+    local base=/var/run/chilli/${cfg}
+    start-stop-daemon -K -x $PROG -p ${base}.pid -s HUP
+}
+
+restart() {
+    stop $@
+    start $@
+}

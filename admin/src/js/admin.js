@@ -62,6 +62,18 @@ app.config(['$routeProvider','$locationProvider',
       when('/users/', {
         templateUrl: '/static/admin-forms/notimplemented.html',
       }).
+      when('/tarifs/', {
+        templateUrl: '/static/admin-forms/tarifs.html',
+        controller: 'Tarifs'
+      }).
+      when('/vouchers/', {
+        templateUrl: '/static/admin-forms/vouchers.html'
+        //,controller: 'Vouchers'
+      }).
+      when('/vouchers/:id/', {
+        templateUrl: '/static/admin-forms/voucher.html'
+        //,controller: 'Voucher'
+      }).
       otherwise({
         redirectTo: '/online/'
       });
@@ -291,6 +303,73 @@ app.controller('Limit',  ['$scope','$resource',
             })
         }
     }]);
+
+
+
+app.controller('Tarifs',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+
+        $scope.limits = { default:{_id:'default'}}
+        $scope.tarifs = {}
+
+        $resource('/db/limit').save(
+            [
+            {find: {} }
+        ], function(response){
+            response.response.forEach( function(item){
+                var id = item._id;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]=item;
+            })
+        })
+
+        $resource('/db/tarif').save(
+            [
+            {find: {} }
+        ], function(response){
+            response.response.forEach( function(item){
+                console.log(response)
+                var id = item._id.$oid;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.tarifs[item_name]=item;
+            })
+        })
+
+        $scope.create = function() {
+
+          $scope.update({name:"Новый", limit:{}});
+
+        }
+
+
+        $scope.update = function(tarif){
+
+            var id = tarif._id
+            var q = {}
+            if (id) {q = {_id: tarif._id}}
+            console.log(id)
+            $resource('/db/tarif').save([{
+            find_and_modify:{
+                query:q,
+                update:tarif,
+                upsert:true,
+                new:true
+                }
+            }], function(response){
+                console.log(response)
+                var id = response.response._id.$oid;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.tarifs[item_name] = response.response;
+            })
+        }
+
+    }]);
+
+
+
 
 
 app.controller('Top',  ['$scope','$resource','$routeParams',

@@ -62,7 +62,7 @@ class BaseRadius(asyncio.DatagramProtocol):
             raise Exception('Packet is not request')
         if logger.isEnabledFor(logging.DEBUG):
             for attr in req.keys():
-                break
+                #break
                 debug('{} :\t{}'.format(attr,req.decode(attr)))
 
         #f = asyncio.ensure_future(
@@ -181,16 +181,18 @@ class Auth:
         return nas
 
 
-    async def billing(self,user,limit):
+    async def billing(self,user,callee,limit):
         now = datetime.utcnow()
 
-        tarif = await self.db.invoice.find_one( {
-            'user_id': user['_id'],
+        invoice = await self.db.invoice.find_one( {
+            'callee':callee,
+            'username': user['_id'],
             'paid':True,
             'start':{'$lte':now},
             'stop':{'$gt':now},
             })
-        if tarif:
+        if invoice:
+            tarif = invoice.get('limit',{})
             for k,v in tarif.items():
                 if v in [0,"0"]:
                     limit.pop(k)
@@ -201,10 +203,10 @@ class Auth:
 
     async def set_limits(self,user,req,reply):
         nas = self.get_type(req)
-
+        callee = req.decode(rad.CalledStationId)
         profiles = [
             'default',
-            req.decode(rad.CalledStationId),
+            callee,
             user['_id']
             ]
         limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(3)
@@ -221,20 +223,20 @@ class Auth:
         limit.pop('_id')
 
         if limit.pop('payable',False):
-            limit = await self.billing(user,limit)
+            limit = await self.billing(user,callee,limit)
 
         with reply.lock:
             for k,v in limit.items():
                 if k == 'rate':
                     v = int(v * 1024)
-                    if nas | typeofNAS.mikrotik:
+                    if nas & typeofNAS.mikrotik:
                         b = int(v * 1.3)
                         r = int(v * 0.9)
                         reply[rad.MikrotikRateLimit] = \
                             "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(v,b,r, BURST_TIME)
                     else:
                         bps = v << 10
-                        if nas | typeofNAS.wispr :  # +chilli here
+                        if nas & (typeofNAS.wispr | typeofNAS.chilli) :
                             reply[rad.WISPrBandwidthMaxDown] = bps
                             reply[rad.WISPrBandwidthMaxUp] = bps
                         else:

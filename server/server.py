@@ -1,4 +1,5 @@
 import logging,sys
+import reindex
 
 #sys.path.insert(0, '.')
 
@@ -93,10 +94,7 @@ def premain():
     config = json.load(open('../config/config.json','r'))
     setup_log(config)
 
-    if args.reindex:
-        import reindex
-        reindex.index(config)
-        return
+    reindex.index(config)
 
     if os.name == 'nt':
         import utils.win32
