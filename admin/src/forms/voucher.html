@@ -1,0 +1,14 @@
+<style type="text/css">
+	.closed {text-decoration:line-through}
+	.invoiced {color:green}
+</style>
+
+<h2> {{callee}}  &mdash; {{tarif.name}}</h2>
+
+<ul class="list-unstyled list-inline">
+	<li ng-class="{closed: v.closed,invoiced:v.invoiced}"
+		class="col-sm-3 col-xs-4 col-md-2"
+		ng-repeat="v in vouchers">
+		<span class=lead>{{v.voucher}}</span>
+	</li>
+</ul>

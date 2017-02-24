@@ -3,7 +3,7 @@ from .decorators import check_auth
 from .decorators import json
 from .admin import list_templates
 from .front import uam_config
-from .billing import voucher
+from .billing import voucher, generate
 
 def index_factory(path,filename):
     async def static_view(request):
@@ -37,6 +37,8 @@ def routers(app):
 
 
     app.router.add_get('/admin/themes.json', check_auth(list_templates))
+    app.router.add_post('/admin/voucher/create.json', check_auth(generate))
+
     app.router.add_get('/admin/{path:.*}', check_auth(index_factory("../static/ht_docs/","admin.html")))
     app.router.add_static('/static/', path='../static/ht_docs/', name='static')
 

@@ -2,9 +2,11 @@ from .decorators import json
 from .logger import *
 import uuid
 import hashlib
+import random
+import bson
 
 @json
-async def voucher(request):
+async def voucher(request,series):
     now = datetime.utcnow()
     coll = request.app['db'].voucher
     
@@ -65,10 +67,10 @@ async def generate(request):
 
     db = request.app['db']
 
-    series = nextseries(db)
+    series = await nextseries(db)
 
     q = {
-        'tarif' : DATA.get('tarif'),
+        'tarif' : bson.ObjectId(DATA.get('tarif')),
         'callee': DATA.get('callee'),
         'series': series,
         'closed': False
@@ -86,7 +88,7 @@ async def generate(request):
 
     await db.voucher.insert(datas)
 
-    return await db.voucher.find(q)
+    return q
 
 @json
 async def close(request):

@@ -68,11 +68,11 @@ app.config(['$routeProvider','$locationProvider',
       }).
       when('/vouchers/', {
         templateUrl: '/static/admin-forms/vouchers.html'
-        //,controller: 'Vouchers'
+        ,controller: 'Vouchers'
       }).
-      when('/vouchers/:id/', {
+      when('/voucher/:series/', {
         templateUrl: '/static/admin-forms/voucher.html'
-        //,controller: 'Voucher'
+        ,controller: 'Voucher'
       }).
       otherwise({
         redirectTo: '/online/'
@@ -305,6 +305,87 @@ app.controller('Limit',  ['$scope','$resource',
     }]);
 
 
+app.controller('Voucher',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource ,$routeParams){
+
+            $scope.vouchers = []
+    	$resource('/db/voucher').save(
+
+    	 [
+                {aggregate:[[
+                {'$match': {'series': parseInt($routeParams.series)}},
+                {'$group': {
+                	_id: { tarif:"$tarif", callee:"$callee" },
+                        vouchers :{'$push':'$$CURRENT'},
+                }},
+                {'$lookup':{
+                	from:'tarif',
+                	localField:'_id.tarif',
+                	foreignField:'_id',
+                	as:'tarif'
+                }}
+                ]]
+            }
+        ],
+
+
+
+           // [{find: [{'series':parseInt($routeParams.series) }] }],
+          function(response){
+            console.log(response)
+            $scope.vouchers = response.response[0].vouchers
+            $scope.callee = response.response[0]._id.callee
+            $scope.tarif = response.response[0].tarif[0]
+
+
+        });
+
+    }])
+
+
+app.controller('Vouchers',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.vouchers = []
+        $scope.tarifs = []
+        $scope.routers = []
+
+
+
+    	$resource('/db/tarif').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+            $scope.tarifs = response.response
+        });
+
+    	$resource('/db/uamconfig').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+            $scope.routers = response.response
+        });
+
+    	$resource('/db/voucher').save(
+            [{distinct: ['series',{}] }],
+          function(response){
+            console.log(response)
+            $scope.vouchers = response.response
+        });
+
+        $scope.create = function(callee,tarif){
+    	    $resource('/admin/voucher/create.json').save(
+    	    {tarif:tarif._id.$oid,callee:callee._id},
+    	    function(response){
+		$scope.vouchers.push(response.series)
+    	        console.log(response)
+	        })
+        }
+
+    }]);
+
+
 
 app.controller('Tarifs',  ['$scope','$resource',
     function ( $scope, $resource ){
@@ -330,8 +411,8 @@ app.controller('Tarifs',  ['$scope','$resource',
             [
             {find: {} }
         ], function(response){
+            console.log(response)
             response.response.forEach( function(item){
-                console.log(response)
                 var id = item._id.$oid;
                 var item_name=id.replace(/[.:-]/g,"_");
                 $scope.tarifs[item_name]=item;
@@ -386,7 +467,7 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
         $scope.stopdate= stopdate;
 
         $resource('/db/accounting').save(
-            [
+       [
                 {aggregate:[[
                 {'$match': {'start_date':{
                     '$gte': {'$date':startdate.getTime()},
@@ -406,7 +487,8 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
                 {'$limit': 10 }
                 ]]
             }
-        ], function(response){
+        ]
+           , function(response){
             $scope.users = response.response;
         }
         );

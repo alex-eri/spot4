@@ -3,10 +3,24 @@
 <section ng-repeat="(id,tarif) in tarifs" >
 <h1>{{tarif.name|| "Новый"}}</h1>
 
-  {{tarif}}
+
 
 {{default=limits.default;limit=tarif.limit;""}}
-  <form class="form-horizontal" >
+
+
+	  <form class="form-horizontal" >
+
+		    <div class="form-group">
+    <label class="col-sm-2 control-label">Название</label>
+    <div class="col-sm-4">
+    <input type="text" class="form-control" ng-model="tarif.name"
+      placeholder="{{default.time}}">
+    </div>
+    <div class="col-sm-6"><p class="form-control-static">
+
+				   {{tarif}}
+    </p></div>
+  </div>
 
   <h2>Ограничения</h2>
       <div ng-include="'/static/admin-forms/limit.html'"></div>

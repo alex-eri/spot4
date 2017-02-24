@@ -9,6 +9,7 @@
   */
 }
 
+
 h3 small {
   display:inline-block;
   }
@@ -68,6 +69,18 @@ height:20px;
 background-color: gray;
 border-radius: 2px;
 }
+
+
+@media print {
+	.sidebar {
+		display: none;
+	}
+        .main {
+		width: 100%;
+		margin:0
+	}
+}
+
 
 </style>
 

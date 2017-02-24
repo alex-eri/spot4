@@ -32,6 +32,13 @@ def setup_web(config):
         upsert=True,new=True)
         )
 
+    loop.run_until_complete(
+        db.counters.find_and_modify(
+        {'_id':'voucher'},
+        { '$setOnInsert': {'seq':0}},
+        upsert=True,new=True)
+        )
+
     debug('starting webapp')
 
 

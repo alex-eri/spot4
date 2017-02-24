@@ -1,0 +1,30 @@
+<form>
+
+<div class="input-group">
+
+<div class="input-group-btn">
+<select class="form-control" required
+ng-model="router" ng-options="r._id for r in routers track by r._id">
+
+<option value="" disabled selected>Вызываемый профиль</option>
+
+
+</select></div>
+<div class="input-group-btn">
+<select class="form-control" required
+ng-model="tarif" ng-options="t.name for t in tarifs track by t._id">
+
+<option value="" disabled selected>Тариф</option>
+
+</select></div>
+<span class="input-group-btn">
+<input class="btn btn-primary" type="submit" ng-click="create(router, tarif)" value="Новая серия" />
+</span>
+</div>
+
+
+</form>
+
+<ul>
+<li ng-repeat="series in vouchers"><a href="voucher/{{series}}/">{{series}}</a></li>
+</ul>
