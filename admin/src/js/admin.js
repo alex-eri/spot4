@@ -288,6 +288,9 @@ app.controller('Limit',  ['$scope','$resource',
         })
         $scope.update = function(router){
             var id = router._id
+
+            //router.redir = router.redir.replace(/http\:\/\/\//g,"/")
+
             $resource('/db/limit').save([{
             find_and_modify:{
                 query:{_id:id},
@@ -299,6 +302,7 @@ app.controller('Limit',  ['$scope','$resource',
                 console.log(response)
                 var id = response.response._id;
                 var item_name=id.replace(/[.:-]/g,"_");
+
                 $scope.limits[item_name] = response.response;
             })
         }
@@ -313,17 +317,24 @@ app.controller('Voucher',  ['$scope','$resource','$routeParams',
 
     	 [
                 {aggregate:[[
-                {'$match': {'series': parseInt($routeParams.series)}},
-                {'$group': {
-                	_id: { tarif:"$tarif", callee:"$callee" },
-                        vouchers :{'$push':'$$CURRENT'},
+                { $match : {'series': parseInt($routeParams.series)}},
+                { $sort  : { closed : 1 } },
+                { $group : {
+                	_id: { series:"$series" },
+                    vouchers :{'$push':'$$CURRENT'},
+                    series:{$first:"$series"} ,
+                	  tarif:{$first:"$tarif"} ,
+                	  callee:{$first:"$callee"},
+                    count: { $sum: {$cond : [ "$closed", 1, 0 ] }},
+                    total: {  $sum: 1}
                 }},
-                {'$lookup':{
+                { $lookup :{
                 	from:'tarif',
-                	localField:'_id.tarif',
+                	localField:'tarif',
                 	foreignField:'_id',
                 	as:'tarif'
-                }}
+                }},
+                { $unwind : "$tarif" }
                 ]]
             }
         ],
@@ -333,11 +344,7 @@ app.controller('Voucher',  ['$scope','$resource','$routeParams',
            // [{find: [{'series':parseInt($routeParams.series) }] }],
           function(response){
             console.log(response)
-            $scope.vouchers = response.response[0].vouchers
-            $scope.callee = response.response[0]._id.callee
-            $scope.tarif = response.response[0].tarif[0]
-
-
+            $scope.response = response.response[0]
         });
 
     }])
@@ -348,8 +355,6 @@ app.controller('Vouchers',  ['$scope','$resource',
         $scope.vouchers = []
         $scope.tarifs = []
         $scope.routers = []
-
-
 
     	$resource('/db/tarif').save(
             [
@@ -368,7 +373,27 @@ app.controller('Vouchers',  ['$scope','$resource',
         });
 
     	$resource('/db/voucher').save(
-            [{distinct: ['series',{}] }],
+                	 [
+                {aggregate:[[
+                {'$match': {'closed': false}},
+                {'$group': {
+                	_id: { series:"$series" },
+                	  series:{$first:"$series"} ,
+                	  tarif:{$first:"$tarif"} ,
+                	  callee:{$first:"$callee"},
+                	  count:{$sum:1}
+                }},
+                {'$lookup':{
+                	from:'tarif',
+                	localField:'tarif',
+                	foreignField:'_id',
+                	as:'tarif'
+                }},
+                { $unwind : "$tarif" },
+                { $sort : { series : 1 } }
+                ]]
+            }
+        ],
           function(response){
             console.log(response)
             $scope.vouchers = response.response
@@ -378,8 +403,14 @@ app.controller('Vouchers',  ['$scope','$resource',
     	    $resource('/admin/voucher/create.json').save(
     	    {tarif:tarif._id.$oid,callee:callee._id},
     	    function(response){
-		$scope.vouchers.push(response.series)
-    	        console.log(response)
+    	      var s = {
+    	        series: response.series,
+    	        callee: response.callee,
+    	        tarif: tarif
+    	      };
+
+            $scope.vouchers.push(s)
+            console.log(response)
 	        })
         }
 
@@ -568,7 +599,19 @@ switch(input) {
   };
 })
 
-
+app.filter('dash', function() {
+  return function(transformedInput) {
+if (transformedInput.length > 4) {
+              var i = 0
+              var transformedInputView = ""
+              for (i=0; i < transformedInput.length-4 ; i+=4) {
+                transformedInputView +=  transformedInput.slice(i,i+4) + "-" ;
+                }
+              transformedInputView += transformedInput.slice(i);
+              }
+    return transformedInputView;
+  };
+})
 
 
 app.controller('Uam',  ['$scope','$resource','$timeout',
@@ -627,6 +670,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout',
         $scope.update = function(router){
             var id = router._id
             router.newbie = undefined;
+
             $resource('/db/uamconfig').save([{
             find_and_modify:{
                 query:{_id:id},

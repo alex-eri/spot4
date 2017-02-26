@@ -13,7 +13,8 @@ build_exe_options = {
     'include_files': [],
     'zip_include_packages': "*",
     'zip_exclude_packages': None,
-    'include_msvcr': True
+    'include_msvcr': True,
+    'constants':{}
 }
 
 import os
@@ -41,10 +42,12 @@ executables = [Executable(
     script="server.py",
     initScript="ConsoleSetLibPath",
     base=base_service,
-    targetName='spot4.exe'
+    targetName='spot4.exe',
+    copyright='Aleksandr Stepanov, eerie.su'
     ),
     Executable(
     "migrate.py",
+    initScript="ConsoleSetLibPath",
     base=base,
     targetName='migrate.exe'
     )

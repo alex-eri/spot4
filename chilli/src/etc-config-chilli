@@ -36,3 +36,5 @@ config chilli 'guest'
     #option layer3 1
     option dhcpnotidle 1
 
+    option conup /etc/chilli/conup.sh #FRAMED_IP_ADDRESS FILTER_ID
+    option condown /etc/chilli/condown.sh 

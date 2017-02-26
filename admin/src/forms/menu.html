@@ -8,7 +8,49 @@
   overflow:scroll;
   */
 }
+/*
+html,body, #container, #container > div {
+	height:100%;
+}
 
+.row-flex, .row-flex > div[class*='col-'] {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    flex:1 1 auto;
+}
+
+.row-flex-wrap {
+	-webkit-flex-flow: row wrap;
+    align-content: flex-start;
+    flex:0;
+}
+
+.row-flex > div[class*='col-'], .container-flex > div[class*='col-'] {
+	 margin:-.2px;
+}
+
+.container-flex > div[class*='col-'] div,.row-flex > div[class*='col-'] div {
+	width:100%;
+}
+
+
+.flex-col {
+    display: flex;
+    display: -webkit-flex;
+    flex: 1 100%;
+	flex-flow: column nowrap;
+}
+
+.flex-grow {
+	display: flex;
+    -webkit-flex: 2;
+    flex: 2;
+}
+
+*/
 
 h3 small {
   display:inline-block;
@@ -32,7 +74,8 @@ position: fixed;
 top: 0;
 bottom: 0;
 left: 0;
-z-index: 1000;
+
+  z-index: 1000;
 display: block;
 padding: 20px;
 overflow-x: hidden;
@@ -81,6 +124,12 @@ border-radius: 2px;
 	}
 }
 
+   @page :left {
+    margin: 5mm 2cm 5mm 1cm; /* Отступы для всех левых страниц */
+   }
+   @page :right {
+    margin: 5mm 1cm 5mm 2cm ; /* Отступы для всех правых страниц */
+   }
 
 </style>
 
@@ -96,22 +145,25 @@ border-radius: 2px;
 
 <div id="navbarCollapse" class="navbar-collapse collapse nav-sidebar">
 <ul class="nav nav-stacked">
-  <li ng-class="menuClass('config/')"><a href="config/">Конфигурация</a></li>
-  <li ng-class="menuClass('users/')"><a href="users/">Пользователи</a></li>
-  <hr/>
+  <li ng-class="menuClass('config/')"><a disabled href="config/">Конфигурация</a></li>
+  <li ng-class="menuClass('users/')"><a disabled href="users/">Пользователи</a></li>
+  <br/>
   <li ng-class="menuClass('registrations/')"><a href="registrations/">Регистрации</a></li>
   <li ng-class="menuClass('top/')"><a href="top/">Топ</a></li>
   <li ng-class="menuClass('online/')"><a href="online/">Онлайн</a></li>
   <li ng-class="menuClass('accounting/')"><a href="accounting/">Аккаунтинг</a></li>
-  <hr/>
+  <br/>
   <li ng-class="menuClass('uam/')"><a href="uam/">Настройки</a></li>
   <li ng-class="menuClass('limits/')"><a href="limits/">Ограничения</a></li>
-  <hr/>
+  <br/>
   <li ng-class="menuClass('tarifs/')"><a href="tarifs/">Тарифы</a></li>
-  <li ng-class="menuClass('vouchers/')"><a href="vouchers/">Ваучеры</a></li>
-  <hr/>
-  <li ng-class="menuClass('modem/')"><a href="modem/">Модемы и sms-шлюзы</a></li>
+  <li ng-class="menuClass('vouchers/')"><a href="vouchers/">GTC-Ваучеры</a></li>
+  <br/>
+  <li ng-class="menuClass('modem/')"><a disabled href="modem/">Модемы и sms-шлюзы</a></li>
   <li ng-class="menuClass('sms/')"><a href="sms/">История SMS</a></li>
+
+  <li class=disabled ng-class="menuClass('sms/spam/')"><a disabled href="sms/spam/">Рассылка</a></li>
+
 </ul>
 </div>
 

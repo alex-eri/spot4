@@ -72,7 +72,7 @@ async def phone_handler(request):
     if device.get('username'):
         reg = False
         if device.get('checked'):
-            device['password'] = getpassw(device.get('username'), device.get('mac'))
+            pass
         elif (now - device.get('registred',now)) > REREG:
             reg = True
         elif uam['smssend'] and not device.get('sms_sent'):
@@ -112,6 +112,8 @@ async def phone_handler(request):
 
     if device:
         device['sms_sent'] = device.get('sms_sent') and True
+        if device.get('checked'):
+            device['password'] = getpassw(device.get('username'), device.get('mac'))
         return device
     else:
         raise web.HTTPNotFound()

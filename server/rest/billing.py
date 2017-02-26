@@ -4,9 +4,15 @@ import uuid
 import hashlib
 import random
 import bson
+from datetime import datetime,timedelta
+
+CHARS = 7
+V_COUNT = 200
+RANDOM_RANGE = 10 ** CHARS
+
 
 @json
-async def voucher(request,series):
+async def voucher(request):
     now = datetime.utcnow()
     coll = request.app['db'].voucher
     
@@ -15,9 +21,11 @@ async def voucher(request,series):
     else:
         DATA = await request.post()
 
+    callee = DATA.get('callee')
+
     q = {
         'voucher' : DATA.get('voucher'),
-        'callee': DATA.get('callee'),
+        'callee': {'$in' :[callee ,'default']},
         'invoiced': { '$exists': False},
         'closed': False
         }
@@ -34,24 +42,28 @@ async def voucher(request,series):
         }
     voucher = await coll.find_and_modify(q, updq, upsert=False, new=True)
     if voucher:
-        tarif = request.app['db'].tarif.find_one({'_id':voucher['tarif']})
+        tarif = await request.app['db'].tarif.find_one({'_id':voucher['tarif']})
         invoices = request.app['db'].invoice
+
+        stop = now +timedelta(days=tarif['duration'])
+
 
         q = {   'username': voucher['username'],
                 'paid':True,
                 'start': now ,
-                'stop':{'$gt':now},
+                'stop': stop,
                 'voucher': voucher['_id'],
                 'tarif': tarif['_id'],
-                'limit': tarif.get('limit',{})
+                'limit': tarif.get('limit',{}),
+                'callee' : callee
              }
 
         debug(type(voucher['_id']))
         invoice = await invoices.insert(q)
 
-        invoice['voucher'] = voucher
-        invoice['tarif'] = tarif
         return invoice
+
+    return {'error':'wrongcode'}
 
 
 async def nextseries(db):
@@ -78,10 +90,10 @@ async def generate(request):
 
     datas = []
 
-    for i in range(500):
-        r = random.randrange(10000_0000)
+    for i in range(V_COUNT):
+        r = random.randrange(RANDOM_RANGE)
         a = {
-            'voucher': str(r).zfill(8)
+            'voucher': str(r).zfill(CHARS)
         }
         a.update(q)
         datas.append(a)

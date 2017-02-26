@@ -183,6 +183,7 @@ class Auth:
 
     async def billing(self,user,callee,limit):
         now = datetime.utcnow()
+        #debug(now)
 
         invoice = await self.db.invoice.find_one( {
             'callee':callee,
@@ -191,13 +192,24 @@ class Auth:
             'start':{'$lte':now},
             'stop':{'$gt':now},
             })
+
+        debug(invoice)
+        debug(limit)
         if invoice:
             tarif = invoice.get('limit',{})
             for k,v in tarif.items():
+                debug((k,v))
                 if v in [0,"0"]:
                     limit.pop(k)
-                if v:
+                elif v:
                     limit[k] = v
+            if invoice.get('stop'):
+                t = round((invoice['stop'] - now).total_seconds())+28
+                if limit.get('time'):
+                    limit['time'] = min(limit.get('time'),t)
+                else:
+                    limit['time'] = t
+        debug(limit)
         return limit
 
 
@@ -206,8 +218,7 @@ class Auth:
         callee = req.decode(rad.CalledStationId)
         profiles = [
             'default',
-            callee,
-            user['_id']
+            callee
             ]
         limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(3)
         if len(limits) == 0:
@@ -218,7 +229,7 @@ class Auth:
             for k,v in l.items():
                 if v in [0,"0"]:
                     limit.pop(k)
-                if v:
+                elif v:
                     limit[k] = v
         limit.pop('_id')
 
@@ -262,7 +273,7 @@ class Auth:
                         reply[rad.ChilliSpotMaxOutputOctets] = b
 
                 elif k == 'redir':
-                    reply[rad.WISPrRedirectionURL] = v
+                    reply[rad.WISPrRedirectionURL] = v.replace('rel://','')
                 elif k == 'filter':
                     reply[rad.FilterId] = v
                 else:

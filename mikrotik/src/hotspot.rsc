@@ -8,7 +8,7 @@ set cache-entries=64k enabled=yes inactive-flow-timeout=5m
 add dst-address={IP} version=5
 
 /ip hotspot profile
-add html-directory-override=build login-by=http-chap,http-pap name=spot4 radius-interim-update=5m use-radius=yes
+add html-directory-override={IP} login-by=http-chap,http-pap name=spot4 radius-interim-update=5m use-radius=yes
 
 /ip hotspot
 add address-pool=hotspotpool disabled=no idle-timeout=30m interface=hotspot keepalive-timeout=30m login-timeout=30m name=server1 profile=spot4
@@ -20,5 +20,5 @@ add add-mac-cookie=no address-pool=hotspotpool keepalive-timeout=30m name=spot4 
 add dst-host={IP} dst-port={PORT}
 
 /ip hotspot walled-garden ip
-add action=accept disabled=yes dst-address={IP}
+add action=accept disabled=no dst-address={IP} dst-port={PORT}
 

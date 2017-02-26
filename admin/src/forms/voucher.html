@@ -1,14 +1,29 @@
 <style type="text/css">
 	.closed {text-decoration:line-through}
 	.invoiced {color:green}
+
+  @media print{
+  .gtc-print {
+    width:52mm;
+  }
+  }
+  @page :left {
+    margin: 5mm 0 5mm 0; /* Отступы для всех левых страниц */
+   }
+  @page :right {
+    margin: 5mm 0 5mm 0 ; /* Отступы для всех правых страниц */
+   }
+
 </style>
 
-<h2> {{callee}}  &mdash; {{tarif.name}}</h2>
+<h2 class=page-header> Карточка #{{response._id.series}} / {{response.callee}}  &mdash; {{response.tarif.name}} ({{response.count}}/{{response.total}})</h2>
 
-<ul class="list-unstyled list-inline">
+<ul class="list-unstyled row">
 	<li ng-class="{closed: v.closed,invoiced:v.invoiced}"
-		class="col-sm-3 col-xs-4 col-md-2"
-		ng-repeat="v in vouchers">
-		<span class=lead>{{v.voucher}}</span>
+		class="col-sm-3 col-xs-4 col-md-2 gtc-print"
+		ng-repeat="v in response.vouchers">
+		<p class="lead text-center" title="{{v.invoiced.$date| date: 'medium'}}">{{v.voucher|dash}}</p>
 	</li>
 </ul>
+
+
