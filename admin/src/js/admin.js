@@ -318,7 +318,7 @@ app.controller('Voucher',  ['$scope','$resource','$routeParams',
     	 [
                 {aggregate:[[
                 { $match : {'series': parseInt($routeParams.series)}},
-                { $sort  : { closed : 1 } },
+                { $sort  : { closed : -1 } },
                 { $group : {
                 	_id: { series:"$series" },
                     vouchers :{'$push':'$$CURRENT'},

@@ -6,6 +6,12 @@ def index(config):
         config['DB']['NAME']
     )
     tasks = [
+        db.counters.find_and_modify(
+            {'_id':'userid'}, { '$setOnInsert': {'seq':0}}, upsert=True,new=True),
+
+        db.counters.find_and_modify(
+        {'_id':'voucher'}, { '$setOnInsert': {'seq':0}}, upsert=True,new=True),
+
         db.devices.ensure_index( [ ("username",1), ("mac",1) ], unique=True, sparse=True ),
         db.devices.ensure_index( [ ("phone",1), ("mac",1) ], unique=True, sparse=True ),
         db.devices.ensure_index( [ ("username",1) ], unique=False),
