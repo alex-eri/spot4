@@ -1,5 +1,15 @@
 <h1>Тарифы</h1>
+
+<form class="form-horizontal" >
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+
     <input class="btn btn-primary" type="submit" ng-click="create()" value="Новый" />
+
+    </div>
+  </div>
+
+</form>
 
 <section ng-repeat="(id,tarif) in tarifs" >
 <h2>{{tarif.name|| "Новый"}}</h2>

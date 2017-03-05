@@ -6,19 +6,20 @@
 <tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
 <i class="glyphicon glyphicon-menu-hamburger"></i>&nbsp; {{limit._id}}
-  {{default=limits.default;""}}
 </th>
+
   <td>
-  <i class="glyphicon glyphicon-download"></i>
+  {{default=limits.default;""}}
+    <i class="glyphicon glyphicon-download"></i>
     <span ng-if="(limit.rate == 0)">не ограничено</span>
-    <span ng-if="(limit.rate == none)">{{default.rate}} Mb/s</span>
+    <span ng-if="(limit.rate == none)">по умолчанию {{default.rate}} Mb/s</span>
     <span ng-if="limit.rate">{{limit.rate||""}} Mb/s</span>
 </td>
 <td>
   <i class="glyphicon glyphicon-time"></i>
   <span ng-if="limit.time">{{ limit.time | interval }}</span>
   <span ng-if="(limit.time == 0)">не ограничено</span>
-  <span ng-if="(limit.time == none)">{{limits.default.time | interval }}</span>
+  <span ng-if="(limit.time == none)">по умолчанию {{limits.default.time | interval }}</span>
 </td>
 <td>
   <i class="glyphicon glyphicon-retweet"></i>

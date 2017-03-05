@@ -49,6 +49,9 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/sms.html',
         controller: 'Sms'
       }).
+      when('/sms/spam/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
       when('/uam/', {
         templateUrl: '/static/admin-forms/uam.html',
         controller: 'Uam'
@@ -57,9 +60,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/notimplemented.html',
       }).
       when('/config/', {
-        templateUrl: '/static/admin-forms/notimplemented.html',
+        templateUrl: '/static/admin-forms/config.html',
+        controller: 'Config'
       }).
-      when('/users/', {
+      when('/admins/', {
         templateUrl: '/static/admin-forms/notimplemented.html',
       }).
       when('/tarifs/', {
@@ -79,6 +83,30 @@ app.config(['$routeProvider','$locationProvider',
       });
   }
 ]);
+
+app.controller('Config',  ['$scope','$resource',
+    function ( $scope, $resource ){
+
+      $scope.reload = function(){
+        var a=confirm("Уверенны?");
+        if (a) {
+
+        $resource('/admin/kill').save({'reload': true},
+          function(response){
+            alert( response.response );
+          }
+          )
+        }
+
+      }
+
+      $resource('/admin/config.json').get(
+        function(response){
+            $scope.config = response.response;
+        }
+      )
+
+    }]);
 
 
 
@@ -187,69 +215,106 @@ app.controller('Online',  ['$scope','$resource',
         )
     }]);
 
-app.controller('Accs',  ['$scope','$resource','$routeParams',
-    function ( $scope, $resource, $routeParams){
-        $scope.label = "";
-        $scope.interval = intervalt;
-        $scope.t = datefymd;
+
+function intervalFactory($scope,$routeParams,load) {
+
+        $scope.changestart = function(startdate,stopdate) {
+            stopdate = new Date(startdate.getFullYear(), startdate.getMonth()+1, 1);
+            $scope.stopdate= stopdate;
+            load(startdate,stopdate)
+        }
+
+        $scope.changestop = function(startdate,stopdate) {
+          load(startdate,stopdate)
+        }
 
         if ($routeParams.month) {
             var y = $routeParams.year , m = $routeParams.month - 1;
         }   else {
             var date = new Date(), y = date.getFullYear(), m = date.getMonth();
         }
-            var startdate = new Date(y, m, 1);
-            var stopdate = new Date(y, m+1, 1);
+        var startdate = new Date(y, m, 1);
+        var stopdate = new Date(y, m+1, 1);
 
         $scope.startdate = startdate;
         $scope.stopdate= stopdate;
 
-        $resource('/db/accounting').save(
-            [
+        load(startdate,stopdate);
 
-            {aggregate:[[
-                {'$match': {'start_date':{
-                    '$gte': {'$date':startdate.getTime()},
-                    '$lte': {'$date':stopdate.getTime()}
-                }}},
-                {'$sort':{ 'start_date': -1}},
-                accounting_group,
-                {'$sort':{'start': -1}}
-                ]]
+}
+
+
+
+
+app.controller('Accs',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
+
+        function load(startdate,stopdate) {
+
+            $resource('/db/accounting').save(
+                [
+
+                {aggregate:[[
+                    {'$match': {'start_date':{
+                        '$gte': {'$date':startdate.getTime()},
+                        '$lte': {'$date':stopdate.getTime()}
+                    }}},
+                    {'$sort':{ 'start_date': -1}},
+                    accounting_group,
+                    {'$sort':{'start': -1}}
+                    ]]
+                }
+            ], function(response){
+                $scope.online = response;
             }
-        ], function(response){
-            $scope.online = response;
-        }
-        )
-    }]);
+            )
+            }
 
-app.controller('Regs',  ['$scope','$resource',
-    function ( $scope, $resource ){
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
-        $resource('/db/devices').save(
-            [
 
-            {aggregate:[[
-                {'$sort':{ 'registred': -1}},
-                {'$group': {_id: {
-                        username:"$username",
-                        },
-                        devs :{'$push':'$$CURRENT'},
-                        count: {'$sum':1},
-                        seen: {'$max':"$seen"},
-                        registred: {'$min':"$registred"},
-                    }
+        intervalFactory($scope,$routeParams,load)
 
-                },
-                {'$sort':{ 'registred': -1}}
-                ]]
-            }
-        ], function(response){
-            $scope.registred = response.response;
+
+    }]);
+
+app.controller('Regs',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource,$routeParams ){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+        function load(startdate,stopdate) {
+              $resource('/db/devices').save(
+                  [
+
+                  {aggregate:[[
+                  {'$match': {'seen':{
+                              '$gte': {'$date':startdate.getTime()},
+                              '$lte': {'$date':stopdate.getTime()}
+                          }}},
+                      {'$sort':{ 'registred': -1}},
+                      {'$group': {_id: {
+                              username:"$username",
+                              },
+                              devs :{'$push':'$$CURRENT'},
+                              count: {'$sum':1},
+                              seen: {'$max':"$seen"},
+                              registred: {'$min':"$registred"},
+                          }
+                      },
+                      {'$sort':{ 'registred': -1}}
+                      ]]
+                  }
+              ], function(response){
+                  $scope.registred = response.response;
+              }
+              )
         }
-        )
+
+        intervalFactory($scope,$routeParams,load);
+
+
     }]);
 
 app.controller('Limit',  ['$scope','$resource',
@@ -487,16 +552,7 @@ app.controller('Tarifs',  ['$scope','$resource',
 app.controller('Top',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource ,$routeParams){
 
-        if ($routeParams.month) {
-            var y = $routeParams.year , m= $routeParams.month - 1;
-        }   else {
-            var date = new Date(), y = date.getFullYear(), m = date.getMonth();
-        }
-        var startdate = new Date(y, m, 1);
-        var stopdate = new Date(y, m+1, 1);
-        $scope.startdate = startdate;
-        $scope.stopdate= stopdate;
-
+        function load(startdate,stopdate) {
         $resource('/db/accounting').save(
        [
                 {aggregate:[[
@@ -549,6 +605,12 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
             $scope.nases = response.response;
         }
         )
+
+        }
+
+
+        intervalFactory($scope,$routeParams,load);
+
     }]);
 
 app.controller("MenuCtrl", function($scope, $location) {

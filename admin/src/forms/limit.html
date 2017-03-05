@@ -41,7 +41,7 @@
       <div class="input-group">
       <span class="input-group-btn">
     <nz-toggle ng-model="limit.redir"
-      val-true="'0'" val-false="limit.redir==0 ? 'http://' : limit.redir"
+      val-true="'0'" val-false="limit.redir=='0' ? 'http://' : limit.redir"
       color-true="'#6068bd'"
       color-null="'#60bd68'"
       color-false="'rgb(221, 221, 221)'"
@@ -49,7 +49,7 @@
       </span>
     <input type="url" class="form-control" ng-model="limit.redir"
       placeholder="{{default.redir}}" ng-if="limit.redir!='0'">
-      <p ng-if="(limit.redir == 0)" class="form-control-static">запрошенный URL</p>
+      <p ng-if="(limit.redir == '0')" class="form-control-static">запрошенный URL</p>
     </div>
 
         </div>
