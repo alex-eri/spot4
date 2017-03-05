@@ -200,7 +200,7 @@ class Auth:
             for k,v in tarif.items():
                 debug((k,v))
                 if v in [0,"0"]:
-                    limit.pop(k)
+                    limit.pop(k,None)
                 elif v:
                     limit[k] = v
             if invoice.get('stop'):
@@ -228,10 +228,10 @@ class Auth:
         for l in ordered:
             for k,v in l.items():
                 if v in [0,"0"]:
-                    limit.pop(k)
+                    limit.pop(k,None)
                 elif v:
                     limit[k] = v
-        limit.pop('_id')
+        limit.pop('_id',None)
 
         if limit.pop('payable',False):
             limit = await self.billing(user,callee,limit)

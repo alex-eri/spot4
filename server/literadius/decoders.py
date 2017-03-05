@@ -69,5 +69,6 @@ decoders = defaultdict(default_decoder, {
     WISPrLocationName: string,
     ChilliSpotVersion: ascii,
     MSMPPEEncryptionPolicy: int,
-    FramedMTU: int
+    FramedMTU: int,
+    CoovaChilliAcctViewPoint: int
 })

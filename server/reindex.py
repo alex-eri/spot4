@@ -1,3 +1,5 @@
+from multiprocessing import Process
+
 def index(config):
     import storage
     import asyncio
@@ -24,4 +26,10 @@ def index(config):
     tasks = [ asyncio.ensure_future(t) for t in tasks ]
     storage.logger.info('reindexing')
     asyncio.wait(tasks)
-    storage.logger.info('done')
+
+
+
+def setup(config):
+    proc = Process(target=index, args=(config,))
+    proc.name = 'index'
+    return [proc]

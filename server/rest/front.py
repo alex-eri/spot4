@@ -16,7 +16,9 @@ async def get_uam_config(request,profile):
 async def uam_config(request):
     profile = request.match_info.get('profile')
     config = await get_uam_config(request,profile)
-    return config
+    if config:
+        return config
+    raise web.HTTPNotFound()
 
 
 
