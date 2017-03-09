@@ -4,11 +4,13 @@ from literadius.packet import Packet
 from uuid import uuid4
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.password import getsms, getpassw
 import pytz
 from bson.json_util import dumps, loads
 from utils.codecs import ip2int
+
+from literadius import decoders
 
 logger = logging.getLogger('protocol')
 debug = logger.debug
@@ -187,7 +189,7 @@ class Auth:
 
         invoice = await self.db.invoice.find_one( {
             'callee':callee,
-            'username': user['_id'],
+            'username': user.get('_id',None),
             'paid':True,
             'start':{'$lte':now},
             'stop':{'$gt':now},
@@ -358,45 +360,86 @@ class Auth:
             )
 
 
+    async def check_password(self,req,reply,psw):
+        if rad.MSCHAP2Response in req.keys():
+            success = req.check_password(psw)
+            if success:
+                with reply.lock:
+                    reply[rad.MSCHAP2Success] = success
+                return True
+        elif req.check_password(psw):
+            return True
+
+    async def check_mac(self, req, mac):
+
+        callee = req.decode(rad.CalledStationId)
+
+        uam = await self.db.uamconfig.find_one(
+            {
+                '_id':callee,
+                'macauth': True
+            }
+        )
+
+        debug(uam)
+
+        if uam:
+            acc = await self.db.accounting.find_one(
+                {
+                    'username': {"$ne": mac},
+                    'caller':mac,
+                    'callee':callee,
+                    'start_date' : {'$gt': datetime.utcnow() - timedelta(days=(uam.get('macdays',1) ))}
+                }
+                )
+            #TODO: last one
+            debug(acc)
+            return acc
+
     async def handle_auth(self,req,caller):
         code = rad.AccessReject
         reply = req.reply(code)
         device = None
+        success = False
         user = await self.db.users.find_one({'_id':req.decode(rad.UserName)})
 
+        mac = req.decode(rad.CallingStationId)
+
         if not user:
-            return  reply
+            psw = None
+            q = {
+                'mac': mac,
+                'checked': True,
+                'username':mac
+            }
+        else:
+            q = {
+                'username':user.get('_id'),
+                'mac':mac
+                 }
 
-        q = {
-            'username':user['_id'],
-            'mac':req.decode(rad.CallingStationId)
-             }
+            psw = user.get('password')
 
-        psw = user.get('password')
+        if req.get(rad.CallingStationId) == req.get(rad.UserName):
+            debug('mac')
+            success = await self.check_mac(req, mac)
+            if success:
+                code = rad.AccessAccept
+                user = {'_id':success['username']}
 
-        if False and rad.EAPMessage in req.keys():
-            code = await self.handle_eap(req,reply,psw)
-            if code == rad.AccessChallenge:
-                return reply
-            elif code == rad.AccessAccept:
-                device = self.mark_device(q)
-
-        elif rad.MSCHAP2Response in req.keys():
-            success = req.check_password(psw)
+        elif psw:
+            success = await self.check_password(req,reply,psw)
             if success:
                 device = self.mark_device(q)
                 code = rad.AccessAccept
-                reply[rad.MSCHAP2Success] = success
 
-        elif psw and req.check_password(psw):
-            device = self.mark_device(q)
-            code = rad.AccessAccept
-        else:
+        if not success:
             for n in [0,-1]:
                 psw = getpassw(n=n, **q)
-                if req.check_password(psw):
+                if await self.check_password(req,reply,psw):
                     code = rad.AccessAccept
                     break
+
 
         if code == rad.AccessReject:
             asyncio.sleep(1)
@@ -405,6 +448,7 @@ class Auth:
             reply[rad.Class]=uuid4().bytes
             q['checked'] = True
             device = device or await self.db.devices.find_one(q)
+            debug(device)
             if device:
                 reply.code = code
                 reply = await self.set_limits(user,req,reply)
