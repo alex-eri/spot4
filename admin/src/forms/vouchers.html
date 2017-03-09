@@ -1,0 +1,52 @@
+<h1>GTC Ваучеры</h1>
+<form class="form-horizontal">
+
+
+<div class="form-group">
+    <label class="col-sm-4 control-label">Вызываемый профиль</label>
+    <div class="col-sm-4">
+<select class="form-control" required
+ng-model="router" ng-options="r._id for r in routers track by r._id">
+</select>
+    </div>
+    <div class="col-sm-4"><p class="form-control-static">
+
+    </p></div>
+  </div>
+
+  <div class="form-group">
+    <label class="col-sm-4 control-label">Тариф</label>
+    <div class="col-sm-4">
+<select class="form-control" required
+ng-model="tarif" ng-options="t.name for t in tarifs track by t._id">
+</select>
+    </div>
+    <div class="col-sm-4"><p class="form-control-static">
+
+    </p></div>
+  </div>
+
+
+
+
+  <div class="form-group">
+    <div class="col-sm-offset-4 col-sm-4">
+<input class="btn btn-primary" type="submit" ng-click="create(router, tarif)" value="Новая серия" />
+
+</div>
+</div>
+
+</form>
+
+<h2>Действующие серии</h2>
+
+<ul class="list-unstyled list-inline">
+<li ng-repeat="v in vouchers" class="col-sm-6 col-xs-12 col-md-4">
+  <a href="voucher/{{v.series}}/" class="btn ">
+    <span>#{{v.series}}</span> /
+        <span class="">{{v.callee}}&mdash;{{v.tarif.name}}</span>
+
+    <span class="badge">{{v.count}}</span>
+  </a>
+</li>
+</ul>

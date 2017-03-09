@@ -1,4 +1,5 @@
 import logging,sys
+import reindex
 
 #sys.path.insert(0, '.')
 
@@ -29,7 +30,7 @@ def setup_log(config):
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
 
-def setup():
+def setup(services=[]):
     import api
     import radius
     import json
@@ -39,7 +40,6 @@ def setup():
 
     config['numbers'] = manager.list()
 
-    services = []
     services.extend( radius.setup(config) )
     services.extend( api.setup(config) )
 
@@ -51,23 +51,47 @@ def setup():
 
     return services
 
-def main():
-    services = setup()
 
-    for proc in services:
-        proc.start()
+def main():
+    import signal
+    services = []
+
+    def start():
+        for proc in services:
+            proc.start()
+
+    def stop():
+        for proc in services:
+            proc.terminate()
+
+    def wait(n=1):
+        for proc in services:
+            proc.join(n)
+
+    def restart(*a):
+        debug(a)
+        stop()
+        wait(5)
+        while services:
+            del services[0]
+        setup(services)
+        start()
+
+    signal.signal(signal.SIGUSR1, restart)
+
+    setup(services)
+    start()
 
     sys.running = True
     while sys.running:
         try:
-            for proc in services:
-                proc.join(1)
-        except:
+            wait()
+        except Exception as e:
+            debug(e)
             sys.running = False
             break
 
-    for proc in services:
-        proc.terminate()
+    stop()
 
 
 def premain():
@@ -93,10 +117,10 @@ def premain():
     config = json.load(open('../config/config.json','r'))
     setup_log(config)
 
-    if args.reindex:
-        import reindex
-        reindex.index(config)
-        return
+    p = reindex.setup(config)
+    p[0].start()
+    p[0].join()
+    logger.info('done')
 
     if os.name == 'nt':
         import utils.win32

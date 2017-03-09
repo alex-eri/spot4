@@ -4,11 +4,13 @@ from literadius.packet import Packet
 from uuid import uuid4
 import logging
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 from utils.password import getsms, getpassw
 import pytz
 from bson.json_util import dumps, loads
 from utils.codecs import ip2int
+
+from literadius import decoders
 
 logger = logging.getLogger('protocol')
 debug = logger.debug
@@ -62,7 +64,7 @@ class BaseRadius(asyncio.DatagramProtocol):
             raise Exception('Packet is not request')
         if logger.isEnabledFor(logging.DEBUG):
             for attr in req.keys():
-                break
+                #break
                 debug('{} :\t{}'.format(attr,req.decode(attr)))
 
         #f = asyncio.ensure_future(
@@ -181,31 +183,44 @@ class Auth:
         return nas
 
 
-    async def billing(self,user,limit):
+    async def billing(self,user,callee,limit):
         now = datetime.utcnow()
+        #debug(now)
 
-        tarif = await self.db.invoice.find_one( {
-            'user_id': user['_id'],
+        invoice = await self.db.invoice.find_one( {
+            'callee':callee,
+            'username': user.get('_id',None),
             'paid':True,
             'start':{'$lte':now},
             'stop':{'$gt':now},
             })
-        if tarif:
+
+        debug(invoice)
+        debug(limit)
+        if invoice:
+            tarif = invoice.get('limit',{})
             for k,v in tarif.items():
+                debug((k,v))
                 if v in [0,"0"]:
-                    limit.pop(k)
-                if v:
+                    limit.pop(k,None)
+                elif v:
                     limit[k] = v
+            if invoice.get('stop'):
+                t = round((invoice['stop'] - now).total_seconds())+28
+                if limit.get('time'):
+                    limit['time'] = min(limit.get('time'),t)
+                else:
+                    limit['time'] = t
+        debug(limit)
         return limit
 
 
     async def set_limits(self,user,req,reply):
         nas = self.get_type(req)
-
+        callee = req.decode(rad.CalledStationId)
         profiles = [
             'default',
-            req.decode(rad.CalledStationId),
-            user['_id']
+            callee
             ]
         limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(3)
         if len(limits) == 0:
@@ -215,26 +230,26 @@ class Auth:
         for l in ordered:
             for k,v in l.items():
                 if v in [0,"0"]:
-                    limit.pop(k)
-                if v:
+                    limit.pop(k,None)
+                elif v:
                     limit[k] = v
-        limit.pop('_id')
+        limit.pop('_id',None)
 
         if limit.pop('payable',False):
-            limit = await self.billing(user,limit)
+            limit = await self.billing(user,callee,limit)
 
         with reply.lock:
             for k,v in limit.items():
                 if k == 'rate':
                     v = int(v * 1024)
-                    if nas | typeofNAS.mikrotik:
+                    if nas & typeofNAS.mikrotik:
                         b = int(v * 1.3)
                         r = int(v * 0.9)
                         reply[rad.MikrotikRateLimit] = \
                             "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(v,b,r, BURST_TIME)
                     else:
                         bps = v << 10
-                        if nas | typeofNAS.wispr :  # +chilli here
+                        if nas & (typeofNAS.wispr | typeofNAS.chilli) :
                             reply[rad.WISPrBandwidthMaxDown] = bps
                             reply[rad.WISPrBandwidthMaxUp] = bps
                         else:
@@ -260,7 +275,7 @@ class Auth:
                         reply[rad.ChilliSpotMaxOutputOctets] = b
 
                 elif k == 'redir':
-                    reply[rad.WISPrRedirectionURL] = v
+                    reply[rad.WISPrRedirectionURL] = v.replace('rel://','')
                 elif k == 'filter':
                     reply[rad.FilterId] = v
                 else:
@@ -345,45 +360,86 @@ class Auth:
             )
 
 
+    async def check_password(self,req,reply,psw):
+        if rad.MSCHAP2Response in req.keys():
+            success = req.check_password(psw)
+            if success:
+                with reply.lock:
+                    reply[rad.MSCHAP2Success] = success
+                return True
+        elif req.check_password(psw):
+            return True
+
+    async def check_mac(self, req, mac):
+
+        callee = req.decode(rad.CalledStationId)
+
+        uam = await self.db.uamconfig.find_one(
+            {
+                '_id':callee,
+                'macauth': True
+            }
+        )
+
+        debug(uam)
+
+        if uam:
+            acc = await self.db.accounting.find_one(
+                {
+                    'username': {"$ne": mac},
+                    'caller':mac,
+                    'callee':callee,
+                    'start_date' : {'$gt': datetime.utcnow() - timedelta(days=(uam.get('macdays',1) ))}
+                }
+                )
+            #TODO: last one
+            debug(acc)
+            return acc
+
     async def handle_auth(self,req,caller):
         code = rad.AccessReject
         reply = req.reply(code)
         device = None
+        success = False
         user = await self.db.users.find_one({'_id':req.decode(rad.UserName)})
 
+        mac = req.decode(rad.CallingStationId)
+
         if not user:
-            return  reply
+            psw = None
+            q = {
+                'mac': mac,
+                'checked': True,
+                'username':mac
+            }
+        else:
+            q = {
+                'username':user.get('_id'),
+                'mac':mac
+                 }
 
-        q = {
-            'username':user['_id'],
-            'mac':req.decode(rad.CallingStationId)
-             }
+            psw = user.get('password')
 
-        psw = user.get('password')
+        if req.get(rad.CallingStationId) == req.get(rad.UserName):
+            debug('mac')
+            success = await self.check_mac(req, mac)
+            if success:
+                code = rad.AccessAccept
+                user = {'_id':success['username']}
 
-        if False and rad.EAPMessage in req.keys():
-            code = await self.handle_eap(req,reply,psw)
-            if code == rad.AccessChallenge:
-                return reply
-            elif code == rad.AccessAccept:
-                device = self.mark_device(q)
-
-        elif rad.MSCHAP2Response in req.keys():
-            success = req.check_password(psw)
+        elif psw:
+            success = await self.check_password(req,reply,psw)
             if success:
                 device = self.mark_device(q)
                 code = rad.AccessAccept
-                reply[rad.MSCHAP2Success] = success
 
-        elif psw and req.check_password(psw):
-            device = self.mark_device(q)
-            code = rad.AccessAccept
-        else:
+        if not success:
             for n in [0,-1]:
                 psw = getpassw(n=n, **q)
-                if req.check_password(psw):
+                if await self.check_password(req,reply,psw):
                     code = rad.AccessAccept
                     break
+
 
         if code == rad.AccessReject:
             asyncio.sleep(1)
@@ -392,6 +448,7 @@ class Auth:
             reply[rad.Class]=uuid4().bytes
             q['checked'] = True
             device = device or await self.db.devices.find_one(q)
+            debug(device)
             if device:
                 reply.code = code
                 reply = await self.set_limits(user,req,reply)

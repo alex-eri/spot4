@@ -49,6 +49,9 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/sms.html',
         controller: 'Sms'
       }).
+      when('/sms/spam/', {
+        templateUrl: '/static/admin-forms/notimplemented.html',
+      }).
       when('/uam/', {
         templateUrl: '/static/admin-forms/uam.html',
         controller: 'Uam'
@@ -57,16 +60,53 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/notimplemented.html',
       }).
       when('/config/', {
+        templateUrl: '/static/admin-forms/config.html',
+        controller: 'Config'
+      }).
+      when('/admins/', {
         templateUrl: '/static/admin-forms/notimplemented.html',
       }).
-      when('/users/', {
-        templateUrl: '/static/admin-forms/notimplemented.html',
+      when('/tarifs/', {
+        templateUrl: '/static/admin-forms/tarifs.html',
+        controller: 'Tarifs'
+      }).
+      when('/vouchers/', {
+        templateUrl: '/static/admin-forms/vouchers.html'
+        ,controller: 'Vouchers'
+      }).
+      when('/voucher/:series/', {
+        templateUrl: '/static/admin-forms/voucher.html'
+        ,controller: 'Voucher'
       }).
       otherwise({
         redirectTo: '/online/'
       });
   }
 ]);
+
+app.controller('Config',  ['$scope','$resource',
+    function ( $scope, $resource ){
+
+      $scope.reload = function(){
+        var a=confirm("Уверенны?");
+        if (a) {
+
+        $resource('/admin/kill').save({'reload': true},
+          function(response){
+            alert( response.response );
+          }
+          )
+        }
+
+      }
+
+      $resource('/admin/config.json').get(
+        function(response){
+            $scope.config = response.response;
+        }
+      )
+
+    }]);
 
 
 
@@ -175,69 +215,106 @@ app.controller('Online',  ['$scope','$resource',
         )
     }]);
 
-app.controller('Accs',  ['$scope','$resource','$routeParams',
-    function ( $scope, $resource, $routeParams){
-        $scope.label = "";
-        $scope.interval = intervalt;
-        $scope.t = datefymd;
+
+function intervalFactory($scope,$routeParams,load) {
+
+        $scope.changestart = function(startdate,stopdate) {
+            stopdate = new Date(startdate.getFullYear(), startdate.getMonth()+1, 1);
+            $scope.stopdate= stopdate;
+            load(startdate,stopdate)
+        }
+
+        $scope.changestop = function(startdate,stopdate) {
+          load(startdate,stopdate)
+        }
 
         if ($routeParams.month) {
             var y = $routeParams.year , m = $routeParams.month - 1;
         }   else {
             var date = new Date(), y = date.getFullYear(), m = date.getMonth();
         }
-            var startdate = new Date(y, m, 1);
-            var stopdate = new Date(y, m+1, 1);
+        var startdate = new Date(y, m, 1);
+        var stopdate = new Date(y, m+1, 1);
 
         $scope.startdate = startdate;
         $scope.stopdate= stopdate;
 
-        $resource('/db/accounting').save(
-            [
+        load(startdate,stopdate);
 
-            {aggregate:[[
-                {'$match': {'start_date':{
-                    '$gte': {'$date':startdate.getTime()},
-                    '$lte': {'$date':stopdate.getTime()}
-                }}},
-                {'$sort':{ 'start_date': -1}},
-                accounting_group,
-                {'$sort':{'start': -1}}
-                ]]
+}
+
+
+
+
+app.controller('Accs',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
+
+        function load(startdate,stopdate) {
+
+            $resource('/db/accounting').save(
+                [
+
+                {aggregate:[[
+                    {'$match': {'start_date':{
+                        '$gte': {'$date':startdate.getTime()},
+                        '$lte': {'$date':stopdate.getTime()}
+                    }}},
+                    {'$sort':{ 'start_date': -1}},
+                    accounting_group,
+                    {'$sort':{'start': -1}}
+                    ]]
+                }
+            ], function(response){
+                $scope.online = response;
             }
-        ], function(response){
-            $scope.online = response;
-        }
-        )
-    }]);
+            )
+            }
 
-app.controller('Regs',  ['$scope','$resource',
-    function ( $scope, $resource ){
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
-        $resource('/db/devices').save(
-            [
 
-            {aggregate:[[
-                {'$sort':{ 'registred': -1}},
-                {'$group': {_id: {
-                        username:"$username",
-                        },
-                        devs :{'$push':'$$CURRENT'},
-                        count: {'$sum':1},
-                        seen: {'$max':"$seen"},
-                        registred: {'$min':"$registred"},
-                    }
+        intervalFactory($scope,$routeParams,load)
 
-                },
-                {'$sort':{ 'registred': -1}}
-                ]]
-            }
-        ], function(response){
-            $scope.registred = response.response;
+
+    }]);
+
+app.controller('Regs',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource,$routeParams ){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+        function load(startdate,stopdate) {
+              $resource('/db/devices').save(
+                  [
+
+                  {aggregate:[[
+                  {'$match': {'seen':{
+                              '$gte': {'$date':startdate.getTime()},
+                              '$lte': {'$date':stopdate.getTime()}
+                          }}},
+                      {'$sort':{ 'registred': -1}},
+                      {'$group': {_id: {
+                              username:"$username",
+                              },
+                              devs :{'$push':'$$CURRENT'},
+                              count: {'$sum':1},
+                              seen: {'$max':"$seen"},
+                              registred: {'$min':"$registred"},
+                          }
+                      },
+                      {'$sort':{ 'registred': -1}}
+                      ]]
+                  }
+              ], function(response){
+                  $scope.registred = response.response;
+              }
+              )
         }
-        )
+
+        intervalFactory($scope,$routeParams,load);
+
+
     }]);
 
 app.controller('Limit',  ['$scope','$resource',
@@ -276,6 +353,9 @@ app.controller('Limit',  ['$scope','$resource',
         })
         $scope.update = function(router){
             var id = router._id
+
+            //router.redir = router.redir.replace(/http\:\/\/\//g,"/")
+
             $resource('/db/limit').save([{
             find_and_modify:{
                 query:{_id:id},
@@ -287,27 +367,194 @@ app.controller('Limit',  ['$scope','$resource',
                 console.log(response)
                 var id = response.response._id;
                 var item_name=id.replace(/[.:-]/g,"_");
+
                 $scope.limits[item_name] = response.response;
             })
         }
     }]);
 
 
+app.controller('Voucher',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource ,$routeParams){
+
+            $scope.vouchers = []
+    	$resource('/db/voucher').save(
+
+    	 [
+                {aggregate:[[
+                { $match : {'series': parseInt($routeParams.series)}},
+                { $sort  : { closed : -1 } },
+                { $group : {
+                	_id: { series:"$series" },
+                    vouchers :{'$push':'$$CURRENT'},
+                    series:{$first:"$series"} ,
+                	  tarif:{$first:"$tarif"} ,
+                	  callee:{$first:"$callee"},
+                    count: { $sum: {$cond : [ "$closed", 1, 0 ] }},
+                    total: {  $sum: 1}
+                }},
+                { $lookup :{
+                	from:'tarif',
+                	localField:'tarif',
+                	foreignField:'_id',
+                	as:'tarif'
+                }},
+                { $unwind : "$tarif" }
+                ]]
+            }
+        ],
+
+
+
+           // [{find: [{'series':parseInt($routeParams.series) }] }],
+          function(response){
+            console.log(response)
+            $scope.response = response.response[0]
+        });
+
+    }])
+
+
+app.controller('Vouchers',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.vouchers = []
+        $scope.tarifs = []
+        $scope.routers = []
+
+    	$resource('/db/tarif').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+            $scope.tarifs = response.response
+        });
+
+    	$resource('/db/uamconfig').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+            $scope.routers = response.response
+        });
+
+    	$resource('/db/voucher').save(
+                	 [
+                {aggregate:[[
+                {'$match': {'closed': false}},
+                {'$group': {
+                	_id: { series:"$series" },
+                	  series:{$first:"$series"} ,
+                	  tarif:{$first:"$tarif"} ,
+                	  callee:{$first:"$callee"},
+                	  count:{$sum:1}
+                }},
+                {'$lookup':{
+                	from:'tarif',
+                	localField:'tarif',
+                	foreignField:'_id',
+                	as:'tarif'
+                }},
+                { $unwind : "$tarif" },
+                { $sort : { series : 1 } }
+                ]]
+            }
+        ],
+          function(response){
+            console.log(response)
+            $scope.vouchers = response.response
+        });
+
+        $scope.create = function(callee,tarif){
+    	    $resource('/admin/voucher/create.json').save(
+    	    {tarif:tarif._id.$oid,callee:callee._id},
+    	    function(response){
+    	      var s = {
+    	        series: response.series,
+    	        callee: response.callee,
+    	        tarif: tarif
+    	      };
+
+            $scope.vouchers.push(s)
+            console.log(response)
+	        })
+        }
+
+    }]);
+
+
+
+app.controller('Tarifs',  ['$scope','$resource',
+    function ( $scope, $resource ){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+
+        $scope.limits = { default:{_id:'default'}}
+        $scope.tarifs = {}
+
+        $resource('/db/limit').save(
+            [
+            {find: {} }
+        ], function(response){
+            response.response.forEach( function(item){
+                var id = item._id;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.limits[item_name]=item;
+            })
+        })
+
+        $resource('/db/tarif').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+            response.response.forEach( function(item){
+                var id = item._id.$oid;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.tarifs[item_name]=item;
+            })
+        })
+
+        $scope.create = function() {
+
+          $scope.update({name:"Новый", limit:{}});
+
+        }
+
+
+        $scope.update = function(tarif){
+
+            var id = tarif._id
+            var q = {}
+            if (id) {q = {_id: tarif._id}}
+            console.log(id)
+            $resource('/db/tarif').save([{
+            find_and_modify:{
+                query:q,
+                update:tarif,
+                upsert:true,
+                new:true
+                }
+            }], function(response){
+                console.log(response)
+                var id = response.response._id.$oid;
+                var item_name=id.replace(/[.:-]/g,"_");
+                $scope.tarifs[item_name] = response.response;
+            })
+        }
+
+    }]);
+
+
+
+
+
 app.controller('Top',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource ,$routeParams){
 
-        if ($routeParams.month) {
-            var y = $routeParams.year , m= $routeParams.month - 1;
-        }   else {
-            var date = new Date(), y = date.getFullYear(), m = date.getMonth();
-        }
-        var startdate = new Date(y, m, 1);
-        var stopdate = new Date(y, m+1, 1);
-        $scope.startdate = startdate;
-        $scope.stopdate= stopdate;
-
+        function load(startdate,stopdate) {
         $resource('/db/accounting').save(
-            [
+       [
                 {aggregate:[[
                 {'$match': {'start_date':{
                     '$gte': {'$date':startdate.getTime()},
@@ -327,7 +574,8 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
                 {'$limit': 10 }
                 ]]
             }
-        ], function(response){
+        ]
+           , function(response){
             $scope.users = response.response;
         }
         );
@@ -357,6 +605,12 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
             $scope.nases = response.response;
         }
         )
+
+        }
+
+
+        intervalFactory($scope,$routeParams,load);
+
     }]);
 
 app.controller("MenuCtrl", function($scope, $location) {
@@ -407,7 +661,19 @@ switch(input) {
   };
 })
 
-
+app.filter('dash', function() {
+  return function(transformedInput) {
+if (transformedInput.length > 4) {
+              var i = 0
+              var transformedInputView = ""
+              for (i=0; i < transformedInput.length-4 ; i+=4) {
+                transformedInputView +=  transformedInput.slice(i,i+4) + "-" ;
+                }
+              transformedInputView += transformedInput.slice(i);
+              }
+    return transformedInputView;
+  };
+})
 
 
 app.controller('Uam',  ['$scope','$resource','$timeout',
@@ -466,6 +732,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout',
         $scope.update = function(router){
             var id = router._id
             router.newbie = undefined;
+
             $resource('/db/uamconfig').save([{
             find_and_modify:{
                 query:{_id:id},

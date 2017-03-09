@@ -1,44 +1,40 @@
-config chilli
+config chilli 'guest'
     #option kname 'chilli' # bug #179
-    option tundev 'tun0'
+    option tundev 'tun-guest'
+
     option net 192.168.182.0/24
     option dynip 192.168.182.51-192.168.182.250
     option statip 192.168.182.2-192.168.182.50
-    option dns1 192.168.236.1
+    option dns1 192.168.182.1
     option dns2 77.88.8.8
-    option domain hs.eerie.su
+    #option domaindnslocal 1
+    option domain eerie.su
     option ipup /etc/chilli/up.sh
     option ipdown /etc/chilli/down.sh
 
-    #option radiuslisten 127.0.0.1
-    option radiusserver1 192.168.236.34
-    option radiusserver2 192.168.236.34
-    #option radiusauthport 1812
-    #option radiusacctport 1813
-    option radiussecret testing123
+    option radiusserver1 {IP}
+    option radiusserver2 {IP}
+    option radiussecret {PASS}
+    option coanoipcheck 1
+    option coaport 3990
+    #роутер-identyti
     option radiusnasid qemu
+    #хотспот
     option nasmac chilli1
-    #option radiuslocationid isocc=us,cc=1,ac=408,network=ACMEWISP_NewarkAirport
-    #option radiuslocationname ERIWISP,HomeAtQEMU
-    option dhcpif br-lan
-    #option dhcpmac 00:00:5E:00:02:00
-    option lease 600
-    option uamserver "http://192.168.236.34:8080/uam/register/"
-    #option uamhomepage http://192.168.182.1/welcome.html
-    option uamsecret ""
-    #option uamlisten 192.168.182.1
-    #option uamport 3990
-    option uamallowed 192.168.236.34
-    #option uamdomain .chillispot.org,.coova.org
-    option uamanydns 1
-    #option macauth
-    #option macallowed 00-0A-5E-AC-BE-51,00-30-1B-3C-32-E9
-    #option macpasswd password
-    #option macsuffix suffix
 
-    #option framedservice 1
-    #option usetap 1
+    option network guest
+    #option dhcpif br-guest
+    option lease 600
+    option uamserver "http://{IP}:{PORT}/uam/register/"
+    option uamsecret ""
+    option uamallowed {IP}
+    option uamanydns 1
+    #option macauth 1
+
     option acctupdate 1
     option swapoctets 1
-    option layer3 1
+    #option layer3 1
+    option dhcpnotidle 1
 
+    option conup /etc/chilli/conup.sh #FRAMED_IP_ADDRESS FILTER_ID
+    option condown /etc/chilli/condown.sh 

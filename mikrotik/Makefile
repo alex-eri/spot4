@@ -16,6 +16,9 @@ build:
 	install src/rlogin.html build/$(IP)/logout.html
 	install -d build/$(IP)/jsonp
 	install src/jsonp/login.html build/$(IP)/jsonp/login.html
+	install src/jsonp/login.html build/$(IP)/jsonp/flogin.html
+	install src/jsonp/login.html build/$(IP)/jsonp/logout.html
+	install src/jsonp/login.html build/$(IP)/jsonp/flogout.html
 	install src/jsonp/login.html build/$(IP)/jsonp/alogin.html
 	install src/jsonp/login.html build/$(IP)/jsonp/status.html
 	install src/jsonp/login.html build/$(IP)/jsonp/fstatus.html

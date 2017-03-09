@@ -64,6 +64,8 @@ async def phone_handler(request):
     uam = await get_uam_config(request, DATA.get('profile','default'))
 
     debug(uam)
+    uam = uam or {}
+
 
     count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-REREG)}} ).count()
     if count >= DEVMAX:
@@ -72,10 +74,10 @@ async def phone_handler(request):
     if device.get('username'):
         reg = False
         if device.get('checked'):
-            device['password'] = getpassw(device.get('username'), device.get('mac'))
+            pass
         elif (now - device.get('registred',now)) > REREG:
             reg = True
-        elif uam['smssend'] and not device.get('sms_sent'):
+        elif uam.get('smssend',False) and not device.get('sms_sent'):
             reg = True
     else:
         reg = True
@@ -83,16 +85,16 @@ async def phone_handler(request):
 
 
     if reg:
-        if uam['nosms']:
+        if uam.get('nosms',False):
             upd['checked'] = True
         else:
             numbers = request.app['config'].get('numbers')
-            if uam['smsrecieve'] and numbers:
+            if uam.get('smsrecieve',False) and numbers:
                 code = getsms(**q)
                 upd['sms_waited'] = code
                 upd['sms_callie'] = random.choice(numbers)
 
-            if uam['smssend']:
+            if uam.get('smssend',False):
                 code = getsms(**q)
                 upd['sms_sent'] = code
 
@@ -112,6 +114,8 @@ async def phone_handler(request):
 
     if device:
         device['sms_sent'] = device.get('sms_sent') and True
+        if device.get('checked'):
+            device['password'] = getpassw(device.get('username'), device.get('mac'))
         return device
     else:
         raise web.HTTPNotFound()

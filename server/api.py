@@ -22,15 +22,7 @@ def setup_web(config):
         config['DB']['SERVER'],
         config['DB']['NAME']
     )
-
     loop = asyncio.get_event_loop()
-
-    loop.run_until_complete(
-        db.counters.find_and_modify(
-        {'_id':'userid'},
-        { '$setOnInsert': {'seq':0}},
-        upsert=True,new=True)
-        )
 
     debug('starting webapp')
 

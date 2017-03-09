@@ -1,9 +1,9 @@
 from .views import *
 from .decorators import check_auth
 from .decorators import json
-from .admin import list_templates
+from .admin import list_templates, config,kill
 from .front import uam_config
-from .billing import voucher
+from .billing import voucher, generate
 
 def index_factory(path,filename):
     async def static_view(request):
@@ -30,18 +30,24 @@ def routers(app):
     app.router.add_route('POST', '/db/{collection}/{skip:\d+}/{limit:\d+}', check_auth(db_handler))
     app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))
 
-    app.router.add_get('/uam/config/{profile}.json', json(uam_config))
+    app.router.add_get('/config/uam/{profile}.json', json(uam_config))
     app.router.add_static('/uam/theme/', path='../uam/theme', name='uam-theme')
     #app.router.add_static('/uam/config/', path='../uam/config', name='uam-config')
     app.router.add_get('/uam/{path:.*}', index_factory("../static/ht_docs/","uam.html"))
 
 
     app.router.add_get('/admin/themes.json', check_auth(list_templates))
+
+    app.router.add_get('/admin/config.json', check_auth(config))
+    app.router.add_post('/admin/kill', check_auth(kill))
+
+    app.router.add_post('/admin/voucher/create.json', check_auth(generate))
+
     app.router.add_get('/admin/{path:.*}', check_auth(index_factory("../static/ht_docs/","admin.html")))
     app.router.add_static('/static/', path='../static/ht_docs/', name='static')
 
 
-    app.router.add_route('*', '/billing/voucher', voucher)
+    app.router.add_route('POST', '/billing/voucher', voucher)
 
 
     #app.router.add_route('OPTIONS', '/{path:.*}', db_options)

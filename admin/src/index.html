@@ -12,13 +12,18 @@
     <link rel="stylesheet" href="/static/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/static/css/nz-toggle.min.css" />
     <link rel="stylesheet" href="/static/css/animations.css" />
-  </head>
+
+    </head>
   <body>
     <div class="container-fluid">
-<div class="row">
-    <div class="col-sm-3 col-md-2 sidebar" ng-include='"/static/admin-forms/menu.html"' ng-controller="MenuCtrl"></div>
-      <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" >
-        <ng-view class=row></ng-view>
+<div class="row ">
+    <div
+	    class="col-sm-3 col-md-2 sidebar hidden-print "
+	    ng-include='"/static/admin-forms/menu.html"'
+	    ng-controller="MenuCtrl">
+    </div>
+      <div class="col-sm-9 col-md-10 col-md-offset-2 col-sm-offset-3 main " >
+        <ng-view ></ng-view>
 
       </div>
 </div>

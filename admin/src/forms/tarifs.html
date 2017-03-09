@@ -1,0 +1,58 @@
+<h1>Тарифы</h1>
+
+<form class="form-horizontal" >
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+
+    <input class="btn btn-primary" type="submit" ng-click="create()" value="Новый" />
+
+    </div>
+  </div>
+
+</form>
+
+<section ng-repeat="(id,tarif) in tarifs" >
+<h2>{{tarif.name|| "Новый"}}</h2>
+
+
+
+{{default=limits.default;limit=tarif.limit;""}}
+
+
+	  <form class="form-horizontal" >
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Название</label>
+<div class="col-sm-4">
+<input type="text" class="form-control" ng-model="tarif.name" required>
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+{{tarif}}
+</p></div>
+</div>
+
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Время действия</label>
+<div class="col-sm-4">
+<input type="number" class="form-control" ng-model="tarif.duration"
+required min=0 step="0.1">
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+дней с момента подключения
+</p></div>
+</div>
+
+
+  <h3>Ограничения</h3>
+      <div ng-include="'/static/admin-forms/limit.html'"></div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+    <input class="btn btn-primary" type="submit" ng-click="update(tarif)" value="Сохранить" />
+    </div>
+  </div>
+</form>
+</section>
+
+
+

@@ -39,15 +39,22 @@ app.directive('codeValidation', function(){
      link: function(scope, element, attrs, modelCtrl) {
 
        modelCtrl.$parsers.push(function (inputValue) {
-         var transformedInput = inputValue;
 
-         if (typeof(inputValue)== "number") {
-                transformedInput = Math.floor(inputValue) % 1000000;
-         } else {
-                transformedInput = String(inputValue).replace(/[^\d]/g,'');
-            }
+        var transformedInput = String(inputValue).replace(/[^\d]/g,'');
+        var transformedInputView = transformedInput
+
+            if (transformedInput.length > 3) {
+
+              transformedInputView = ""
+              var i=0;
+              for (i=0; i < transformedInput.length-3 ; i+=4) {
+                transformedInputView +=  transformedInput.slice(i,i+4) + "-" ;
+                }
+              transformedInputView += transformedInput.slice(i);
+              }
+
          if (transformedInput!=inputValue) {
-           modelCtrl.$setViewValue(transformedInput);
+           modelCtrl.$setViewValue(transformedInputView);
            modelCtrl.$render();
          }
 
@@ -97,6 +104,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/uam-forms/check-sms.html',
         controller: 'Check'
       }).
+      when('/check/', {
+        template: waittemplate,
+        controller: 'Check'
+      }).
       when('/wait/sms/', {
         templateUrl: '/static/uam-forms/wait-sms.html',
         controller: 'Check'
@@ -104,6 +115,13 @@ app.config(['$routeProvider','$locationProvider',
       when('/login/', {
         template: waittemplate,
         controller: 'Login'
+      }).
+      when('/voucher/gtc/', {
+        templateUrl: '/static/uam-forms/gtc.html'
+        ,controller: 'VoucherGTC'
+      }).
+      when('/no-reg/', {
+        templateUrl: '/static/uam-forms/no-reg.html'
       }).
       otherwise({
         redirectTo: '/status/'
@@ -123,9 +141,14 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
                     {phone:form.phone.$modelValue, mac: mac, profile:$cookies.get('called')},
 
                 function(response) {
+                    console.log(response)
+                    console.log(response.username)
+                    console.log(response.password)
+
                     $scope.device = response;
                     $location.search('device', response._id.$oid);
                     $cookies.put('device', response._id.$oid);
+                    $cookies.put('username', response.username);
                     if (response.checked) {
                         $location.search('password', response.password);
                         $location.search('username', response.username);
@@ -133,8 +156,9 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
                         }
                     else if (response.sms_sent)
                         $location.path('/check/sms/')
-                    else
+                    else if (response.sms_waited)
                         $location.path('/wait/sms/')
+                    else $location.path('/no-reg/')
 
                 },
                 function(error) {
@@ -154,11 +178,71 @@ function hex2bin(str) {
     }).join('');
 }
 
+app.controller('VoucherGTC',  ['$scope','$resource','$cookies','$location','$http',
+    function ( $scope, $resource, $cookies ,$location,$http){
+      $scope.username = $location.$$search.username|| $cookies.get('username');
+      var oid = $location.$$search.device || $cookies.get('device');
+
+      $scope.gtc = ""
+      $scope.wrongcode = false
+
+      var ischilli = $cookies.get('uamip');
+      if (ischilli)
+            var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
+
+      function onlogoff(resp) {
+        console.log(resp)
+        $location.path('/check/')
+      }
+
+
+      function logoff() {
+          if (ischilli)
+            $resource(chilli+'logoff',
+                {
+                },
+                {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
+            ).get(onlogoff)
+          else
+            $resource($cookies.get('linklogout'),
+                {
+                    target:'jsonp',
+                },
+                {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onlogoff)
+      }
+
+
+      function onconfirm(resp) {
+          console.log(resp)
+          if (resp.error) {$scope.wrongcode = true} else {
+            $scope.wrongcode = false
+            logoff()
+            }
+      }
+
+      $scope.logoff = logoff;
+      $scope.confirm = function(form){
+          $resource('/billing/voucher').save(
+                    {
+
+        'voucher' : $scope.gtc,
+        'callee': $cookies.get('called'),
+        'nas': $cookies.get('nasid'),
+        'device' : oid,
+        'username': $scope.username
+                    },
+                onconfirm
+      )
+   }
+
+
+    }]);
+
 
 app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
     function ( $window, $resource, $cookies ,$location,$http){
-        var username =    $location.$$search.username;
-        var password =    $location.$$search.password;
+        var username = $location.$$search.username ;
+        var password = $location.$$search.password;
         var ischilli = $cookies.get('uamip');
         if (ischilli)
             var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
@@ -166,16 +250,18 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
         function onerror(error){
             console.log('login failed');
             console.log(error)
-           
-            $window.location.href=$cookies.get('linklogout') || 'http://ya.ru/'  ;
+            if ($cookies.get('linklogout') ) {
+              $window.location.href=$cookies.get('linklogout') ;
+            } else {
+              $location.path('/status/')
+            }
         }
 
-        function onchillilogin(response) {
+        function onlogin(response) {
 
             console.log(response)
                 if (response.redir.redirectionURL) {
                     console.log(response.redir.redirectionURL)
-
                     $window.location.href=response.redir.redirectionURL
                 }
                 else if (response.redir.originalURL) {
@@ -205,7 +291,7 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                     response:charpassw,
                 },
                 {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
-            ).get(onchillilogin);
+            ).get(onlogin);
             if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
 
@@ -219,7 +305,7 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                     username:username,
                     password:charpassw,
                 },
-                {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onchillilogin)
+                {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onlogin)
                 if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
 
@@ -321,6 +407,8 @@ app.controller('Status',  ['$rootScope','$resource','$cookies',
 
     function onstatus(response){
         $scope.status = response;
+        var logoutURL = response.redir.logoutURL ||$cookies.get('linklogout');
+        $scope.logoutURL = logoutURL.replace('/jsonp/','/');
     }
 
     if(ischilli) {
@@ -368,7 +456,7 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
 
     console.log($cookies.getAll())
 
-    $resource('/uam/config/:called.json').get(
+    $resource('/config/uam/:called.json').get(
     {called:$cookies.get('called')},
     function(response){
         $scope.config = response
@@ -385,3 +473,9 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
 }
 ]);
 
+
+app.filter('EmbedUrl', function ($sce) {
+    return function(videoId,ext) {
+      return $sce.trustAsResourceUrl('http://' + videoId + ext);
+    };
+  });

@@ -1,83 +1,47 @@
 <h1>Ограничения на портале</h1>
 
-<table class=table>
+<table class=table >
 
-<tbody ng-repeat="(id,router) in limits">
+<tbody ng-repeat="(id,limit) in limits" >
 <tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
-<i class="glyphicon glyphicon-menu-hamburger"></i>&nbsp; {{router._id}}
+<i class="glyphicon glyphicon-menu-hamburger"></i>&nbsp; {{limit._id}}
 </th>
+
   <td>
-  <i class="glyphicon glyphicon-download"></i>
-    <span ng-if="(router.rate == 0)">не ограничено</span>
-    <span ng-if="(router.rate == none)">default</span>
-    <span ng-if="router.rate">{{router.rate||""}} Mb/s</span>
+  {{default=limits.default;""}}
+    <i class="glyphicon glyphicon-download"></i>
+    <span ng-if="(limit.rate == 0)">не ограничено</span>
+    <span ng-if="(limit.rate == none)">по умолчанию {{default.rate}} Mb/s</span>
+    <span ng-if="limit.rate">{{limit.rate||""}} Mb/s</span>
 </td>
 <td>
   <i class="glyphicon glyphicon-time"></i>
-  <span ng-if="router.time">{{ router.time | interval }}</span>
-  <span ng-if="(router.time == 0)">не ограничено</span>
-  <span ng-if="(router.time == none)">default</span>
+  <span ng-if="limit.time">{{ limit.time | interval }}</span>
+  <span ng-if="(limit.time == 0)">не ограничено</span>
+  <span ng-if="(limit.time == none)">по умолчанию {{limits.default.time | interval }}</span>
 </td>
 <td>
-  <i class="glyphicon glyphicon-retweet"></i>  {{router.redir ||"default"}}
+  <i class="glyphicon glyphicon-retweet"></i>
+
+
+  <span ng-if="limit.redir != 0 && limit.redir != none">{{ limit.redir }}</span>
+  <span ng-if="(limit.redir == '0')">запрошенный URL</span>
+  <span ng-if="(limit.redir == none)">{{limits.default.redir}}</span>
+
 </td>
 
 </tr>
 <tr id="form{{id}}" class="collapse"><td colspan=4>
   <form class="form-horizontal" >
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Скорость</label>
-    <div class="col-sm-4">
-    <input type="number" class="form-control" ng-model="router.rate" min=0 step="0.1">
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">мегабит. Можно с десятыми. 0 снимает ограничение</p></div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Время</label>
-    <div class="col-sm-4">
-    <input type="number" class="form-control" ng-model="router.time" min=0>
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">
-          секунд. Сбрасывать авторизацию по истечении этого времени.
-    </p></div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label" >Устройства</label>
-    <div class="col-sm-4">
-    <input type="number" class="form-control" min="0" max="99" step=1 ng-model="router.ports">
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">
-           сессий одновременно. В пределах одного роутера.
-    </p>
-    </div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label" >Трафик</label>
-    <div class="col-sm-4">
-    <input type="number" class="form-control" min=0 ng-model="router.bytes" step=1>
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">мегабайт на сессию. Микротик и Чили.</p></div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label" >Редирект</label>
-    <div class="col-sm-4">
-    <input type="url" class="form-control" ng-model="router.redir">
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">ссылка</p></div>
-  </div>
-  <div class="form-group">
-    <label class="col-sm-2 control-label">Фильтр</label>
-    <div class="col-sm-4">
-    <input type="text" class="form-control" ng-model="router.filter">
-    </div>
-    <div class="col-sm-6"><p class="form-control-static">имя цепочки в фаерволе</p></div>
-  </div>
+
+    <div ng-include="'/static/admin-forms/limit.html'"></div>
+
       <div class="form-group">
     <label class="col-sm-2 control-label">Платный доступ</label>
     <div class="col-sm-4">
 
-    <nz-toggle ng-model="router.payable" tri-toggle val-false=0></nz-toggle>
+    <nz-toggle ng-model="limit.payable" tri-toggle val-false=0></nz-toggle>
     </div>
     <div class="col-sm-6"><p class="form-control-static">
           проверка оплаты по билингу.
@@ -85,7 +49,7 @@
     </p></div>
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
-    <input class="btn btn-primary" type="submit" ng-click="update(router)" value="Сохранить" />
+    <input class="btn btn-primary" type="submit" ng-click="update(limit)" value="Сохранить" />
     </div>
   </div>
 </form>
