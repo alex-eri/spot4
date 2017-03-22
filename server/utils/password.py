@@ -15,7 +15,7 @@ import base64, pyotp,time
 def getsms(phone,mac):
     return str(random.randrange(0,10**SMSLEN-1)).zfill(SMSLEN)
 
-def getpassw(username, mac, n=None, *a, **kw):
+def getpassw(username="", mac="", n=None, *a, **kw):
     base = base64.b32encode(":".join([username, mac, SALT]).encode('ascii'))
     otp = pyotp.TOTP(base)
     if n:

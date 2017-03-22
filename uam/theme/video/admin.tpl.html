@@ -1,0 +1,12 @@
+<fieldset  ng-include="'/uam/theme/default/admin.tpl.html'" />
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Видео</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_video||''}}"
+   class="form-control" ng-model="router.theme_video" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+ссылка на три файла с расширениями jpg,mp4,webm.
+</p></div>
+</div>

@@ -144,7 +144,8 @@ app.controller('Flows',  ['$scope','$resource','$routeParams',
                     {$group : {'_id': {'prot': '$prot', 'sensor':'$sensor'},
                       'bytes': {'$sum': '$dOctets'},
                       'pkts' : {'$sum': '$dPkts'}
-                      }}
+                      }},
+                      {'$sort':{  'bytes': -1 }}
                     ]
 
                     }

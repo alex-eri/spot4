@@ -3,8 +3,8 @@ USE_CYTHON = False
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
-packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms","lxml"] #,"pandas"]
-excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses"]
+packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms"] #,"pandas"]
+excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses","multidict._multidict"]
 
 build_exe_options = {
     "packages": packages,

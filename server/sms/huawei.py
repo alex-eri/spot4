@@ -44,9 +44,9 @@ class Client(_httpclient.Client):
 
     async def capacity(self):
         cap = await self._capacity_info()
-        inbox =  int(cap.find('LocalInbox'))
-        sent =  int(cap.find('LocalOutbox'))
-        capacity = int(cap.find('LocalMax'))
+        inbox =  int(cap.find('LocalInbox').text)
+        sent =  int(cap.find('LocalOutbox').text)
+        capacity = int(cap.find('LocalMax').text)
 
         ret = {
             'inbox': inbox,

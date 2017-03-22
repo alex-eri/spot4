@@ -13,15 +13,14 @@ def get_json(fu):
         return data
     return inner
 
-from lxml import objectify
-
 
 def get_xml(fu):
+    import xml.etree.ElementTree as ET
     async def inner(*a,**kw):
         c = await fu(*a,**kw)
         assert c.status == 200, 'status %d' % c.status
         resp = c.read()
-        data = objectify.fromstring(resp)
+        data = ET.fromstring(resp)
         return data
     return inner
 

@@ -26,6 +26,8 @@ def setup_log(config):
     level = logging.INFO
     if config.get('DEBUG'):
         level = logging.DEBUG
+    else:
+        level = logging.WARNING
 
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 

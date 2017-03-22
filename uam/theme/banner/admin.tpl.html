@@ -1,0 +1,23 @@
+<fieldset  ng-include="'/uam/theme/default/admin.tpl.html'" />
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Логотип</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_logo||''}}"
+   class="form-control" ng-model="router.theme_logo" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+ссылка на иконку 64х64.
+</p></div>
+</div>
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Обложка</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_cover||''}}"
+   class="form-control" ng-model="router.theme_cover" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+умещается в экран
+</p></div>
+</div>

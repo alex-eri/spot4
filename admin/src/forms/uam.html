@@ -39,6 +39,11 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 </div>
 <div class="col-sm-6"><p class="form-control-static">имя шаблона в uam/theme/</p></div>
 </div>
+
+<fieldset ng-if='router.theme' ng-include="'/uam/theme/' + (router.theme) + '/admin.tpl.html'">
+</fieldset>
+
+
 <div class="form-group">
 <label class="col-sm-2 control-label">Пароль</label>
 <div class="col-sm-4">
