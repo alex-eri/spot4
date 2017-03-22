@@ -9,4 +9,4 @@
         
 [submodule "Pywin32"]
 	path = Pywin32
-	url = git@github.com:SublimeText/Pywin32.git
+	url = https://github.com/SublimeText/Pywin32.git
