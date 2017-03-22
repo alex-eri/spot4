@@ -102,6 +102,7 @@ def premain():
     multiprocessing.freeze_support()
     import argparse
     import json
+    import codecs
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
     parser.add_argument('--config-dir', nargs='?', help='Config dir')
@@ -115,8 +116,8 @@ def premain():
     if args.config_dir:
         import utils.procutil
         utils.procutil.chdir(args.config_dir)
-
-    config = json.load(open('../config/config.json','r'))
+    
+    config = json.load(codecs.open('../config/config.json','r','utf-8'))
     setup_log(config)
 
     p = reindex.setup(config)
