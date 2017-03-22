@@ -7,3 +7,6 @@
 	url = https://github.com/alex-eri/ctypescrypto.git
 	branch = py3
         
+[submodule "Pywin32"]
+	path = Pywin32
+	url = git@github.com:SublimeText/Pywin32.git
