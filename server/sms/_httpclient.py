@@ -41,6 +41,7 @@ class Client(_sms.Client):
             data = urllib.parse.urlencode(data)
         if isinstance(data, str):
             uri = '?'.join((uri,data))
+        self.logger.debug(uri)
         req = urllib.request.Request(uri, headers=self.get_headers, method="GET")
         return self.urlopen(req)
 
@@ -49,11 +50,13 @@ class Client(_sms.Client):
             data = urllib.parse.urlencode(data,)
         if isinstance(data, str):
             data = data.encode(self.encoding)
+        self.logger.debug(data)
         req = urllib.request.Request(uri, data=data,
                                      headers=self.post_headers, method='POST')
         return self.urlopen(req)
 
     async def urlopen(self,req):
+        self.logger.debug(req)
         await self.sema.acquire()
         try: ret = urllib.request.urlopen(req,timeout=5)
         except Exception as e: error=e
