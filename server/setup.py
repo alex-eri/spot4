@@ -35,8 +35,9 @@ if os.name == 'posix':
 base = None
 base_service = base
 
-#if os.name == 'nt':
-#    base_service = 'Win32Service'
+if os.name == 'nt':
+    build_exe_options['packages'].extend(['win32'])
+    #base_service = 'Win32Service'
 
 executables = [Executable(
     script="server.py",

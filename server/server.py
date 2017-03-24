@@ -126,9 +126,9 @@ def premain():
     logger.info('done')
 
     if os.name == 'nt':
-        import utils.win32
+        import utils.windows
         if args.service:
-            utils.win32.startservice(sys.modules[__name__])
+            utils.windows.startservice(sys.modules[__name__])
         else:
 
             exeargs = sys.argv[1:]
@@ -139,7 +139,7 @@ def premain():
             print(argv)
             print(exeargs)
 
-            utils.win32.start(sys.modules[__name__],  argv, exeargs)
+            utils.windows.start(sys.modules[__name__],  argv, exeargs)
     else:
         main()
 
