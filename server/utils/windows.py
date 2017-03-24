@@ -1,6 +1,6 @@
-import win32serviceutil
-import win32service
-import win32event
+from win32 import win32serviceutil
+from win32 import win32service
+from win32 import win32event
 import os
 import sys
 import time
