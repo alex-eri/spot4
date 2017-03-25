@@ -39,7 +39,7 @@ def setup(services=[]):
     import codecs
     manager = Manager()
 
-    config = json.load(codecs.open('../config/config.json','r'))
+    config = json.load(codecs.open('../config/config.json','r','utf-8'))
 
     config['numbers'] = manager.list()
 

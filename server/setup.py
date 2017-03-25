@@ -32,11 +32,19 @@ if os.name == 'posix':
         ]
     )
 
+
 base = None
 base_service = base
 
 if os.name == 'nt':
     build_exe_options['packages'].extend(['win32serviceutil'])
+    build_exe_options['include_files'].extend(
+        [
+            'openssl.exe',
+            'libeay32.dll',
+            'ssleay32.dll'
+        ]
+    )
     #base_service = 'Win32Service'
 
 executables = [Executable(
