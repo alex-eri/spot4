@@ -3,7 +3,6 @@ from . import _httpclient
 import logging
 import time
 import datetime
-from dateutil.tz import tzlocal
 from utils.codecs import trydecodeHexUcs2,encodeUcs2
 import pytz
 

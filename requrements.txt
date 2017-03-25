@@ -5,3 +5,5 @@ cx-Freeze>5.0
 motor>=0.6.2
 pyotp>=2.1.1
 pytz
+git+https://github.com/alex-eri/ctypescrypto.git@py3#egg=ctypescrypto
+
