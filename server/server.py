@@ -86,7 +86,8 @@ def main():
         setup(services)
         start()
 
-    signal.signal(signal.SIGUSR1, restart)
+    if os.name == 'posix':
+        signal.signal(signal.SIGUSR1, restart)
 
     setup(services)
     start()
