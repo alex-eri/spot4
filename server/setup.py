@@ -36,7 +36,7 @@ base = None
 base_service = base
 
 if os.name == 'nt':
-    build_exe_options['packages'].extend(['win32'])
+    build_exe_options['packages'].extend(['win32serviceutil'])
     #base_service = 'Win32Service'
 
 executables = [Executable(
