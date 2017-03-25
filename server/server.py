@@ -38,9 +38,14 @@ def setup(services=[]):
     import json
     manager = Manager()
 
-    config = json.load(open('../config/config.json','r'))
+    config = json.load(codecs.open('../config/config.json','r'))
 
     config['numbers'] = manager.list()
+
+    p = reindex.setup(config)
+    p[0].start()
+    p[0].join()
+    logger.info('done')
 
     services.extend( radius.setup(config) )
     services.extend( api.setup(config) )
@@ -55,6 +60,7 @@ def setup(services=[]):
 
 
 def main():
+
     import signal
     services = []
 
@@ -110,27 +116,25 @@ def premain():
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
+        parser.add_argument('--fg',
+                             dest='fg', action='store_true', help='Windows foreground')
     args,argv = parser.parse_known_args()
 
 
+    import utils.procutil
     if args.config_dir:
-        import utils.procutil
         utils.procutil.chdir(args.config_dir)
-    
-    config = json.load(codecs.open('../config/config.json','r','utf-8'))
-    setup_log(config)
+    else:
+        utils.procutil.chdir(args.config_dir)
 
-    p = reindex.setup(config)
-    p[0].start()
-    p[0].join()
-    logger.info('done')
 
     if os.name == 'nt':
-        import utils.windows
+        if args.fg:
+            main()
         if args.service:
+            import utils.windows
             utils.windows.startservice(sys.modules[__name__])
         else:
-
             exeargs = sys.argv[1:]
             for i in argv:
                 exeargs.remove(i)
@@ -138,7 +142,7 @@ def premain():
             argv.insert(0,sys.argv[0])
             print(argv)
             print(exeargs)
-
+            import utils.windows
             utils.windows.start(sys.modules[__name__],  argv, exeargs)
     else:
         main()
