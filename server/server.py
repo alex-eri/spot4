@@ -36,6 +36,7 @@ def setup(services=[]):
     import api
     import radius
     import json
+    import codecs
     manager = Manager()
 
     config = json.load(codecs.open('../config/config.json','r'))
@@ -107,8 +108,6 @@ def premain():
     import multiprocessing,os
     multiprocessing.freeze_support()
     import argparse
-    import json
-    import codecs
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
     parser.add_argument('--config-dir', nargs='?', help='Config dir')
@@ -125,8 +124,15 @@ def premain():
     if args.config_dir:
         utils.procutil.chdir(args.config_dir)
     else:
-        utils.procutil.chdir(args.config_dir)
-
+        if getattr(sys, 'frozen', False):
+            # frozen
+            dir_ = os.path.dirname(sys.executable)
+        else:
+            # unfrozen
+            dir_ = os.path.dirname(os.path.realpath(__file__))
+        utils.procutil.chdir(
+            dir_
+            )
 
     if os.name == 'nt':
         if args.fg:
