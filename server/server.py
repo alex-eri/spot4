@@ -62,7 +62,7 @@ def setup(services=[]):
 
 def main():
 
-    import signal
+    import signal,os
     services = []
 
     def start():
