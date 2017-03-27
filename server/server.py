@@ -3,7 +3,7 @@ import reindex
 
 #sys.path.insert(0, '.')
 
-from multiprocessing import Manager, Queue
+from multiprocessing import Manager
 
 logger = logging.getLogger('main')
 debug = logger.debug
@@ -71,6 +71,7 @@ def main():
 
     def stop():
         for proc in services:
+            debug('terminate %s' % proc.name)
             proc.terminate()
 
     def wait(n=1):
@@ -134,6 +135,11 @@ def premain():
         utils.procutil.chdir(
             dir_
             )
+
+    import json,codecs
+    config = json.load(codecs.open('../config/config.json','r','utf-8'))
+    setup_log(config)
+
 
     if os.name == 'nt':
         if args.fg:

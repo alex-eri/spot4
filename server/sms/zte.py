@@ -191,7 +191,7 @@ class Client(_httpclient.Client):
             m['to'] = self.callie
             try:
                 date = pytz.datetime.datetime.strptime(m['date'].rsplit(',',1)[0], '%y,%m,%d,%H,%M,%S' )
-                date = date.replace(tzinfo=tzlocal())
+                date = pytz.datetime.datetime.astimezone(date)
             except Exception as e:
                 self.logger.warning(e)
             else:

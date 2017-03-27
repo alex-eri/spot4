@@ -35,6 +35,7 @@ if os.name == 'posix':
 
 base = None
 base_service = base
+initScript="ConsoleSetLibPath"
 
 if os.name == 'nt':
     build_exe_options['packages'].extend(['win32serviceutil'])
@@ -45,18 +46,21 @@ if os.name == 'nt':
             'ssleay32.dll'
         ]
     )
+    initScript="Console"
     #base_service = 'Win32Service'
+
+
 
 executables = [Executable(
     script="server.py",
-    initScript="ConsoleSetLibPath",
+    initScript=initScript,
     base=base_service,
     targetName='spot4.exe',
     copyright='Aleksandr Stepanov, eerie.su'
     ),
     Executable(
     "migrate.py",
-    initScript="ConsoleSetLibPath",
+    initScript=initScript,
     base=base,
     targetName='migrate.exe'
     )

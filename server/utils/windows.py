@@ -6,6 +6,9 @@ import sys
 import time
 import servicemanager
 
+import logging
+logger = logging.getLogger('service')
+
 class ServiceLauncher(win32serviceutil.ServiceFramework):
     _svc_name_ = 'Spot4'
     _svc_display_name_ ='Spot4 Hotspot controller'
@@ -28,10 +31,21 @@ class ServiceLauncher(win32serviceutil.ServiceFramework):
 
 def startservice(main,exeargs=[]):
     ServiceLauncher.main = main
+    print(main)
+    logger.debug(main)
     ServiceLauncher._exe_args_ += " ".join(exeargs)
+    logger.debug('init')
     servicemanager.Initialize()
+    logger.debug('prepare')
     servicemanager.PrepareToHostSingle(ServiceLauncher)
-    servicemanager.StartServiceCtrlDispatcher()
+    logger.debug('start')
+    try:
+        servicemanager.StartServiceCtrlDispatcher()
+    except Exception as e:
+        logger.critical(e)
+        raise e
+    else:
+        logger.debug('started')
 
 def start(main,argv,exeargs):
     ServiceLauncher.main = main
