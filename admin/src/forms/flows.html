@@ -1,0 +1,15 @@
+<h1>Траффик <small ng-if=startdate  class="form-inline">
+       <input class="form-control" type="month" ng-model=startdate ng-change="changestart(startdate,stopdate)" /> &mdash;
+       <input class="form-control" type="month" ng-model=stopdate ng-change="changestop(startdate,stopdate)" />
+     </small></h1>
+
+<div ng-repeat="stat in protocols track by $index">
+<div ng-repeat="(id,flows) in stat">
+  <h3>{{id}}</h3>
+<p ng-repeat="flow in flows track by $index">
+   {{flow._id.prot | proto }}/{{flow._id.port|| (flow._id.sensor |ip ) || "все"}} : {{flow.bytes| mega}}B , {{flow.pkts| mega}} пакетов
+</p>
+
+</div>
+</div>
+

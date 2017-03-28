@@ -475,7 +475,7 @@ app.run(['$route','$location','$rootScope','$resource','$cookies',
 
 
 app.filter('EmbedUrl', function ($sce) {
-    return function(videoId,ext) {
-      return $sce.trustAsResourceUrl('http://' + videoId + ext);
+    return function(uri,ext) {
+      return $sce.trustAsResourceUrl(uri + ext);
     };
   });

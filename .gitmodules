@@ -1,9 +1,0 @@
-[submodule "numpy"]
-	path = numpy
-	url = https://github.com/numpy/numpy.git
-
-[submodule "ctypescrypto"]
-	path = ctypescrypto
-	url = https://github.com/alex-eri/ctypescrypto.git
-	branch = py3
-        

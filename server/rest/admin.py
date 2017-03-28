@@ -21,5 +21,7 @@ async def config(request):
 @json
 async def kill(request):
     ppid = os.getppid()
-    os.kill(ppid, signal.SIGUSR1)
-    return {'response':'ok'}
+    if os.name == 'posix':
+        os.kill(ppid, signal.SIGUSR1)
+        return {'response':'ok'}
+    return {'error':'unimplemented in '+os.name}

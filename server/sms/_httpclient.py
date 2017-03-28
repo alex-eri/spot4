@@ -13,15 +13,14 @@ def get_json(fu):
         return data
     return inner
 
-from lxml import objectify
-
 
 def get_xml(fu):
+    import xml.etree.ElementTree as ET
     async def inner(*a,**kw):
         c = await fu(*a,**kw)
         assert c.status == 200, 'status %d' % c.status
         resp = c.read()
-        data = objectify.fromstring(resp)
+        data = ET.fromstring(resp)
         return data
     return inner
 
@@ -42,6 +41,7 @@ class Client(_sms.Client):
             data = urllib.parse.urlencode(data)
         if isinstance(data, str):
             uri = '?'.join((uri,data))
+        self.logger.debug(uri)
         req = urllib.request.Request(uri, headers=self.get_headers, method="GET")
         return self.urlopen(req)
 
@@ -50,11 +50,13 @@ class Client(_sms.Client):
             data = urllib.parse.urlencode(data,)
         if isinstance(data, str):
             data = data.encode(self.encoding)
+        self.logger.debug(data)
         req = urllib.request.Request(uri, data=data,
                                      headers=self.post_headers, method='POST')
         return self.urlopen(req)
 
     async def urlopen(self,req):
+        self.logger.debug(req)
         await self.sema.acquire()
         try: ret = urllib.request.urlopen(req,timeout=5)
         except Exception as e: error=e

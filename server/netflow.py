@@ -8,11 +8,15 @@ import time
 logger = logging.getLogger('netflow')
 debug = logger.debug
 
+from utils.codecs import ip2int
+
 FLUSHINTERVAL = 60
 FLUSHLEVEL = 16<<10
 
 FLOW5HEADER = "!HHIIII"
 FLOW5DATA = "!IIIHHIIIIHHxBBBHHBBxx"
+
+IPFIXHEADER = "!HHIII"
 
 #srcaddr,dstaddr,nexthop,input,output,dPkts,dOctets,first,last,srcport,dstport,tcp_flags,prot,tos,as[4]
 
@@ -26,6 +30,7 @@ Fields =  set(['sensor','sequence'] + Flow5Fields)
 insert_cb = None
 
 from utils.codecs import ip2int
+from collections import defaultdict
 
 #import numpy as np
 #import pandas as pd
@@ -54,12 +59,55 @@ class Netflow5(asyncio.DatagramProtocol):
         loop = asyncio.get_event_loop()
         self._flush_future = loop.create_task(self.store())
 
-    def datagram_received(self, data, addr):
+        self.templates = defaultdict(dict)
 
-        assert data[1] == 5
+
+
+    def datagram_received(self, data, addr):
+        if data[1] == 5:
+            self.nf5(data, addr)
+        #elif data[1] == 10:
+        #    self.ipfix(data, addr)
+
+
+    def on_ipfix_data(self,sensor_ident, data,set_length):
+        return -255
+
+    def on_ipfix_template(self,sensor_ident, data,set_length):
+        x=0
+
+        def tmplt_gen(x, count):
+            for i in range(count):
+                yield struct.unpack_from("!HH", data, x )
+
+        while set_length:
+            ident, count = struct.unpack_from("!HH", data, x )
+            x+=8
+            self.templates[sensor_ident][ident] = list(tmplt_gen(x, count))
+            x+=8*count
+
+    def ipfix(self, data, addr):
+        ver,count,timestamp,sequence,observation_id = struct.unpack_from(IPFIXHEADER, data)
+
+        x = 16
+        sensor = ip2int(addr[0])
+        sensor_ident = (sensor,addr[1],observation_id)
+
+        while count > 0 and x < len(data):
+            ident, set_length = struct.unpack_from("!HH", data, x )
+            if ident == 2:
+                count -= self.on_ipfix_template(sensor_ident, data[x+4:x+set_length],set_length)
+            else:
+                count -= self.on_ipfix_data(sensor_ident, data[x+4:x+set_length],set_length)
+
+            x+=set_length
+
+    def nf5(self, data, addr):
         ver,count,uptime,timestamp,nanosecs,sequence = struct.unpack_from(FLOW5HEADER, data)
 
         delta = timestamp*1000 + nanosecs//1000000 - uptime
+
+        sensor = ip2int(addr[0])
 
         def flow_gen():
             for i in range(count):
@@ -69,7 +117,7 @@ class Netflow5(asyncio.DatagramProtocol):
                 flow = dict(zip(Flow5Fields,x))
                 #flow['first'] += delta
                 #flow['last'] += delta
-                sensor = ip2int(addr[0])
+
                 flow.update({'sensor': sensor , 'sequence': sequence + i })
                 yield flow
 

@@ -3,7 +3,7 @@ import reindex
 
 #sys.path.insert(0, '.')
 
-from multiprocessing import Manager, Queue
+from multiprocessing import Manager
 
 logger = logging.getLogger('main')
 debug = logger.debug
@@ -26,6 +26,8 @@ def setup_log(config):
     level = logging.INFO
     if config.get('DEBUG'):
         level = logging.DEBUG
+    else:
+        level = logging.WARNING
 
     logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
 
@@ -34,11 +36,17 @@ def setup(services=[]):
     import api
     import radius
     import json
+    import codecs
     manager = Manager()
 
-    config = json.load(open('../config/config.json','r'))
+    config = json.load(codecs.open('../config/config.json','r','utf-8'))
 
     config['numbers'] = manager.list()
+
+    p = reindex.setup(config)
+    p[0].start()
+    p[0].join()
+    logger.info('done')
 
     services.extend( radius.setup(config) )
     services.extend( api.setup(config) )
@@ -53,7 +61,8 @@ def setup(services=[]):
 
 
 def main():
-    import signal
+
+    import signal,os
     services = []
 
     def start():
@@ -62,6 +71,7 @@ def main():
 
     def stop():
         for proc in services:
+            debug('terminate %s' % proc.name)
             proc.terminate()
 
     def wait(n=1):
@@ -77,7 +87,8 @@ def main():
         setup(services)
         start()
 
-    signal.signal(signal.SIGUSR1, restart)
+    if os.name == 'posix':
+        signal.signal(signal.SIGUSR1, restart)
 
     setup(services)
     start()
@@ -99,7 +110,6 @@ def premain():
     import multiprocessing,os
     multiprocessing.freeze_support()
     import argparse
-    import json
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
     parser.add_argument('--config-dir', nargs='?', help='Config dir')
@@ -107,27 +117,37 @@ def premain():
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
+        parser.add_argument('--fg',
+                             dest='fg', action='store_true', help='Windows foreground')
     args,argv = parser.parse_known_args()
 
 
+    import utils.procutil
     if args.config_dir:
-        import utils.procutil
         utils.procutil.chdir(args.config_dir)
+    else:
+        if getattr(sys, 'frozen', False):
+            # frozen
+            dir_ = os.path.dirname(sys.executable)
+        else:
+            # unfrozen
+            dir_ = os.path.dirname(os.path.realpath(__file__))
+        utils.procutil.chdir(
+            dir_
+            )
 
-    config = json.load(open('../config/config.json','r'))
+    import json,codecs
+    config = json.load(codecs.open('../config/config.json','r','utf-8'))
     setup_log(config)
 
-    p = reindex.setup(config)
-    p[0].start()
-    p[0].join()
-    logger.info('done')
 
     if os.name == 'nt':
-        import utils.win32
+        if args.fg:
+            main()
         if args.service:
-            utils.win32.startservice(sys.modules[__name__])
+            import utils.windows
+            utils.windows.startservice(sys.modules[__name__])
         else:
-
             exeargs = sys.argv[1:]
             for i in argv:
                 exeargs.remove(i)
@@ -135,8 +155,8 @@ def premain():
             argv.insert(0,sys.argv[0])
             print(argv)
             print(exeargs)
-
-            utils.win32.start(sys.modules[__name__],  argv, exeargs)
+            import utils.windows
+            utils.windows.start(sys.modules[__name__],  argv, exeargs)
     else:
         main()
 

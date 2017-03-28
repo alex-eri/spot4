@@ -3,8 +3,8 @@ USE_CYTHON = False
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
-packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms","lxml"] #,"pandas"]
-excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses"]
+packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms"] #,"pandas"]
+excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses","multidict._multidict"]
 
 build_exe_options = {
     "packages": packages,
@@ -32,22 +32,35 @@ if os.name == 'posix':
         ]
     )
 
+
 base = None
 base_service = base
+initScript="ConsoleSetLibPath"
 
-#if os.name == 'nt':
-#    base_service = 'Win32Service'
+if os.name == 'nt':
+    build_exe_options['packages'].extend(['win32serviceutil'])
+    build_exe_options['include_files'].extend(
+        [
+            'openssl.exe',
+            'libeay32.dll',
+            'ssleay32.dll'
+        ]
+    )
+    initScript="Console"
+    #base_service = 'Win32Service'
+
+
 
 executables = [Executable(
     script="server.py",
-    initScript="ConsoleSetLibPath",
+    initScript=initScript,
     base=base_service,
     targetName='spot4.exe',
     copyright='Aleksandr Stepanov, eerie.su'
     ),
     Executable(
     "migrate.py",
-    initScript="ConsoleSetLibPath",
+    initScript=initScript,
     base=base,
     targetName='migrate.exe'
     )

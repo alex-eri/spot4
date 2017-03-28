@@ -10,6 +10,10 @@ async def get_uam_config(request,profile):
         conf = await request.app['db'].uamconfig.find_one({'_id':profile})
         if conf:
             conf = {k: v for k, v in conf.items() if v or v is False }
+
+            if not conf.get('theme',False):
+                conf = {k: v for k, v in conf.items() if not k.startswith('theme_')}
+
             default.update(conf)
         return default
 
