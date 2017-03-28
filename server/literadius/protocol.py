@@ -87,6 +87,35 @@ class BaseRadius(asyncio.DatagramProtocol):
 #        else:
 #            self.respond(resp, caller)
 
+    async def check_mac(self, req, mac=None):
+
+        callee = req.decode(rad.CalledStationId)
+        if not mac:
+            mac = req.decode(rad.CallingStationId)
+
+        uam = await self.db.uamconfig.find_one(
+            {
+                '_id':callee,
+                'macauth': True
+            }
+        )
+
+        debug(uam)
+
+        if uam:
+            acc = await self.db.accounting.find_one(
+                {
+                    'username': {"$ne": mac},
+                    'caller':mac,
+                    'callee':callee,
+                    'start_date' : {'$gt': datetime.utcnow() - timedelta(days=(uam.get('macdays',1) ))}
+                },
+                 sort=[("$natural", pymongo.DESCENDING)]
+                )
+            #TODO: test last one
+            debug(acc)
+            return acc
+
     def db_cb(self,r,e,*a,**kw):
         if e:
             logger.error(e.__repr__())
@@ -370,32 +399,6 @@ class Auth:
         elif req.check_password(psw):
             return True
 
-    async def check_mac(self, req, mac):
-
-        callee = req.decode(rad.CalledStationId)
-
-        uam = await self.db.uamconfig.find_one(
-            {
-                '_id':callee,
-                'macauth': True
-            }
-        )
-
-        debug(uam)
-
-        if uam:
-            acc = await self.db.accounting.find_one(
-                {
-                    'username': {"$ne": mac},
-                    'caller':mac,
-                    'callee':callee,
-                    'start_date' : {'$gt': datetime.utcnow() - timedelta(days=(uam.get('macdays',1) ))}
-                }
-                )
-            #TODO: last one
-            debug(acc)
-            return acc
-
     async def handle_auth(self,req,caller):
         code = rad.AccessReject
         reply = req.reply(code)
@@ -422,7 +425,7 @@ class Auth:
 
         if req.get(rad.CallingStationId) == req.get(rad.UserName):
             debug('mac')
-            success = await self.check_mac(req, mac)
+            success = await self.check_mac(req,mac)
             if success:
                 code = rad.AccessAccept
                 user = {'_id':success['username']}
