@@ -61,6 +61,14 @@ run_up() {
 		ipt -I FORWARD -o $DHCPIF -j DROP
 	    fi
 
+modprobe ipt_NETFLOW.ko 
+sysctl -w net.netflow.protocol=5
+sysctl -w net.netflow.sndbuf=1048576
+sysctl -w net.netflow.destination=${HS_RADIUS}
+
+ipt -I FORWARD -t mangle -i $TUNTAP -j NETFLOW
+ipt -I FORWARD -t mangle -o $TUNTAP -j NETFLOW
+
 	    ipt -I FORWARD -i $TUNTAP -j forwarding_rule
 	    ipt -I FORWARD -o $TUNTAP -j forwarding_rule
 

@@ -78,11 +78,103 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/voucher.html'
         ,controller: 'Voucher'
       }).
+      when('/flows/', {
+        templateUrl: '/static/admin-forms/flows.html'
+        ,controller: 'Flows'
+      }).
+
       otherwise({
         redirectTo: '/online/'
       });
   }
 ]);
+
+
+app.controller('Flows',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
+
+        function load(startdate,stopdate) {
+
+            $resource('/db/collector').save(
+                [
+
+                {aggregate:
+                {pipeline:
+                [
+                    {$match: {
+                      first:{
+                        $gte: Math.floor(startdate.getTime()/1000),
+                        $lte: Math.floor(stopdate.getTime()/1000)
+                      }
+                    }},
+
+                    { $facet: {
+
+                    Upload:  [
+                      {$match : { dstport : { $lt: 10000} }},
+                      {$group : {'_id': {'prot': '$prot', 'port': '$dstport'},
+                        'bytes': {'$sum': '$dOctets'},
+                        'pkts' : {'$sum': '$dPkts'}
+                      }},
+                      {'$sort':{  'bytes': -1 }},
+                      {'$limit': 10}
+                    ],
+
+                    Download:  [
+                      {$match : { srcport : { $lt: 10000} }},
+                      {$group : {'_id': {'prot': '$prot', 'port': '$srcport'},
+                        'bytes': {'$sum': '$dOctets'},
+                        'pkts' : {'$sum': '$dPkts'}
+                      }},
+                      {'$sort':{  'bytes': -1 }},
+                      {'$limit': 10}
+                    ],
+
+                    p2p : [
+                    {$match : { srcport : { $gte: 10000}, dstport : { $gte: 10000}}},
+                    {$group : {'_id': {'prot': '$prot', 'sensor':'$sensor'},
+                      'bytes': {'$sum': '$dOctets'},
+                      'pkts' : {'$sum': '$dPkts'}
+                      }},
+                      {'$sort':{  'bytes': -1 }},
+                      {'$limit': 10}
+                    ],
+
+                    Total : [
+                    {$group : {'_id': {'prot': '$prot', 'sensor':'$sensor'},
+                      'bytes': {'$sum': '$dOctets'},
+                      'pkts' : {'$sum': '$dPkts'}
+                      }},
+                      {'$sort':{  'bytes': -1 }}
+                    ]
+
+                    }
+
+                    }
+                    ],
+                  allowDiskUse:true,
+                  cursor:{}
+                 }
+                }
+            ], function(response){
+
+                $scope.protocols = response.response;
+            }
+            )
+            }
+
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
+
+        intervalFactory($scope,$routeParams,load)
+
+
+    }]);
+
+
+
+
 
 app.controller('Config',  ['$scope','$resource',
     function ( $scope, $resource ){
@@ -656,6 +748,7 @@ switch(input) {
     case 1: return 'icmp'
     case 2: return 'igmp'
     case 47: return 'gre'
+    case 41: return 'IPv6-in-IP'
     default:return input;
     }
   };
@@ -672,6 +765,23 @@ if (transformedInput.length > 4) {
               transformedInputView += transformedInput.slice(i);
               }
     return transformedInputView;
+  };
+})
+
+
+app.filter('ip',  function() {
+  return function(num) {
+  if ( num ) {
+  var d = num%256;
+    for (var i = 3; i > 0; i--)
+    {
+        num = Math.floor(num/256);
+        d = num%256 + '.' + d;
+    }
+    return d;
+  } else {
+    return false;
+  }
   };
 })
 

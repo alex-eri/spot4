@@ -20,7 +20,8 @@ class Client(_httpclient.Client):
         return self.request(self.base_url,data)
 
     async def send(self,phone,text,*a,**kw):
-        text = urllib.parse.quote(text)
+        #text = urllib.parse.quote(text)
+        text = urllib.parse.quote(text, safe='/%',encoding=self.encoding)
         try:
             res = await self._send_sms(phone,text)
             #assert res.get("result") == "success", 'Modem cant send message'
