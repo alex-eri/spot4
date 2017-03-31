@@ -1,0 +1,16 @@
+/ip firewall address-list add list=yandex address=5.45.192.0/18
+/ip firewall address-list add list=yandex address=5.255.192.0/18
+/ip firewall address-list add list=yandex address=37.9.64.0/18
+/ip firewall address-list add list=yandex address=37.140.128.0/18
+/ip firewall address-list add list=yandex address=77.88.0.0/18
+/ip firewall address-list add list=yandex address=84.201.128.0/18
+/ip firewall address-list add list=yandex address=87.250.224.0/19
+/ip firewall address-list add list=yandex address=93.158.128.0/18
+/ip firewall address-list add list=yandex address=95.108.128.0/17
+/ip firewall address-list add list=yandex address=100.43.64.0/19
+/ip firewall address-list add list=yandex address=130.193.32.0/19
+/ip firewall address-list add list=yandex address=141.8.128.0/18
+/ip firewall address-list add list=yandex address=178.154.128.0/17
+/ip firewall address-list add list=yandex address=199.21.96.0/22
+/ip firewall address-list add list=yandex address=199.36.240.0/22
+/ip firewall address-list add list=yandex address=213.180.192.0/19
