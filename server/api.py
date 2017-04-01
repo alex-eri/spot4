@@ -38,8 +38,11 @@ def setup_web(config):
 
     #ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
     #ssl_context.load_cert_chain('../config/server.pem')
+    try:
+        web.run_app(app,port=port)#,ssl_context=ssl_context)
+    except Exception as e:
+        logger.error(e)
 
-    web.run_app(app,port=port)#,ssl_context=ssl_context)
 
 def setup(config):
     web = Process(target=setup_web, args=(config,))

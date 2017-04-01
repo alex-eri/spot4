@@ -63,13 +63,26 @@ def setup(services=[]):
 def main():
 
     import signal,os
+    from multiprocessing import Lock
+
+    restart_lock = Lock()
+
     services = []
 
-    def start():
+    def start(*a):
         for proc in services:
             proc.start()
 
-    def stop():
+    def stop(*a):
+        for proc in services:
+            if proc.is_alive():
+                if os.name == 'posix':
+                    os.kill(proc.pid, signal.SIGINT)
+                elif os.name == 'nt':
+                    os.kill(proc.pid, signal.CTRL_C_EVENT)
+                    os.kill(proc.pid, signal.CTRL_C_EVENT)
+
+    def kill(*a):
         for proc in services:
             debug('terminate %s' % proc.name)
             proc.terminate()
@@ -79,16 +92,20 @@ def main():
             proc.join(n)
 
     def restart(*a):
-        debug(a)
-        stop()
-        wait(5)
+        restart_lock.acquire()
+        #stop()
+        #wait(10)
+        kill()
+        wait(10)
         while services:
-            del services[0]
+            del services[-1]
         setup(services)
         start()
+        restart_lock.release()
 
     if os.name == 'posix':
         signal.signal(signal.SIGUSR1, restart)
+
 
     setup(services)
     start()
@@ -98,11 +115,11 @@ def main():
         try:
             wait()
         except Exception as e:
-            debug(e)
+            logger.error(e)
             sys.running = False
             break
 
-    stop()
+    kill()
 
 
 def premain():
