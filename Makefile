@@ -87,6 +87,9 @@ opera:
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"
 
 
-IPonAS:
-	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' | aggregate > ./$$AS-ip
 
+ASN = $$(cat ./${AS}-asn)
+
+IPonAS:
+	whois -h whois.radb.net -i origin -T route ${ASN} | grep route: | awk '{print $$2}' | aggregate > ./${AS}-ip
+	cat ./${AS}-ip | awk '{print "/ip firewall address-list add list={$AS} address="$$1}'
