@@ -4,10 +4,10 @@ from aiohttp import web
 
 
 
-async def get_uam_config(request,profile):
-    default = await request.app['db'].uamconfig.find_one({'_id':'default'})
+async def get_uam_config(db,profile):
+    default = await db.uamconfig.find_one({'_id':'default'})
     if default:
-        conf = await request.app['db'].uamconfig.find_one({'_id':profile})
+        conf = await db.uamconfig.find_one({'_id':profile})
         if conf:
             conf = {k: v for k, v in conf.items() if v or v is False }
 
@@ -19,7 +19,7 @@ async def get_uam_config(request,profile):
 
 async def uam_config(request):
     profile = request.match_info.get('profile')
-    config = await get_uam_config(request,profile)
+    config = await get_uam_config(request.app['db'],profile)
     if config:
         return config
     raise web.HTTPNotFound()

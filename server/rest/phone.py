@@ -61,7 +61,7 @@ async def phone_handler(request):
 
     upd = {'try': 0 }
 
-    uam = await get_uam_config(request, DATA.get('profile','default'))
+    uam = await get_uam_config(request.app['db'], DATA.get('profile','default'))
 
     debug(uam)
     uam = uam or {}

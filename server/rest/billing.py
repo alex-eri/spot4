@@ -45,8 +45,10 @@ async def voucher(request):
         tarif = await request.app['db'].tarif.find_one({'_id':voucher['tarif']})
         invoices = request.app['db'].invoice
 
-        stop = now +timedelta(days=tarif['duration'])
-
+        if tarif.get('duration') > 0:
+            stop = now +timedelta(days=tarif['duration'])
+        else:
+            stop = 0
 
         q = {   'username': voucher['username'],
                 'paid':True,

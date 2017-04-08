@@ -23,6 +23,8 @@ def index(config):
         db.voucher.ensure_index( [ ("voucher",1), ("callee",1),("closed",1) ], unique=True, sparse=True ),
         db.voucher.ensure_index( [ ("series",1)], unique=False),
         db.collector.ensure_index( [ ("first",1)], unique=False),
+        db.collector.rad_sessions( [ ("stop",-1)], unique=False),
+        db.collector.rad_sessions( [ ("caller",1),("callee",1)], unique=False),
     ]
     tasks = [ asyncio.ensure_future(t) for t in tasks ]
     storage.logger.info('reindexing')
