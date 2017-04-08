@@ -520,7 +520,7 @@ class Auth:
             reply.code = code
             limit = await self.reduce_limits(session['username'],session['callee'],limit,session['start'])
             reply = await self.set_limits(limit,req,reply)
-            if reply.code == code:
+            if reply.code == rad.AccessAccept:
                 return reply
 
 
@@ -532,7 +532,7 @@ class Auth:
             limit = await self.get_limits(user,req,reply)
             reply = await self.set_limits(limit,req,reply)
 
-            expires = limit.get('time',43200)
+            expires = limit.get('time',3600)
 
             await self.db.rad_sessions.insert({
 
