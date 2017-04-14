@@ -1,4 +1,4 @@
-all: clean ht_docs
+all: clean ht_docs compress
 
 bower_components:
 	npm install
@@ -13,6 +13,8 @@ ht_docs: bower_components
 	install -d ./ht_docs/icons
 	cp ./icons/* ./ht_docs/icons/
 	install ./css/animations.css ./ht_docs/css/
+
+	rm -rf ./ht_docs/static
 
 	cp bower_components/bootstrap/dist/css/*.min* ./ht_docs/css/
 	cp bower_components/nz-toggle/dist/nz-toggle.min.css ./ht_docs/css/
@@ -42,6 +44,9 @@ ht_docs: bower_components
 		bower_components/bootstrap/dist/js/bootstrap.min.js \
 		bower_components/nz-toggle/dist/nz-toggle.min.js \
 		> ./ht_docs/js/libadmin.js
+
+ht_docs/static:
+	ln -s . ./ht_docs/static
 
 clean:
 	rm -rf ht_docs

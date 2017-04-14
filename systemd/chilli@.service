@@ -1,0 +1,16 @@
+[Unit]
+Description=Hotspot Coova Chilli
+
+[Service]
+Type=forking
+ExecStartPre=/bin/mkdir -p /var/run/chilli/%i
+ExecStartPre=/bin/mkdir -p /var/lib/chilli/%i
+ExecStartPre=/sbin/ifup %i
+ExecStart=/usr/sbin/chilli -c /etc/chilli/%i.conf --pidfile /var/run/chilli/%i.pid --cmdsocket /var/run/chilli/%i.sock --unixipc /var/run/chilli/%i.ipc --statedir /var/lib/chilli/%i/
+PIDFile=/var/run/chilli/%i.pid
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target
+

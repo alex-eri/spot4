@@ -19,7 +19,7 @@ build: server/build
 	mkdir -p ./build/uam/{config,theme}/
 	cp -R ./uam/config/spot4.json ./build/uam/config/spot4.json.example
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
-	gzip -9 -r ./build/static/ht_docs/
+	gzip -9 --keep -r ./build/static/ht_docs/
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/
 

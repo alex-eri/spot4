@@ -60,8 +60,6 @@ class Client(_sms.Client):
         try: ret = urllib.request.urlopen(req,timeout=5)
         except Exception as e: error=e
         else:
-            ret = ret.read()
-            self.logger.info(ret)
             return ret
         finally: self.sema.release()
         raise error

@@ -18,6 +18,28 @@
    class="form-control" ng-model="router.theme_cover" />
 </div>
 <div class="col-sm-6"><p class="form-control-static">
-умещается в экран
+задает фон страницы.
 </p></div>
+
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Размещение</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_css_bgsize||''}}"
+   class="form-control" ng-model="router.theme_css_bgsize" />
+</div>
+
+<select class="form-control"
+ng-model="router.theme_css_bgsize" >
+<option value="">по умолчанию: {{limits.default.theme_css_bgsize||'contain'}}</option>
+<option value="contain">уместить</option>
+<option value="cover">растянуть</option>
+</select>
+
+<div class="col-sm-6"><p class="form-control-static">
+Уместить - масштабирует изображение с сохранением пропорций таким образом, чтобы картинка целиком поместилась внутрь блока.
+Растянуть - масштабирует изображение с сохранением пропорций так, чтобы его ширина или высота равнялась ширине или высоте блока.
+</p></div>
+
+
 </div>

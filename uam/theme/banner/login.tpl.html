@@ -1,12 +1,17 @@
 <link rel="stylesheet" href="/static/css/bootstrap-theme.min.css" />
 
 <style>
+
+  body,html {
+    height:100%;
+  }
+
   body {
     background-image:url({{config.theme_cover| EmbedUrl :''}}?for={{$cookies.get('called')}}&router={{$cookies.get('nasid')}});
     background-attachment: fixed;
     background-position: center;
     background-repeat: no-repeat;
-    background-size: contain;
+    background-size: {{config.theme_css_bgsize || "contain" }};
     background-color:#121238;
   }
 
