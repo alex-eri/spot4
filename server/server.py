@@ -145,6 +145,7 @@ def premain():
     else:
         if getattr(sys, 'frozen', False):
             # frozen
+            print('frozen')
             dir_ = os.path.dirname(sys.executable)
         else:
             # unfrozen
@@ -152,6 +153,8 @@ def premain():
         utils.procutil.chdir(
             dir_
             )
+
+    print(dir_)
 
     import json,codecs
     config = json.load(codecs.open('../config/config.json','r','utf-8'))
