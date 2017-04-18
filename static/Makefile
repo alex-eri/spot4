@@ -26,12 +26,15 @@ ht_docs: bower_components
 		> ./ht_docs/js/compat.js
 
 	node_modules/uglify-js/bin/uglifyjs \
-		bower_components/angular/angular.min.js \
-		bower_components/angular-route/angular-route.min.js \
-		bower_components/angular-resource/angular-resource.min.js \
+		bower_components/es5-shim/es5-shim.js \
+		bower_components/es5-shim/es5-sham.js \
+		bower_components/angular/angular.js \
+		bower_components/angular-route/angular-route.js \
+		bower_components/angular-resource/angular-resource.js \
 		bower_components/angular-cookies/angular-cookies.js \
 		js/md5.js \
 		> ./ht_docs/js/libuam.js
+
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/jquery/dist/jquery.min.js \
 		bower_components/moment/moment.js \
