@@ -4,7 +4,7 @@
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
 
-    <input class="btn btn-primary" type="submit" ng-click="create()" value="Новый" />
+    <input class="btn btn-success" type="submit" ng-click="create()" value="Новый" />
 
     </div>
   </div>
@@ -12,14 +12,14 @@
 </form>
 
 <section ng-repeat="(id,tarif) in tarifs" >
-<h2>{{tarif.name|| "Новый"}}</h2>
-
-
+<h2 data-target="#form{{id}}" data-toggle="collapse" >
+  <i class="glyphicon glyphicon-menu-hamburger"></i>
+  {{tarif.name|| "Новый"}}</h2>
 
 {{default=limits.default;limit=tarif.limit;""}}
 
 
-	  <form class="form-horizontal" >
+	  <form id="form{{id}}" class="collapse form-horizontal" >
 
 <div class="form-group">
 <label class="col-sm-2 control-label">Название</label>
@@ -27,7 +27,7 @@
 <input type="text" class="form-control" ng-model="tarif.name" required>
 </div>
 <div class="col-sm-6"><p class="form-control-static">
-{{tarif}}
+
 </p></div>
 </div>
 
@@ -52,6 +52,8 @@ required min=0 step="0.1">
     </div>
   </div>
 </form>
+
+
 </section>
 
 

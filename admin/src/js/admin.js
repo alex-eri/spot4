@@ -469,21 +469,26 @@ app.controller('Limit',  ['$scope','$resource',
 app.controller('Voucher',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource ,$routeParams){
 
-            $scope.vouchers = []
+      $scope.vouchers = []
     	$resource('/db/voucher').save(
 
     	 [
                 {aggregate:[[
-                { $match : {'series': parseInt($routeParams.series)}},
-                { $sort  : { closed : -1 } },
+                { $match : {
+                      'series': parseInt($routeParams.series),
+                      'closed': {'$gte': {'$date': new Date().getTime()}}
+                      }
+                },
+                { $sort  : { closed : 1 } },
                 { $group : {
                 	_id: { series:"$series" },
                     vouchers :{'$push':'$$CURRENT'},
                     series:{$first:"$series"} ,
                 	  tarif:{$first:"$tarif"} ,
                 	  callee:{$first:"$callee"},
-                    count: { $sum: {$cond : [ "$closed", 1, 0 ] }},
-                    total: {  $sum: 1}
+                    count: { $sum: {$cond : [ "$invoiced", 1, 0 ] }},
+                    total: { $sum: 1},
+                    expires: { $max: "$closed"}
                 }},
                 { $lookup :{
                 	from:'tarif',
@@ -512,6 +517,7 @@ app.controller('Vouchers',  ['$scope','$resource',
         $scope.vouchers = []
         $scope.tarifs = []
         $scope.routers = []
+        $scope.expire = 32;
 
     	$resource('/db/tarif').save(
             [
@@ -532,13 +538,13 @@ app.controller('Vouchers',  ['$scope','$resource',
     	$resource('/db/voucher').save(
                 	 [
                 {aggregate:[[
-                {'$match': {'closed': false}},
+                {'$match': {'closed': {'$gte': {'$date': new Date().getTime()}}}},
                 {'$group': {
                 	_id: { series:"$series" },
                 	  series:{$first:"$series"} ,
                 	  tarif:{$first:"$tarif"} ,
                 	  callee:{$first:"$callee"},
-                	  count:{$sum:1}
+                    count: { $sum: {$cond : [ "$invoiced", 1, 0 ] }},
                 }},
                 {'$lookup':{
                 	from:'tarif',
@@ -556,9 +562,13 @@ app.controller('Vouchers',  ['$scope','$resource',
             $scope.vouchers = response.response
         });
 
-        $scope.create = function(callee,tarif){
+        $scope.create = function(callee,tarif,expire){
     	    $resource('/admin/voucher/create.json').save(
-    	    {tarif:tarif._id.$oid,callee:callee._id},
+    	    {
+    	      tarif:tarif._id.$oid,
+    	      callee:callee._id,
+    	      expire:expire
+    	    },
     	    function(response){
     	      var s = {
     	        series: response.series,

@@ -27,7 +27,7 @@ async def voucher(request):
         'voucher' : DATA.get('voucher'),
         'callee': {'$in' :[callee ,'default']},
         'invoiced': { '$exists': False},
-        'closed': False
+        'closed': {'$gt': now}
         }
 
     upd = {
@@ -35,7 +35,7 @@ async def voucher(request):
         'nas': DATA.get('nas'),
         'device' : DATA.get('device'),
         'username': DATA.get('username'),
-        'closed':True
+        'closed': now,
         }
     updq = {
         '$set': upd
@@ -82,12 +82,13 @@ async def generate(request):
     db = request.app['db']
 
     series = await nextseries(db)
+    till =  datetime.utcnow() + timedelta(days=DATA.get('expire',32))
 
     q = {
         'tarif' : bson.ObjectId(DATA.get('tarif')),
         'callee': DATA.get('callee'),
         'series': series,
-        'closed': False
+        'closed': till
         }
 
     datas = []

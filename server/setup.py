@@ -49,7 +49,7 @@ if os.name == 'nt':
     initScript="Console"
     #base_service = 'Win32Service'
 
-
+initScript="Console"
 
 executables = [Executable(
     script="server.py",

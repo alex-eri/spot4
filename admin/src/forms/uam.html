@@ -43,11 +43,11 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 <fieldset ng-if='router.theme' ng-include="'/uam/theme/' + (router.theme) + '/admin.tpl.html'">
 </fieldset>
 
-
+<fieldset>
 <div class="form-group">
 <label class="col-sm-2 control-label">Пароль</label>
 <div class="col-sm-4">
-       <nz-toggle  tri-toggle
+       <nz-toggle tri-toggle
         val-null=undefined
         ng-model="router.password"></nz-toggle>
 </div>
@@ -59,7 +59,7 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 <div class="form-group">
 <label class="col-sm-2 control-label">Вход по MAC</label>
 <div class="col-sm-4">
-       <nz-toggle
+       <nz-toggle tri-toggle
         val-null=undefined
         ng-model="router.macauth"></nz-toggle>
 </div>
@@ -67,6 +67,10 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 разрешит вход без страницы для зарегистрированных устройств на время сессии.
 </p></div>
 </div>
+
+  </fieldset>
+
+<fieldset>
 
 <div class="form-group">
 <label class="col-sm-2 control-label">Не проверять номер</label>
@@ -124,7 +128,7 @@ pattern=".*\{code\}.*" />
 </p></div>
 </div>
 
-
+</fieldset>
 
 <div class="form-group">
 <div class="col-sm-offset-2 col-sm-10">
