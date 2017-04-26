@@ -39,9 +39,10 @@ def find_libs():
     files =  [ find_library(x) for x in LIBS ]
 
     prefix = [
-        "/usr/lib/x86_64-linux-gnu/" #deb,
+        "/usr/lib/x86_64-linux-gnu/", #deb
         "/lib/x86_64-linux-gnu/",
-        "/usr/lib/" #arch,
+        "/usr/lib/", #arch
+        "."
         ]
 
     for p in prefix:
