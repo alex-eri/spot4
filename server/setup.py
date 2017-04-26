@@ -23,7 +23,10 @@ build_exe_options = {
 }
 
 
-LIBS = [
+
+
+def find_libs():
+    LIBS = [
             'ssl',
             'crypto',
             'xslt',
@@ -32,21 +35,29 @@ LIBS = [
             'z',
             'exslt'
         ]
-
-def find_libs():
     from ctypes.util import find_library
-    return [ find_library(x) for x in LIBS ]
+    files =  [ find_library(x) for x in LIBS ]
+
+    prefix = [
+        "/usr/lib/x86_64-linux-gnu/" #deb,
+        "/lib/x86_64-linux-gnu/",
+        "/usr/lib/" #arch,
+        ]
+
+    for p in prefix:
+        for f in files:
+            a = os.path.join(p,f)
+            if os.path.isfile(a):
+                yield a
+
 
 
 import os
 if os.name == 'posix':
 
-    prefix = "/usr/lib/x86_64-linux-gnu/" #deb
-    #prefix = "/usr/lib/" #arch
-
     build_exe_options['include_files'].extend(
 
-        [ os.path.join(prefix,x) for x in find_libs() ]
+        [ x for x in find_libs() ]
     )
 
 print(build_exe_options['include_files'])
