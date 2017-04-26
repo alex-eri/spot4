@@ -3,6 +3,11 @@ USE_CYTHON = False
 from cx_Freeze import Executable
 from cx_Freeze import setup as cx_setup
 
+import sys
+sys.path.insert(1,'lib/python3.6')
+sys.path.insert(1,'lib/python36.zip')
+
+
 packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms"] #,"pandas"]
 excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses","multidict._multidict"]
 
@@ -17,21 +22,34 @@ build_exe_options = {
     'constants':{}
 }
 
+
+LIBS = [
+            'ssl',
+            'crypto',
+            'xslt',
+            'xml2',
+            'lzma',
+            'z',
+            'exslt'
+        ]
+
+def find_libs():
+    from ctypes.util import find_library
+    return [ find_library(x) for x in LIBS ]
+
+
 import os
 if os.name == 'posix':
+
+    prefix = "/usr/lib/x86_64-linux-gnu/" #deb
+    #prefix = "/usr/lib/" #arch
+
     build_exe_options['include_files'].extend(
 
-        [
-            '/usr/lib/libssl.so.1.0.0',
-            '/usr/lib/libcrypto.so.1.0.0',
-            '/usr/lib/libxslt.so.1',
-            '/usr/lib/libxml2.so.2',
-            '/usr/lib/liblzma.so.5',
-            '/usr/lib/libz.so.1',
-            '/usr/lib/libexslt.so.0'
-        ]
+        [ os.path.join(prefix,x) for x in find_libs() ]
     )
 
+print(build_exe_options['include_files'])
 
 base = None
 base_service = base
@@ -49,7 +67,7 @@ if os.name == 'nt':
     initScript="Console"
     #base_service = 'Win32Service'
 
-initScript="Console"
+#initScript="Console"
 
 executables = [Executable(
     script="server.py",
