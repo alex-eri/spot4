@@ -82,7 +82,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/flows.html'
         ,controller: 'Flows'
       }).
-
+      when('/administrator/', {
+        templateUrl: '/static/admin-forms/administrator.html'
+        ,controller: 'Admins'
+      }).
       otherwise({
         redirectTo: '/online/'
       });
@@ -202,6 +205,73 @@ app.controller('Config',  ['$scope','$resource',
 
 
 
+app.controller("Admins", ['$scope','$resource',
+    function ( $scope, $resource ){
+
+        $scope.uams = {}
+        //$scope.admins = [{'_id': '5904ffdeec988d449aa10a7f', 'name': 'admin', 'password': 'testing123'}];
+
+
+        $resource('/db/administrator').save(
+
+        [
+            {find:{}}
+        ], function(response){
+            $scope.admins = response.response
+
+            }
+        )
+
+
+        $resource('/db/accounting').save(
+
+        [
+            {distinct:['callee']}
+        ], function(response){
+            $scope.uams = response.response
+
+            }
+        )
+
+        $scope.create = function() {
+            $scope.admins.push( {name : "username", password:""} )
+
+        }
+
+
+        $scope.update = function(admin){
+
+            if (admin._id) {
+              $resource('/db/administrator').save([{
+              find_and_modify:{
+                  query:{_id:admin._id},
+                  update:admin,
+                  new:true
+                  }
+              }], function(response){
+                  console.log(response)
+                  admin = response.response
+              })
+
+            }
+
+            else {
+
+              $resource('/db/administrator').save([{
+              insert:[admin]
+              }], function(response){
+                  console.log(response)
+                  admin._id = response.response
+              })
+
+            }
+
+            return admin
+        }
+
+
+
+}]);
 
 
 app.controller('Sms',  ['$scope','$resource',
@@ -306,6 +376,10 @@ app.controller('Online',  ['$scope','$resource',
         }
         )
     }]);
+
+
+
+
 
 
 function intervalFactory($scope,$routeParams,load) {
@@ -624,7 +698,7 @@ app.controller('Tarifs',  ['$scope','$resource',
         }
 
 
-        $scope.update = function(tarif){
+        $scope.update = function(tarif){ //TODO плохой инсерт. перетирается один тариф
 
             var id = tarif._id
             var q = {}

@@ -14,7 +14,7 @@
     </tr>
   </thead>
 
-<tbody ng-repeat="n in online.response track by t(n._id)">
+<tbody ng-repeat="n in online.response | orderBy: ['-_id.year','-_id.month','-_id.day'] track by t(n._id)">
 
   <tr>
     <th colspan=2>Всего сессий: {{n.count}}</th>

@@ -42,6 +42,10 @@ async def phone_handler(request):
     except:
         raise web.HTTPForbidden()
 
+    uam = await get_uam_config(request.app['db'], DATA.get('profile','default'))
+    debug(uam)
+    uam = uam or {}
+
     q = dict(
         phone = phone,
         mac = DATA.get('mac').upper().replace('-',':')
@@ -52,7 +56,7 @@ async def phone_handler(request):
             'seen':now,
             'ua': request.headers.get('User-Agent','')
             },
-        '$setOnInsert':{'registred': now},
+        '$setOnInsert':{'registred': now, 'callee': uam.get('_id','default') },
         #, "$set" {'sensor': request.ip }
         }
 
@@ -60,11 +64,6 @@ async def phone_handler(request):
     debug(device.__repr__())
 
     upd = {'try': 0 }
-
-    uam = await get_uam_config(request.app['db'], DATA.get('profile','default'))
-
-    debug(uam)
-    uam = uam or {}
 
 
     count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-REREG)}} ).count()
@@ -102,7 +101,13 @@ async def phone_handler(request):
                 text = tmpl.format(code=code)
 
                 #request.app['config']['smsq'].put((phone,text))
-                request.app['db'].sms_sent.insert({'phone':phone,'text':text,'sent':now})
+                request.app['db'].sms_sent.insert(
+                    {
+                        'phone':phone,
+                        'text':text,
+                        'sent':now,
+                        'callee': uam.get('_id','default')
+                    })
 
         updq = {
             '$set': upd,

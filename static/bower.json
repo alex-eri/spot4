@@ -19,6 +19,7 @@
     "ua-parser-js": "0.7.x",
     "nz-toggle": "2.x.x",
     "html5shiv":"3.x.x",
-    "json2":""
+    "json2":"",
+    "es5-shim":""
   }
 }

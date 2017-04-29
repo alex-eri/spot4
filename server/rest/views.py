@@ -29,6 +29,85 @@ def add_cmd(pipe,command,args):
         ret = r(*a,**kw)
         return ret
 
+
+async def filter_for_admin(administrator,collection,data,db):
+
+    filters = administrator.get('filters',None)
+
+    field = False
+
+    if collection in ["tarif","users","sms_received","collector"] and filters:
+        raise web.HTTPForbidden()
+
+    if not filters: return
+
+    command = next(iter(data[0].keys()))
+
+    if not command: return
+
+    if collection in ["accounting",'devices','sms_sent']:
+        field = 'callee'
+
+    elif collection in ['limit','uamconfig']:
+        field = '_id'
+        if command == 'find':
+            filters.append('default')
+
+    elif collection == "administrator" and filters:
+        if command == 'find':
+            field = '_id'
+            filters = [administrator.get('_id')]
+        elif command == 'find_and_modify':
+            if data[0][command].get('update'):
+                if data[0][command]['update'].get('$set'):
+                    data[0][command]['update']['$set'].pop('filters',None)
+                    data[0][command]['update']['$set'].pop('_id',None)
+                else:
+                    upd = data[0][command]['update']
+                    upd.pop('filters',None)
+                    upd.pop('_id',None)
+                    data[0][command]['update'] = {'$set': upd }
+            else:
+                raise web.HTTPForbidden()
+        else:
+            raise web.HTTPForbidden()
+
+    if not field: return
+
+    if command in ['find','find_and_modify']:
+        opts = data[0][command]
+
+        if not opts:
+            data[0][command] = [ {}]
+            data[0][command][0][field] = {'$in':filters}
+
+        elif type(opts) == dict:
+            data[0][command]['query'][field] = {'$in':filters}
+
+        elif type(opts) == list:
+            data[0][command][0][field] = {'$in':filters}
+
+    elif command == 'distinct':
+        data.insert(0,{'find': [{field: {'$in':filters} }]})
+
+    elif command == 'aggregate':
+        data[0][command][0].insert(0, {'$match': {field: {'$in':filters}} })
+
+    elif command == 'insert':
+        raise web.HTTPForbidden()
+    else:
+        raise web.HTTPForbidden()
+
+    """
+    find
+    find_and_modify
+    distinct
+    aggregate
+    """
+
+
+
+
 @json
 async def db_handler(request):
     collection = request.match_info.get('collection')
@@ -39,6 +118,9 @@ async def db_handler(request):
     debug(data)
 
     cursor = request.app['db'][collection]
+
+    await filter_for_admin(request.administrator, collection, data, request.app['db'])
+    logger.debug(data)
 
     for cmd in data:
         for c,a in cmd.items():

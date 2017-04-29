@@ -16,18 +16,17 @@ build: server/build
 	mkdir -p ./build/static/ht_docs
 	cp -R ./server/build/exe* ./build/bin
 	mkdir -p ./build/mikrotik
-	mkdir -p ./build/uam/{config,theme}/
-	cp -R ./uam/config/spot4.json ./build/uam/config/spot4.json.example
+	mkdir -p ./build/uam/theme/
 	cp -R ./static/ht_docs/* ./build/static/ht_docs/
 	gzip -9 --keep -r ./build/static/ht_docs/
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/
 
 build/config:
-	mkdir -p ./build/{config,systemd}/
-	cp ./systemd/spot.service ./build/systemd/
+	mkdir -p ./build/config/
+	mkdir -p ./build/systemd/
+	install -m 664 ./systemd/spot.service ./build/systemd/
 	install -m 664 ./config/config.json ./build/config/config.json.example
-	ln -s ../uam/config/ ./build/config/uam
 
 
 clean:
@@ -37,7 +36,7 @@ clean:
 	make -C ./static clean
 
 start:
-	cd ./build/exe.* ; ./spot4.exe
+	cd ./build/bin* ; ./spot4.exe
 
 
 

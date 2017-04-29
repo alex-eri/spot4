@@ -1,6 +1,8 @@
 from aiohttp import web
 from bson.json_util import dumps, loads
 
+from .logger import logger
+
 import base64
 
 def check_auth(handler):
@@ -10,8 +12,14 @@ def check_auth(handler):
         else:
             method, secret = request.headers.get('AUTHORIZATION').split()
             login, password = base64.b64decode(secret).decode('utf-8').split(':')
-            if request.app['config']['API_SECRET'].get(login) != password:
+
+            coll = request.app['db'].administrator
+
+            request.administrator = await coll.find_one({'name':login,'password':password})
+            logger.debug(request.administrator)
+            if not request.administrator:
                 raise web.HTTPForbidden()
+
         return await handler(request)
     return middleware_handler
 

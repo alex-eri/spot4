@@ -1,5 +1,15 @@
 from multiprocessing import Process
 
+def admins(db,config):
+    for (k,v) in config['API_SECRET'].items():
+        yield db.administrator.find_and_modify(
+            {'name':k},
+            {"$setOnInsert":{'password':v}},
+            upsert=True)
+    config.pop('API_SECRET')
+
+
+
 def index(config):
     import storage
     import asyncio
@@ -26,6 +36,8 @@ def index(config):
         db.rad_sessions.ensure_index( [ ("stop",-1)], unique=False),
         db.rad_sessions.ensure_index( [ ("caller",1),("callee",1)], unique=False),
     ]
+
+    tasks.extend(admins(db,config))
     tasks = [ asyncio.ensure_future(t) for t in tasks ]
     storage.logger.info('reindexing')
     asyncio.wait(tasks)

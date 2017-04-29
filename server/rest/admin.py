@@ -3,6 +3,8 @@ import os
 import signal
 from .logger import *
 
+from aiohttp import web
+
 @json
 async def list_templates(request):
     thedir = "../uam/theme"
@@ -11,6 +13,11 @@ async def list_templates(request):
 
 @json
 async def config(request):
+
+    if request.administrator.get('filters'):
+        conf = {}
+        conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
+        return {'response': conf}
 
     conf = request.app['config'].copy()
     conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
@@ -21,6 +28,9 @@ async def config(request):
 
 @json
 async def kill(request):
+    if request.administrator.get('filters'):
+        raise web.HTTPForbidden()
+
     if os.name == 'posix':
         ppid = os.getppid()
         debug(ppid)
