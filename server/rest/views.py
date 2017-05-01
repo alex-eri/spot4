@@ -53,24 +53,27 @@ async def filter_for_admin(administrator,collection,data,db):
         if command == 'find':
             filters.append('default')
 
-    elif collection == "administrator" and filters:
-        if command == 'find':
-            field = '_id'
-            filters = [administrator.get('_id')]
-        elif command == 'find_and_modify':
-            if data[0][command].get('update'):
-                if data[0][command]['update'].get('$set'):
-                    data[0][command]['update']['$set'].pop('filters',None)
-                    data[0][command]['update']['$set'].pop('_id',None)
+    elif collection == "administrator":
+        if administrator.get('superadmin',None):
+            return
+        elif filters:
+            if command == 'find':
+                field = '_id'
+                filters = [administrator.get('_id')]
+            elif command == 'find_and_modify':
+                if data[0][command].get('update'):
+                    if data[0][command]['update'].get('$set'):
+                        data[0][command]['update']['$set'].pop('filters',None)
+                        data[0][command]['update']['$set'].pop('_id',None)
+                    else:
+                        upd = data[0][command]['update']
+                        upd.pop('filters',None)
+                        upd.pop('_id',None)
+                        data[0][command]['update'] = {'$set': upd }
                 else:
-                    upd = data[0][command]['update']
-                    upd.pop('filters',None)
-                    upd.pop('_id',None)
-                    data[0][command]['update'] = {'$set': upd }
+                    raise web.HTTPForbidden()
             else:
                 raise web.HTTPForbidden()
-        else:
-            raise web.HTTPForbidden()
 
     if not field: return
 

@@ -16,6 +16,7 @@
   }
 
   .pulse {
+    cursor: pointer;
     -webkit-animation: pulsate 3s ease-out;
     -webkit-animation-iteration-count: infinite;
 }
@@ -43,7 +44,7 @@
 
 <div ng-if="goform" class="pull-right" id="regwindow">
 <center>
-  <h1><img src="{{config.theme_logo| EmbedUrl :''}}"  width=64 height=64></h1>
+  <h1><img src="{{config.theme_logo|| '/static/icons/favicon.png'}}"  width=64 height=64></h1>
 </center>
 <center ng-show="($location.$$path != '/register/') || $root.comfirmed">
     <div ng-view></div>

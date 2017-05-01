@@ -47,9 +47,23 @@ ng-model="admin.filters" ng-options="uam for uam in uams">
 </select>
     </div>
     <div class="col-sm-6"><p class="form-control-static">
-      Доступна всё админка если фильтр пустой.
+      Доступна вся админка, если фильтр пустой.
     </p></div>
   </div>
+
+
+<div class="form-group" ng-if=!router.nosms >
+<label class="col-sm-2 control-label">Суперадмин</label>
+<div class="col-sm-4">
+
+<nz-toggle ng-model="admin.superadmin"></nz-toggle>
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+Правка администраторов
+</p></div>
+</div>
+
 
 <div class="form-group">
 <div class="col-sm-offset-2 col-sm-10">

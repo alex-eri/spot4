@@ -13,7 +13,7 @@
 "DEBUG": true,
 "LOGFILE": null,
 "DB": {
-	"SERVER": "mongodb://127.0.0.1:27017",
+	"SERVER": "mongodb://192.168.236.34:27017",
 	"NAME":"spot4"
 },
 "SMS": {
