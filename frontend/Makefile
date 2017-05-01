@@ -14,9 +14,9 @@ node_modules:
 	cp ./icons/* ../static/icons/
 	install ./css/animations.css ../static/css/
 
-	cp bower_components/bootstrap/dist/css/*.min* ./ht_docs/css/
-	cp bower_components/nz-toggle/dist/nz-toggle.min.css ./ht_docs/css/
-	cp bower_components/bootstrap/dist/fonts/* ./ht_docs/fonts/
+	cp bower_components/bootstrap/dist/css/*.min* ../static/css/
+	cp bower_components/nz-toggle/dist/nz-toggle.min.css ../static/css/
+	cp bower_components/bootstrap/dist/fonts/* ../static/fonts/
 
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/html5shiv/dist/html5shiv.min.js \
