@@ -29,7 +29,10 @@ def setup_log(config):
     else:
         level = logging.WARNING
 
-    logging.basicConfig(format = FORMAT, level=level, filename = config.get('LOGFILE'))
+    logfile = config.get('LOGFILE', None)
+
+    #TODO https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
+    logging.basicConfig(format = FORMAT, level=level, filename = logfile )
 
 
 def setup(services=[]):

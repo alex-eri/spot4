@@ -1,6 +1,6 @@
 from multiprocessing import Process, current_process
 import logging
-import literadius.constants as rad
+
 
 logger = logging.getLogger('radius')
 debug = logger.debug
@@ -8,6 +8,7 @@ TTL = 56
 BILLING = False
 
 async def close_sessions(db):
+    import literadius.constants as rad
     return await db.accounting.update(
                 {'termination_cause':{'$exists': False}},
                 {'$set':{'termination_cause': rad.TCAdminReboot}},
