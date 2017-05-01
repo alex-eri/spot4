@@ -1,4 +1,4 @@
-all: clean ht_docs compress
+all: clean ../static compress
 
 bower_components:
 	npm install
