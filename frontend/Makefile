@@ -6,15 +6,13 @@ bower_components:
 node_modules:
 	npm install
 
-ht_docs: bower_components
-	install -d ./ht_docs/js
-	install -d ./ht_docs/css
-	install -d ./ht_docs/fonts
-	install -d ./ht_docs/icons
-	cp ./icons/* ./ht_docs/icons/
-	install ./css/animations.css ./ht_docs/css/
-
-	rm -rf ./ht_docs/static
+../static: bower_components
+	install -d ../static/js
+	install -d ../static/css
+	install -d ../static/fonts
+	install -d ../static/icons
+	cp ./icons/* ../static/icons/
+	install ./css/animations.css ../static/css/
 
 	cp bower_components/bootstrap/dist/css/*.min* ./ht_docs/css/
 	cp bower_components/nz-toggle/dist/nz-toggle.min.css ./ht_docs/css/
@@ -23,7 +21,7 @@ ht_docs: bower_components
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/html5shiv/dist/html5shiv.min.js \
 		bower_components/json2/json2.js \
-		> ./ht_docs/js/compat.js
+		> ../static/js/compat.js
 
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/es5-shim/es5-shim.js \
@@ -33,7 +31,7 @@ ht_docs: bower_components
 		bower_components/angular-resource/angular-resource.js \
 		bower_components/angular-cookies/angular-cookies.js \
 		js/md5.js \
-		> ./ht_docs/js/libuam.js
+		> ../static/js/libuam.js
 
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/jquery/dist/jquery.min.js \
@@ -46,22 +44,20 @@ ht_docs: bower_components
 		bower_components/angular-i18n/angular-locale_ru-ru.js \
 		bower_components/bootstrap/dist/js/bootstrap.min.js \
 		bower_components/nz-toggle/dist/nz-toggle.min.js \
-		> ./ht_docs/js/libadmin.js
-
-ht_docs/static:
-	ln -s . ./ht_docs/static
+		> ../static/js/libadmin.js
 
 clean:
-	rm -rf ht_docs
+	rm -rf ../static
 
 fullclean:
 	rm -rf bower_components node_modules
 
-compress: ht_docs node_modules
+compress: ../static node_modules
 	./node_modules/.bin/html-minifier --html5 --keep-closing-slash \
 		--collapse-whitespace \
 		--conservative-collapse \
 		--collapse-inline-tag-whitespace \
 		--remove-tag-whitespace \
 		--sort-attributes --minify-css --file-ext html \
-		--input-dir ./ht_docs/ --output-dir ./ht_docs/
+		--input-dir ../static/ --output-dir ../static
+	gzip -9 --keep -r -f ../static/

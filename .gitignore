@@ -6,6 +6,7 @@ dist/*
 */node_modules/*
 */bower_components/*
 */ht_docs/*
+static/*
 mikrotik/hotspot/*
 *.c
 *.pem

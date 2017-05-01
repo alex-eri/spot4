@@ -8,17 +8,16 @@ server/build:
 	make -C ./server
 
 build: server/build
-	make -C ./static
+	make -C ./frontend
 	make -C ./uam
 	make -C ./mikrotik
 	make -C ./admin
-	make -C ./static compress
-	mkdir -p ./build/static/ht_docs
+	make -C ./frontend compress
+	mkdir -p ./build/static/
 	cp -R ./server/build/exe* ./build/bin
 	mkdir -p ./build/mikrotik
 	mkdir -p ./build/uam/theme/
-	cp -R ./static/ht_docs/* ./build/static/ht_docs/
-	gzip -9 --keep -r ./build/static/ht_docs/
+	cp -R ./static/* ./build/static/
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/
 
@@ -33,7 +32,7 @@ clean:
 	rm -rf ./server/build
 	rm -rf ./build
 	rm -rf ./dist
-	make -C ./static clean
+	make -C ./frontend clean
 
 start:
 	cd ./build/bin* ; ./spot4.exe

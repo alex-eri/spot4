@@ -32,8 +32,7 @@ def routers(app):
 
     app.router.add_get('/config/uam/{profile}.json', json(uam_config))
     app.router.add_static('/uam/theme/', path='../uam/theme', name='uam-theme')
-    #app.router.add_static('/uam/config/', path='../uam/config', name='uam-config')
-    app.router.add_get('/uam/{path:.*}', index_factory("../static/ht_docs/","uam.html"))
+    app.router.add_get('/uam/{path:.*}', index_factory("../static/","uam.html"))
 
 
     app.router.add_get('/admin/themes.json', check_auth(list_templates))
@@ -43,9 +42,10 @@ def routers(app):
 
     app.router.add_post('/admin/voucher/create.json', check_auth(generate))
 
-    app.router.add_get('/admin/{path:.*}', check_auth(index_factory("../static/ht_docs/","admin.html")))
-    app.router.add_static('/static/', path='../static/ht_docs/', name='static')
+    app.router.add_get('/admin/{path:.*}', check_auth(index_factory("../static/","admin.html")))
 
+    app.router.add_static('/static/', path='../static/', name='static')
+    app.router.add_static('/data/', path='../data/', name='static-data')
 
     app.router.add_route('POST', '/billing/voucher', voucher)
 
