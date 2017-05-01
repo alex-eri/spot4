@@ -1,4 +1,4 @@
-all: clean ../static compress
+all: clean ../static
 
 bower_components:
 	npm install

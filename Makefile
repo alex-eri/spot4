@@ -8,7 +8,7 @@ server/build:
 	make -C ./server
 
 build: server/build
-	make -C ./frontend
+	make -C ./frontend ../static
 	make -C ./uam
 	make -C ./mikrotik
 	make -C ./admin
