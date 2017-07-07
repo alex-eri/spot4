@@ -22,6 +22,7 @@ build: server/build
 	cp -R ./mikrotik/* ./build/mikrotik/
 
 build/config:
+	mkdir -p ./build/data/
 	mkdir -p ./build/config/
 	mkdir -p ./build/systemd/
 	install -m 664 ./systemd/spot.service ./build/systemd/

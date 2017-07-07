@@ -37,3 +37,7 @@ async def kill(request):
         os.kill(ppid, signal.SIGUSR1)
         return {'response':'ok'}
     return {'error':'unimplemented in '+os.name}
+
+@json
+async def whoami(request):
+    return {'response':request.administrator}

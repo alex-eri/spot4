@@ -24,14 +24,26 @@ TZ = format(-time.timezone//3600,"+d")
 INTERVAL = 5
 
 
-async def handle(m,db):
+async def handle(m,db,client):
     t = retoken.search(m['text'])
+    q = None
+
     if t:
         q = dict(phone=m['phone'], sms_waited=t.group())
-        await db.devices.update(q, {
-                      '$set':{ 'checked': True },
-                      '$currentDate':{'check_date':True}
-                    })
+
+    elif client.anytext:
+        now = datetime.utcnow()
+        delta = timedelta(seconds=client.anytext)
+        q = dict(phone=m['phone'], seen={'$gt': now - delta})
+        m['text'] += "// любой текст //"
+
+    if q:
+        device = await db.devices.find_and_modify(q, {
+              '$set':{ 'checked': True },
+              '$currentDate':{'check_date':True}
+            }, upsert=False)
+        if device:
+            m['callee'] = device.get('callee','default')
     logger.info(m)
 
 async def worker(client,db):
@@ -39,7 +51,7 @@ async def worker(client,db):
         msgs = []
         #async
         for m in await client.unread():
-            await handle(m,db)
+            await handle(m,db,client)
             msgs.append(m)
 
         if msgs: db.sms_received.insert(msgs)

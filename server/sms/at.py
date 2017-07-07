@@ -1,3 +1,52 @@
+TERMINATOR = b'\r'
+CTRLZ = b'\x1a'
+
+
+import asyncio
+import serial_asyncio
+import serial.threaded
+
+
+#http://pyserial.readthedocs.io/en/latest/pyserial_api.html
+
+class Output(serial.threaded.LineReader):
+    TERMINATOR = b'\r'
+
+    def connection_made(self, transport):
+        self.transport = transport
+
+    def handle_line(self, data):
+        print('data received', repr(data))
+
+    def connection_lost(self, exc):
+        print('port closed')
+        #TODO reconnect
+
+class Modem:
+    def __init__(self,port, cb, baudrate=115200,*a,**kw):
+        pass
+
+
+
+class Client(_sms.Client):
+    def __init__(self,*a,**kw):
+        self.messages = []
+        self.logger = logging.getLogger('at')
+        baudrate = kw.pop('baudrate',115200)
+        device = kw.pop('uiport')
+        self.callie = kw.get('number','')
+        self.modem = Modem(device,baudrate)
+
+        super(Client,self).__init__(*a,**kw)
+
+    async def send(self,phone,text,*a,**kw):
+        pass
+
+    async def unread(self):
+        unread,self.messages = self.messages, []
+        return unread
+
+"""
 from . import sms
 import serial
 #from gsmmodem.modem import GsmModem
@@ -176,3 +225,5 @@ class Client(sms.Client):
 
     async def clean(self):
         pass
+
+"""

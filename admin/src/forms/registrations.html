@@ -32,8 +32,8 @@
     <td>
       {{a.mac}}
     </td>
-    <td>{{a.registred.$date| date: 'mediumDate'}}</td>
-    <td>{{a.seen.$date| date: 'medium'}}</td>
+    <td>{{a.registred.$date| date: 'mediumDate'}} / {{a.callee|| "-"}}</td>
+    <td>{{a.seen.$date| date: 'medium'}} / {{a.seen_callee|| "-"}}</td>
   </tr>
 
 </tbody>

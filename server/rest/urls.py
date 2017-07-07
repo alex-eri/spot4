@@ -1,7 +1,7 @@
 from .views import *
 from .decorators import check_auth
 from .decorators import json
-from .admin import list_templates, config,kill
+from .admin import list_templates, config,kill,whoami
 from .front import uam_config
 from .billing import voucher, generate
 
@@ -39,7 +39,7 @@ def routers(app):
 
     app.router.add_get('/admin/config.json', check_auth(config))
     app.router.add_post('/admin/kill', check_auth(kill))
-
+    app.router.add_post('/admin/whoami', check_auth(whoami))
     app.router.add_post('/admin/voucher/create.json', check_auth(generate))
 
     app.router.add_get('/admin/{path:.*}', check_auth(index_factory("../static/","admin.html")))

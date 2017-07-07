@@ -40,7 +40,10 @@ def index(config):
     tasks.extend(admins(db,config))
     tasks = [ asyncio.ensure_future(t) for t in tasks ]
     storage.logger.info('reindexing')
-    asyncio.wait(tasks)
+    waiter = asyncio.gather(*tasks)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(waiter)
+
 
 
 

@@ -212,6 +212,13 @@ app.controller("Admins", ['$scope','$resource',
         //$scope.admins = [{'_id': '5904ffdeec988d449aa10a7f', 'name': 'admin', 'password': 'testing123'}];
 
 
+        $resource('/admin/whoami').save(
+          function(response){
+              $scope.selfuser = response.response;
+          }
+        )
+
+
         $resource('/db/administrator').save(
 
         [

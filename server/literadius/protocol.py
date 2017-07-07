@@ -106,6 +106,7 @@ class Accounting:
                 'session_id': req.decode(rad.AcctSessionId)
             }
         account = {}
+        unset = {}
 
         username = req.decode(rad.UserName)
 
@@ -156,6 +157,8 @@ class Accounting:
 
             if req.decode(rad.AcctStatusType) == rad.AccountingStop:
                 account['termination_cause'] =  req.decode(rad.AcctTerminateCause)
+            else:
+                unset['termination_cause']=""
 
 
         elif req.decode(rad.AcctStatusType) in [rad.AccountingOn, rad.AccountingOff]:
@@ -173,8 +176,10 @@ class Accounting:
                 })
             upd={
             '$setOnInsert':{'start_date':datetime.utcnow()},
-            '$set':account
+            '$set':account,
             }
+            if unset:
+                upd['$unset'] = unset
 
             self.db.accounting.find_and_modify(q,upd,upsert=True)
 

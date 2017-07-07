@@ -36,7 +36,7 @@ async def filter_for_admin(administrator,collection,data,db):
 
     field = False
 
-    if collection in ["tarif","users","sms_received","collector"] and filters:
+    if collection in ["tarif","users","collector"] and filters:
         raise web.HTTPForbidden()
 
     if not filters: return
@@ -45,7 +45,7 @@ async def filter_for_admin(administrator,collection,data,db):
 
     if not command: return
 
-    if collection in ["accounting",'devices','sms_sent']:
+    if collection in ["accounting",'devices','sms_sent','sms_received']:
         field = 'callee'
 
     elif collection in ['limit','uamconfig']:

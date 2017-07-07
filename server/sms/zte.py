@@ -174,7 +174,7 @@ class Client(_httpclient.Client):
         '''
            returns async
         '''
-        return self.messages(tags=1)
+        return self.messages(tags=UNREAD)
 
     async def messages(self,tags=RECIEVED,limit=100):
         '''
