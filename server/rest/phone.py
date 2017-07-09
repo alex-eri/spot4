@@ -55,9 +55,9 @@ async def phone_handler(request):
         '$set':{
             'seen':now,
             'ua': request.headers.get('User-Agent',''),
-            'seen_callee':uam.get('_id','-')
+            'seen_callee': DATA.get('profile','default')
             },
-        '$setOnInsert':{'registred': now, 'callee': uam.get('_id','-') },
+        '$setOnInsert':{'registred': now, 'callee': DATA.get('profile','default') },
         #, "$set" {'sensor': request.ip }
         }
 
