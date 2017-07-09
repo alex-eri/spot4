@@ -20,13 +20,13 @@ debug = logger.debug
 BURST_TIME = 5
 BITMASK32 = 0xFFFFFFFF
 TIMEOUT = 10
-
 MAX_INT = 0xFFFFFFFF
 
 class BaseRadius(asyncio.DatagramProtocol):
     radsecret = None
     db = None
     loop = None
+    session_limit = None
 
     def connection_made(self, transport):
         self.transport = transport
@@ -291,6 +291,9 @@ class Auth:
 
         if limit.pop('payable',False):
             limit = await self.billing(user,callee,limit)
+
+        if self.session_limit:
+            limit['time'] = self.session_limit
 
         return limit
 

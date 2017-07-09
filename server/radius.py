@@ -6,6 +6,8 @@ logger = logging.getLogger('radius')
 debug = logger.debug
 TTL = 56
 BILLING = False
+SESSIONLIMIT = False
+
 
 async def close_sessions(db):
     import literadius.constants as rad
@@ -19,6 +21,7 @@ async def close_sessions(db):
 def setup_radius(config,PORT):
     import asyncio
     from literadius.protocol import RadiusProtocol
+
     from utils import procutil
     import socket
     import os
@@ -46,6 +49,7 @@ def setup_radius(config,PORT):
     RadiusProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
     RadiusProtocol.db = db
     RadiusProtocol.loop = loop
+    RadiusProtocol.session_limit = SESSIONLIMIT
 
     t = asyncio.Task(loop.create_datagram_endpoint(
         RadiusProtocol, local_addr=(HOST,PORT)))

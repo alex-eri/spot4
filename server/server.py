@@ -16,6 +16,38 @@ def modem_setup(config):
     return procs
 
 
+def lic(config):
+    lic = config.get('LIC')
+    if lic:
+
+        digest,signature = lic.split("::")
+        pubkey = b"""-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArYI6YEadMmtOVRODBIZ1
+py774embTyz7evat+vp31J0roayn2MugIcfBxOW/Kv9Aei5VAQ6uuozXykbfJGlx
+IMv9XQ7HtQkzF//DHAbq/ir3XE3gB6DSil9MxqceJlnYWJKNAVKlfkb2+j3sustx
+v1pRajn35IVuZbhtg5xtc/kyFb7nrPcYWW0QJ53/Ybd4OC8i/RQAqjxtDYpgTkqq
+JlvAnH0PJ4um4HvaY4myG31cFjzLM1YmFOAp0hWMkP9PPMS+UvvufPMHl3oPEqKH
+c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
+3wIDAQAB
+-----END PUBLIC KEY-----"""
+        from base64 import b64decode
+        signature = b64decode(signature)
+        digest = digest.encode('utf-8')
+
+        from ctypescrypto.pkey import PKey
+        verifier=PKey(pubkey=pubkey)
+        if verifier.verify(digest,signature):
+            return
+
+
+    import radius
+    import zte
+    radius.TTL = 2
+    radius.SESSIONLIMIT = 600
+    zte.INTERVAL = 60
+
+
+
 def setup_log(config):
 
     if config.get('LOGFILE'):
