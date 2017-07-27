@@ -3,7 +3,8 @@ import logging
 class Client:
 
     def __init__(self,*a,**kw):
-        self.logger = logging.getLogger('sms')
+        self.logger = logging.getLogger(self.__class__.__module__)
+        self.logger.debug(self.__class__)
         self.logger.debug(kw)
         self.sender = kw.pop('sender',False)
         self.reciever = kw.pop('reciever',True)

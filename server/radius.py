@@ -33,6 +33,8 @@ def setup_radius(config,PORT):
 
     loop = asyncio.get_event_loop()
 
+    from server import lic
+    lic(config,"radius")
 
     db = storage.setup(
         config['DB']['SERVER'],

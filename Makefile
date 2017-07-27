@@ -87,6 +87,8 @@ opera:
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"
 
 
+operaonmikrotik: netns mikrobr dhclient2 opera
+
 IPonAS:
 	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' | aggregate > ./$$AS-ip
 

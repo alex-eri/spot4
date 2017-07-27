@@ -94,7 +94,15 @@ app.config(['$routeProvider','$locationProvider',
       }).
       when('/register/', {
         templateUrl: '/static/uam-forms/register.html',
+        controller: 'PreRegister'
+      }).
+      when('/register/sms/', {
+        templateUrl: '/static/uam-forms/register-phone.html',
         controller: 'Register'
+      }).
+      when('/register/password/', {
+        templateUrl: '/static/uam-forms/register-password.html',
+        controller: 'RegisterPassword'
       }).
       when('/status/', {
         templateUrl: '/static/uam-forms/status.html',
@@ -128,17 +136,65 @@ app.config(['$routeProvider','$locationProvider',
       });
   }]);
 
+app.controller('PreRegister',  ['$rootScope','$resource','$cookies','$location','$window',
+    function ( $scope, $resource, $cookies ,$location,$window){
+
+//  если всего один метод - редиректнуть на него, если несколько - показываем кнопки.
+
+    var c=0;
+    var r=false;
+
+    if ($scope.config.external) {
+      c++;
+      r=false;
+    }
+
+    if ($scope.config.nosms || $scope.config.smsrecieve || $scope.config.smssend) {
+      r='/register/sms/';
+      c++;
+      $scope.config.sms = true;
+    }
+    if ($scope.config.password) {
+      r='/register/password/';
+      c++;
+    }
+
+    if (c==1 && r) {
+      $location.path(r);
+    }
+
+    if (c==0) {
+      $location.path('/no-reg/');
+    }
+
+
+    }]);
+
+
+
+app.controller('RegisterPassword',  ['$rootScope','$resource','$cookies','$location','$window',
+    function ( $scope, $resource, $cookies ,$location,$window){
+
+    $scope.register = function(form) {
+                        $location.search('password', form.password.$modelValue);
+                        $location.search('username', form.username.$modelValue);
+                        $location.path('/login/');
+    }
+
+    }]);
 
 
 app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$window',
     function ( $scope, $resource, $cookies ,$location,$window){
         var mac = $location.$$search.mac || $cookies.get('mac');
+        var called = $location.$$search.called || $cookies.get('called');
+
         $scope.register = function(form) {
             console.log(form);
             if (form.$valid) {
-                $resource('/register/').save(
+                $resource('/register/phone').save(
 
-                    {phone:form.phone.$modelValue, mac: mac, profile:$cookies.get('called')},
+                    {phone:form.phone.$modelValue, mac: mac, profile:called},
 
                 function(response) {
                     console.log(response)
@@ -163,6 +219,7 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
                 },
                 function(error) {
                     $window.alert('Не сработало...Может Интернет сломался.');
+                    //window.location.replace('/register/');
                     $location.path('/register/');
                 });
             }

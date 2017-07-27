@@ -3,10 +3,10 @@
 <center>
   <h1><img src="/static/icons/apple-touch-favicon.png" /></h1>
 </center>
-<center ng-show="($location.$$path != '/register/') || $root.comfirmed">
+<center ng-show="($location.$$path.indexOf('/register/') != 0 ) || $root.comfirmed">
     <div ng-view></div>
 </center>
-<div class=well ng-if="($location.$$path == '/register/') && ! $root.comfirmed">
+<div class=well ng-if="($location.$$path.indexOf('/register/') == 0) && ! $root.comfirmed">
 <p>Уважаемый пользователь!</p>
 <p>{{config.theme_text1 || "В соответствии с действующим законодательством Российской Федерации в области связи, при предоставлении услуг передачи данных и доступа к информационно-телекоммуникационной сети «Интернет» Оператором осуществляется идентификация пользователя и используемого им оконечного оборудования."}}</p>
 <p>{{config.theme_text2 || "Просим Вас ввести в специальное поле Ваш мобильный номер (например: +79031234567) и следовать инструкциям."}}</p>

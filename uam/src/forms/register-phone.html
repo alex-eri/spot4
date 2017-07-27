@@ -1,0 +1,28 @@
+<p>
+  <label>Регистрация в сети</label>
+</p>
+<p>
+<form name="regform" class="form-inline">
+  <div class="form-group">
+    <div class="input-group">
+      <span class="input-group-addon" >Тел.</span>
+      <input
+        class="form-control"
+        type="tel"
+        ng-model="$root.phone"
+        required
+        pattern="\+\d{10,12}"
+        placeholder="+79123456789"
+        name='phone'
+        phone-validation
+        />
+    </div>
+
+    </div>
+  <div class="form-group">
+          <input class="btn btn-default form-control" type="submit" ng-click="register(regform)" value="Войти" />
+  </div>
+
+</form>
+</p>
+

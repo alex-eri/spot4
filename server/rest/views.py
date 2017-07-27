@@ -56,18 +56,21 @@ async def filter_for_admin(administrator,collection,data,db):
     elif collection == "administrator":
         if administrator.get('superadmin',None):
             return
-        elif filters:
+        else:
+            field = '_id'
+            filters = [administrator.get('_id')]
             if command == 'find':
-                field = '_id'
-                filters = [administrator.get('_id')]
+                pass
             elif command == 'find_and_modify':
                 if data[0][command].get('update'):
                     if data[0][command]['update'].get('$set'):
                         data[0][command]['update']['$set'].pop('filters',None)
                         data[0][command]['update']['$set'].pop('_id',None)
+                        data[0][command]['update']['$set'].pop('superadmin',None)
                     else:
                         upd = data[0][command]['update']
                         upd.pop('filters',None)
+                        upd.pop('superadmin',None)
                         upd.pop('_id',None)
                         data[0][command]['update'] = {'$set': upd }
                 else:

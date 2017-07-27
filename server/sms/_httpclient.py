@@ -3,6 +3,7 @@ import json
 import urllib.request
 import urllib.parse
 from . import _sms
+import ssl
 
 def get_json(fu):
     async def inner(*a,**kw):
@@ -57,7 +58,9 @@ class Client(_sms.Client):
 
     async def urlopen(self,req):
         await self.sema.acquire()
-        try: ret = urllib.request.urlopen(req,timeout=5)
+        try:
+            context =  ssl._create_unverified_context()
+            ret = urllib.request.urlopen(req, context=context, timeout=5)
         except Exception as e: error=e
         else:
             return ret

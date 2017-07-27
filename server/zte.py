@@ -35,7 +35,7 @@ async def handle(m,db,client):
         now = datetime.utcnow()
         delta = timedelta(seconds=client.anytext)
         q = dict(phone=m['phone'], seen={'$gt': now - delta})
-        m['text'] += "// любой текст //"
+        m['text'] += "// принимаем любой текст //"
 
     if q:
         device = await db.devices.find_and_modify(q, {
@@ -170,6 +170,10 @@ def setup_loop(config):
     procutil.set_proc_name(name)
 
     loop = asyncio.get_event_loop()
+
+    from server import lic
+    lic(config,"zte")
+
     import storage
 
     db = storage.setup(

@@ -16,11 +16,16 @@ def modem_setup(config):
     return procs
 
 
-def lic(config):
+def lic(config, module):
     lic = config.get('LIC')
-    if lic:
 
+    signature = None
+
+    if lic:
         digest,signature = lic.split("::")
+
+    if signature:
+
         pubkey = b"""-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArYI6YEadMmtOVRODBIZ1
 py774embTyz7evat+vp31J0roayn2MugIcfBxOW/Kv9Aei5VAQ6uuozXykbfJGlx
@@ -37,14 +42,17 @@ c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
         from ctypescrypto.pkey import PKey
         verifier=PKey(pubkey=pubkey)
         if verifier.verify(digest,signature):
+            logger.info('Lic ok')
             return
 
+    if module == "radius":
+        import radius
+        radius.TTL = 1
+        radius.SESSIONLIMIT = 600
 
-    import radius
-    import zte
-    radius.TTL = 2
-    radius.SESSIONLIMIT = 600
-    zte.INTERVAL = 60
+    elif module == "zte":
+        import zte
+        zte.INTERVAL = 30
 
 
 
