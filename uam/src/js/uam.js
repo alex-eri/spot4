@@ -16,6 +16,10 @@ app.directive('phoneValidation', function(){
             .replace(/^89/g,'+79')
             .replace(/^79/g,'+79')
             .replace(/^9/g,'+79')
+            .replace(/^(02)([459])/g,'+3752$2') //belarus
+            .replace(/^033/g,'+37533')
+            .replace(/^044/g,'+37544')
+            .replace(/^7([04567])/g,'+77$1') //kazahstan
             ;
 
          if (transformedInput!=inputValue) {

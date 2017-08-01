@@ -93,6 +93,10 @@ app.config(['$routeProvider','$locationProvider',
 ]);
 
 
+
+
+
+
 app.controller('Flows',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource, $routeParams){
 
@@ -202,6 +206,14 @@ app.controller('Config',  ['$scope','$resource',
       )
 
     }]);
+
+
+app.controller("Iam"['$rootScope','$resource',
+    function ( $scope, $resource ){
+
+
+
+    }])
 
 
 
@@ -796,7 +808,14 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
 
     }]);
 
-app.controller("MenuCtrl", function($scope, $location) {
+app.controller("MenuCtrl", function($scope,$resource, $location) {
+
+        $resource('/admin/whoami').save(
+          function(response){
+              $scope.selfuser = response.response;
+          }
+        )
+
   $scope.menuClass = function(page) {
     var current = $location.path().substring(1);
     return current.startsWith(page) ? "active" : "";
