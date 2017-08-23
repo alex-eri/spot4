@@ -12,3 +12,4 @@ mikrotik/hotspot/*
 *.c
 *.pem
 tests/*
+*.7z

@@ -6,14 +6,14 @@
 "HTTP_PORT":8080,
 "HTTPS_PORT":8443,
 "API_SECRET": {"admin":"testing123"},
-"NETFLOW": [5],
-"NETFLOW_PORT": 2055,
-"//NETFLOW_SIZE": "Выделяется на диске в мегабайтах под подробную статистику",
-"NETFLOW_SIZE": 2100,
+"//NETFLOW": [5],
+"//NETFLOW_PORT": 2055,
+"//#NETFLOW_SIZE": "Выделяется на диске в мегабайтах под подробную статистику",
+"//NETFLOW_SIZE": 2100,
 "DEBUG": true,
 "LOGFILE": null,
 "DB": {
-	"SERVER": "mongodb://192.168.236.34:27017",
+	"SERVER": "mongodb://127.0.0.1:27017",
 	"NAME":"spot4"
 },
 "SMS": {
@@ -38,9 +38,18 @@
 			"driver":"http",
 			"method":"get",
 			"url":"http://localhost:8000/sms/send_hotspot/",
-			"sender": true,
+			"sender": false,
 			"reciever": false,
 			"query":"tel={phone}&text={text}",
+			"encoding":"utf-8"
+			},
+			{
+			"driver":"http",
+			"method":"get",
+			"url":"https://sms.ru/sms/send",
+			"sender": true,
+			"reciever": false,
+			"query":"api_id=B3251567-5EEB-4xxxxxxx&to={phone}&msg={text}&json=1",
 			"encoding":"utf-8"
 			}
 		]

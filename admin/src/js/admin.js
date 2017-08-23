@@ -78,14 +78,25 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/admin-forms/voucher.html'
         ,controller: 'Voucher'
       }).
-      when('/flows/', {
-        templateUrl: '/static/admin-forms/flows.html'
+      when('/flows/stats/', {
+        templateUrl: '/static/admin-forms/flows-statshtml'
         ,controller: 'Flows'
       }).
       when('/administrator/', {
         templateUrl: '/static/admin-forms/administrator.html'
         ,controller: 'Admins'
       }).
+
+      when('/flows/sensors/', {
+        templateUrl: '/static/admin-forms/flows-sensors.html'
+        ,controller: 'FlowSensors'
+      }).
+
+      when('/flows/session/', {
+        templateUrl: '/static/admin-forms/flows-session.html'
+        ,controller: 'FlowSession'
+      }).
+
       otherwise({
         redirectTo: '/online/'
       });
@@ -93,6 +104,20 @@ app.config(['$routeProvider','$locationProvider',
 ]);
 
 
+
+app.controller('FlowSensors',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
+
+      $resource('/netflow/sensors').save(
+              {session: {_id: {$oid: "598248766b5ab96bdb84f68c"}}},
+
+              function(response){
+
+                $scope.sensors = response.response;
+            }
+      )
+
+        }])
 
 
 

@@ -4,7 +4,7 @@ def admins(db,config):
     for (k,v) in config['API_SECRET'].items():
         yield db.administrator.find_and_modify(
             {'name':k},
-            {"$setOnInsert":{'password':v}},
+            {"$setOnInsert":{'password':v,'superadmin':True}},
             upsert=True)
     config.pop('API_SECRET')
 
@@ -32,7 +32,8 @@ def index(config):
         db.accounting.ensure_index([ ("callee",1) ], unique=False),
         db.voucher.ensure_index( [ ("voucher",1), ("callee",1),("closed",1) ], unique=True, sparse=True ),
         db.voucher.ensure_index( [ ("series",1)], unique=False),
-        db.collector.ensure_index( [ ("first",1)], unique=False),
+        db.collector.ensure_index( [ ("first",1),("last",1)], unique=False),
+        db.collector.ensure_index( [ ("dstaddr",1),("srcaddr",1)], unique=False),
         db.rad_sessions.ensure_index( [ ("stop",-1)], unique=False),
         db.rad_sessions.ensure_index( [ ("caller",1),("callee",1)], unique=False),
     ]

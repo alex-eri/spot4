@@ -18,6 +18,7 @@ debug = logger.debug
 retoken = re.compile('([0-9]{%d})' % SMSLEN)
 
 from itertools import cycle
+from collections import defaultdict
 
 TZ = format(-time.timezone//3600,"+d")
 
@@ -83,11 +84,27 @@ async def recieve_loop(clients,db):
             logger.error(e)
         await asyncio.sleep(INTERVAL)
 
+
+
 async def send_loop(clients,db):
     debug('starting sender')
     clients = list(filter(lambda x: x.sender, clients))
     if not clients: return
-    roundrobin = cycle(clients)
+
+    xclients = defaultdict(list)
+    cclients = list()
+
+    for c in clients:
+        if c.callee:
+            for p in c.callee:
+                xclients[p].append(c)
+        else:
+            cclients.append(c)
+
+    for p in xclients.keys():
+        xclients[p] = cycle(xclients[p])
+
+    roundrobin = cycle(cclients)
 
     from pymongo.cursor import CursorType
 
@@ -100,10 +117,16 @@ async def send_loop(clients,db):
         cursor = db.sms_sent.find(q,cursor_type=CursorType.TAILABLE_AWAIT)
         while cursor.alive:
             async for sms in cursor:
-                client = next(roundrobin)
+                p = sms.get('callee', 'default')
+
+                if p in xclients.keys():
+                    client = next(xclients[p])
+                else:
+                    client = next(roundrobin)
                 last = sms.get('_id',last)
                 try:
-                    await client.send(**sms)
+                    res = await client.send(**sms)
+                    logger.info(res)
                 except Exception as e:
                     logger.error(e)
                 else:

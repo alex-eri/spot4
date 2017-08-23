@@ -5,6 +5,8 @@ from .admin import list_templates, config,kill,whoami
 from .front import uam_config
 from .billing import voucher, generate
 
+from .netflow import *
+
 def index_factory(path,filename):
     async def static_view(request):
         route = web.StaticResource('/', path)
@@ -49,5 +51,8 @@ def routers(app):
 
     app.router.add_route('POST', '/billing/voucher', voucher)
 
+
+    app.router.add_route('POST', '/netflow/sensors', get_sensors)
+    app.router.add_route('POST', '/netflow/session', get_flows)
 
     #app.router.add_route('OPTIONS', '/{path:.*}', db_options)

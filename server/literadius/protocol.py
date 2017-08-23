@@ -14,6 +14,8 @@ from literadius import decoders
 
 from rest.front import get_uam_config
 
+import time
+
 logger = logging.getLogger('protocol')
 debug = logger.debug
 
@@ -30,9 +32,12 @@ class BaseRadius(asyncio.DatagramProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
+        print(time.time())
 
     def respond(self, resp, nas):
         self.transport.sendto(resp.data(), nas)
+
+        print(time.time())
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():

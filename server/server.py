@@ -75,7 +75,7 @@ def setup_log(config):
     logging.basicConfig(format = FORMAT, level=level, filename = logfile )
 
 
-def setup(services=[]):
+def setup(services=[],args=None):
     import api
     import radius
     import json
@@ -86,10 +86,13 @@ def setup(services=[]):
 
     config['numbers'] = manager.list()
 
-    p = reindex.setup(config)
-    p[0].start()
-    p[0].join()
-    logger.info('done')
+    if args.noreindex :
+        logger.info('no reindexing')
+    else:
+        p = reindex.setup(config)
+        p[0].start()
+        p[0].join()
+        logger.info('done')
 
     services.extend( radius.setup(config) )
     services.extend( api.setup(config) )
@@ -103,7 +106,7 @@ def setup(services=[]):
     return services
 
 
-def main():
+def main(args=None):
 
     import signal,os
     from multiprocessing import Lock
@@ -142,7 +145,7 @@ def main():
         wait(10)
         while services:
             del services[-1]
-        setup(services)
+        setup(services,args=args)
         start()
         restart_lock.release()
 
@@ -150,7 +153,7 @@ def main():
         signal.signal(signal.SIGUSR1, restart)
 
 
-    setup(services)
+    setup(services,args=args)
     start()
 
     sys.running = True
@@ -174,6 +177,9 @@ def premain():
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
     parser.add_argument('--config-dir', nargs='?', help='Config dir')
     parser.add_argument('--reindex', action='store_true', help='Ensure indexes')
+
+    parser.add_argument('--noreindex', action='store_true', help='Fast start')
+
     if os.name == 'nt':
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
@@ -206,7 +212,7 @@ def premain():
 
     if os.name == 'nt':
         if args.fg:
-            main()
+            main(args)
         if args.service:
             import utils.windows
             utils.windows.startservice(sys.modules[__name__])
@@ -221,7 +227,7 @@ def premain():
             import utils.windows
             utils.windows.start(sys.modules[__name__],  argv, exeargs)
     else:
-        main()
+        main(args)
 
 if "__main__" in __name__ :
     premain()
