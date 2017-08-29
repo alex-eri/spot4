@@ -100,6 +100,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/uam-forms/register.html',
         controller: 'PreRegister'
       }).
+      when('/register/vk/', {
+        templateUrl: '/static/uam-forms/register-vk.html',
+        controller: 'RegisterVk'
+      }).
       when('/register/sms/', {
         templateUrl: '/static/uam-forms/register-phone.html',
         controller: 'Register'
@@ -162,7 +166,10 @@ app.controller('PreRegister',  ['$rootScope','$resource','$cookies','$location',
       r='/register/password/';
       c++;
     }
-
+    if ($scope.config.vk) {
+      r='/register/vk/';
+      c++;
+    }
     if (c==1 && r) {
       $location.path(r);
     }
@@ -184,6 +191,103 @@ app.controller('RegisterPassword',  ['$rootScope','$resource','$cookies','$locat
                         $location.search('username', form.username.$modelValue);
                         $location.path('/login/');
     }
+
+    }]);
+
+
+
+app.controller('RegisterVk',  ['$rootScope','$resource','$cookies','$location','$window',
+    function ( $scope, $resource, $cookies ,$location,$window){
+
+/*
+function sample(arr){
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+
+onclick="VK.Auth.login(authInfo);"
+
+
+
+function authInfo(response) {
+  if (response.session) {
+    $('#vk_login').hide();
+    if (window.hs_config.post) {
+        $('#vk_post').show();
+    } else {
+        CanLogin();
+    }
+
+  } else {
+    // no auth
+  }
+}
+
+
+CanLogin = function(){
+
+
+
+};
+
+
+$scope.register = function(){
+
+
+
+
+VK.Api.call('wall.post', $scope.config.post , function(r) {
+  console.log(r);
+  if(r.response && r.response['post_id']) {
+    CanLogin();
+  }
+});
+
+}
+*/
+
+$scope.vk = false;
+
+function register(response){
+ 	console.log(response)
+}
+
+$scope.vk_post = function(){
+
+	VK.Api.call('wall.post', $scope.config.post , function(r) {
+	  console.log(r);
+	  if(r.response && r.response['post_id']) {
+	    register($scope.vk);
+	  }
+	});
+
+}
+
+$scope.vk_login = function(){
+
+ function authInfo(response){
+ 	if (response.session) {
+ 		$scope.vk = response;
+ 		if ($scope.config.vk_post) {
+
+ 		} else {
+ 			register(response)
+ 		}
+ 	} else {
+
+ 		scope.error = "Авторизация не удалась"
+
+ 	}
+
+ 	}
+
+ VK.init({
+    apiId: $scope.config.vk_appid
+  });
+  VK.Auth.login(authInfo);
+
+}
+
 
     }]);
 

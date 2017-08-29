@@ -43,6 +43,40 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 <fieldset ng-if='router.theme' ng-include="'/uam/theme/' + (router.theme) + '/admin.tpl.html'">
 </fieldset>
 
+
+
+<fieldset>
+<div class="form-group">
+<label class="col-sm-2 control-label">Вконтакте</label>
+<div class="col-sm-4">
+       <nz-toggle tri-toggle
+        val-null=undefined
+        ng-model="router.vk"></nz-toggle>
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+разрешит вход через вконтакте
+</p></div>
+</div>
+
+
+<div class="form-group" ng-if="router.vk" >
+<label class="col-sm-2 control-label">ID Приложения Вконтакте</label>
+<div class="col-sm-4">
+
+<input type="text" class="form-control" ng-model="router.vk_appid"
+  placeholder="{{limits.default.vk_appid}}"
+pattern="[0-9]*" />
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+получить тут: https://vk.com/apps?act=manage
+</p></div>
+</div>
+
+</fieldset>
+
+
+
 <fieldset>
 <div class="form-group">
 <label class="col-sm-2 control-label">Пароль</label>
