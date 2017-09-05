@@ -5,6 +5,8 @@ from .admin import list_templates, config,kill,whoami
 from .front import uam_config
 from .billing import voucher, generate
 
+from .vk import vk_handler
+
 from .netflow import *
 
 def index_factory(path,filename):
@@ -24,6 +26,8 @@ def routers(app):
         app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
         app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
         app.router.add_route('POST', '/register/phone', phone_handler)
+
+        app.router.add_route('POST', '/register/vk', vk_handler)
 
         app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 

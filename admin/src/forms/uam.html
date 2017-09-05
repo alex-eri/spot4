@@ -69,9 +69,57 @@ pattern="[0-9]*" />
 
 </div>
 <div class="col-sm-6"><p class="form-control-static">
-получить тут: https://vk.com/apps?act=manage
+<a href="https://vk.com/apps?act=manage">получите ID по ссылке</a>, укажите доверенный домен в приложении: {{$location.protocol() + "://" + $location.host() + ":" + $location.port()}}
 </p></div>
 </div>
+
+
+
+<div class="form-group" ng-if="router.vk" >
+<label class="col-sm-2 control-label">Сообщение поста</label>
+<div class="col-sm-4">
+
+<input type="text" class="form-control" ng-model="router.vk_message"
+  placeholder="{{limits.default.vk_message}}" />
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+обязательно для репоста, хотябы смайлик.
+</p></div>
+</div>
+
+<div class="form-group" ng-if="router.vk_message" >
+<label class="col-sm-2 control-label">Вложение поста</label>
+<div class="col-sm-4">
+
+<input type="text" class="form-control" ng-model="router.vk_attachments"
+  placeholder="{{limits.default.vk_attachments}}"
+pattern=".*_[0-9]*" />
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+пример: photo7839870_418519510  - часть прямой ссылки на материал (wall1_1835009 уже не работает, вк запретил)
+</p></div>
+</div>
+
+<div class="form-group" ng-if="router.vk_message" >
+<label class="col-sm-2 control-label">Место репоста</label>
+<div class="col-sm-4">
+
+<input type="text" class="form-control" ng-model="router.vk_place_id"
+  placeholder="{{limits.default.vk_place_id}}"
+pattern="[0-9]*" />
+
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+Число, идентификатор места. По нему будет показанна ссылка на группу места.
+Задайте местоположение в группе, потом в Информации найдите ссылку на это местоположение.
+Нажмите правой кнопкой и пункт исследовать элемент(просмотреть код элемента).  Найдите Groups.showMapBox и введите сюда число, которое идет в скобках.
+
+</p></div>
+</div>
+
+
 
 </fieldset>
 

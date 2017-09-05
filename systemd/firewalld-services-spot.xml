@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service>
+  <port protocol="udp" port="2055"/>
+  <port protocol="udp" port="1812"/>
+  <port protocol="tcp" port="8080"/>
+  <port protocol="udp" port="1813"/>
+</service>
+

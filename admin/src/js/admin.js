@@ -921,8 +921,8 @@ app.filter('ip',  function() {
 })
 
 
-app.controller('Uam',  ['$scope','$resource','$timeout',
-    function ( $scope, $resource,$timeout){
+app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
+    function ( $scope, $resource,$timeout,$location){
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
@@ -936,6 +936,8 @@ app.controller('Uam',  ['$scope','$resource','$timeout',
         };
 
       $scope.removePropertyAndApply =  removePropertyAndApply;
+
+    $scope.$location = $location
 
     $resource('/admin/themes.json').query(
     function(response){

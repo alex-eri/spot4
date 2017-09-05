@@ -51,9 +51,10 @@ class Client(_sms.Client):
             data = urllib.parse.urlencode(data,)
         if isinstance(data, str):
             data = data.encode(self.encoding)
-        self.logger.debug(data)
+
         req = urllib.request.Request(uri, data=data,
                                      headers=self.post_headers, method='POST')
+
         return self.urlopen(req)
 
     async def urlopen(self,req):
@@ -61,6 +62,12 @@ class Client(_sms.Client):
         try:
             context =  ssl._create_unverified_context()
             ret = urllib.request.urlopen(req, context=context, timeout=5)
+            self.logger.debug('http request')
+            self.logger.debug(req.headers)
+            self.logger.debug(req.data)
+            self.logger.debug('http response')
+            self.logger.debug(ret.headers)
+
         except Exception as e: error=e
         else:
             return ret

@@ -17,7 +17,7 @@
     <th>{{n._id.username}} </th>
     <th>
       <a ng-if="n.devs[0].phone" href="tel:{{n.devs[0].phone}}">{{n.devs[0].phone}}</a>
-
+      <a ng-if="n.devs[0].vk" href="{{n.devs[0].vk.href}}">{{n.devs[0].vk.first_name}} {{n.devs[0].vk.last_name}}</a>
 
       <a target=_blank class="hidden pull-right" href="https://phonenumber.to/search?text={{n.devs[0].phone}}"><i class="glyphicon glyphicon-search" ></i></a>
 

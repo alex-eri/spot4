@@ -53,6 +53,7 @@ c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
     elif module == "zte":
         import zte
         zte.INTERVAL = 30
+    logger.warning('No Lic')
 
 
 
@@ -64,10 +65,17 @@ def setup_log(config):
         FORMAT = '%(processName)s\%(name)-8s %(levelname)s: %(message)s'
 
     level = logging.INFO
-    if config.get('DEBUG'):
+
+    debug_level = config.get('DEBUG')
+
+    if type(debug_level) == int:
+            level = debug_level
+    elif debug_level:
         level = logging.DEBUG
     else:
         level = logging.WARNING
+
+
 
     logfile = config.get('LOGFILE', None)
 

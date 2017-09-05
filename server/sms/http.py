@@ -13,9 +13,12 @@ class Client(_httpclient.Client):
         self.query =  kw.pop('query')
         self.reciever = kw.pop('reciever',False) and False
         self.callie = kw.get('number','http')
+        self.strip =  kw.get('strip',False)
         super(Client,self).__init__( *a, **kw)
 
     def _send_sms(self,phone,text):
+        if self.strip:
+            phone=phone.strip('+')
         data = self.query.format(phone=phone,text=text)
 
         return self.request(self.base_url,data)
@@ -24,7 +27,8 @@ class Client(_httpclient.Client):
         #text = urllib.parse.quote(text)
         text = urllib.parse.quote(text, safe='/%',encoding=self.encoding)
         try:
-            res = await self._send_sms(phone,text)
+            ret = await self._send_sms(phone,text)
+            self.logger.info(ret.read())
             #assert res.get("result") == "success", 'Modem cant send message'
         except Exception as e:
             self.logger.error(e)

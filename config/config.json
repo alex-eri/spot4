@@ -6,10 +6,10 @@
 "HTTP_PORT":8080,
 "HTTPS_PORT":8443,
 "API_SECRET": {"admin":"testing123"},
-"//NETFLOW": [5],
-"//NETFLOW_PORT": 2055,
-"//#NETFLOW_SIZE": "Выделяется на диске в мегабайтах под подробную статистику",
-"//NETFLOW_SIZE": 2100,
+"NETFLOW": [5],
+"NETFLOW_PORT": 2055,
+"#NETFLOW_SIZE": "Выделяется на диске в мегабайтах под подробную статистику",
+"NETFLOW_SIZE": 2100,
 "DEBUG": true,
 "LOGFILE": null,
 "DB": {
@@ -52,6 +52,7 @@
 			"query":"api_id=B3251567-5EEB-4xxxxxxx&to={phone}&msg={text}&json=1",
 			"encoding":"utf-8"
 			}
+
 		]
 }
 }

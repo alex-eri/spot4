@@ -246,10 +246,34 @@ VK.Api.call('wall.post', $scope.config.post , function(r) {
 }
 */
 
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = "//vk.com/js/api/openapi.js";
+document.body.appendChild(script);
+
 $scope.vk = false;
 
-function register(response){
- 	console.log(response)
+function register(vk){
+        console.log(vk)
+
+        var mac = $location.$$search.mac || $cookies.get('mac');
+        var called = $location.$$search.called || $cookies.get('called');
+
+$resource('/register/vk').save(
+                    {vk:vk.session.user, mac: mac, profile:called},
+                function(response) {
+                    console.log(response)
+                    if (response.checked) {
+                        $location.search('password', response.password);
+                        $location.search('username', response.username);
+                        $location.path('/login/');
+                    }
+
+                }, function(error) {
+                    $window.alert('Не сработало...Может Интернет сломался.');
+                    $location.path('/register/');
+                })
+
 }
 
 $scope.vk_post = function(){
@@ -257,7 +281,9 @@ $scope.vk_post = function(){
 	VK.Api.call('wall.post', $scope.config.post , function(r) {
 	  console.log(r);
 	  if(r.response && r.response['post_id']) {
-	    register($scope.vk);
+	    var vk=$scope.vk;
+	    vk.session.user.post_id = r.response['post_id'];
+	    register(vk);
 	  }
 	});
 
@@ -265,20 +291,27 @@ $scope.vk_post = function(){
 
 $scope.vk_login = function(){
 
+if ($scope.config.vk_message) {
+        $scope.config.post = {
+          "message":$scope.config.vk_message,
+          "attachments":$scope.config.vk_attachments,
+          "place_id": $scope.config.vk_place_id
+          }
+ 		}
+
  function authInfo(response){
  	if (response.session) {
  		$scope.vk = response;
- 		if ($scope.config.vk_post) {
-
- 		} else {
- 			register(response)
+ 		register(response);
+ 		if ($scope.config.vk_message) {
+      $scope.post = true;
  		}
  	} else {
 
- 		scope.error = "Авторизация не удалась"
+ 		$scope.error = "Авторизация не удалась"
 
  	}
-
+    $scope.$apply();
  	}
 
  VK.init({

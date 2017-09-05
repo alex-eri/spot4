@@ -462,7 +462,7 @@ class Auth:
         username = req.decode(rad.UserName)
         mac = req.decode(rad.CallingStationId)
 
-        session = await self.db.rad_sessions.find_one(
+        session = await self._one(
             {
                 'username':username,
                 'callee': callee,

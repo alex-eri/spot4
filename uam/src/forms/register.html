@@ -4,15 +4,19 @@
 <p>
 <form name="preregform" class="form-inline">
   <div class="form-group">
-          <a class="btn btn-default form-control" href="register/password/" ng-if=config.password >По паролю</a>
+          <a class="btn btn-default form-control password-button" href="register/password/" ng-if=config.password >По паролю</a>
   </div>
 
   <div class="form-group">
-          <a class="btn btn-default form-control" href="register/sms/" ng-if=config.sms >По SMS</a>
+          <a class="btn btn-default form-control sms-button" href="register/sms/" ng-if=config.sms >По SMS</a>
   </div>
 
     <div class="form-group">
-          <a class="btn btn-default form-control" href="register/call/" ng-if=config.call >По звонку</a>
+          <a class="btn btn-default form-control call-button" href="register/call/" ng-if=config.call >По звонку</a>
+  </div>
+
+    <div class="form-group">
+          <a class="btn btn-default form-control vk-button" href="register/vk/" ng-if=config.vk >Через ВК</a>
   </div>
 
 </form>
