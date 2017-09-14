@@ -165,7 +165,6 @@ def run5(config):
 
     SIZE = config.get('NETFLOW_SIZE', 2000) << 20
 
-    print(SIZE)
 
     db = storage.setup(
         config['DB']['SERVER'],

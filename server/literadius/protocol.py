@@ -32,12 +32,13 @@ class BaseRadius(asyncio.DatagramProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        print(time.time())
+        self.start_time = time.time()
 
     def respond(self, resp, nas):
         self.transport.sendto(resp.data(), nas)
 
-        print(time.time())
+        logger.info( "Reply {} to {}, user".format(resp.code,nas))
+        logger.info( "Processing time: %s" % (time.time()-self.start_time) )
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
@@ -462,7 +463,7 @@ class Auth:
         username = req.decode(rad.UserName)
         mac = req.decode(rad.CallingStationId)
 
-        session = await self._one(
+        session = await self.db.rad_sessions.find_one(
             {
                 'username':username,
                 'callee': callee,

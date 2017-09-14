@@ -1,0 +1,17 @@
+/ip firewall address-list add list=microsoft address=65.52.0.0/15
+/ip firewall address-list add list=microsoft address=65.54.0.0/20
+/ip firewall address-list add list=microsoft address=65.55.0.0/16
+/ip firewall address-list add list=microsoft address=103.81.184.0/22
+/ip firewall address-list add list=microsoft address=131.107.0.0/16
+/ip firewall address-list add list=microsoft address=157.54.0.0/15
+/ip firewall address-list add list=microsoft address=157.56.0.0/14
+/ip firewall address-list add list=microsoft address=157.60.0.0/16
+/ip firewall address-list add list=microsoft address=167.220.0.0/16
+/ip firewall address-list add list=microsoft address=198.105.232.0/22
+/ip firewall address-list add list=microsoft address=198.180.95.0/24
+/ip firewall address-list add list=microsoft address=199.2.137.0/24
+/ip firewall address-list add list=microsoft address=199.242.48.0/22
+/ip firewall address-list add list=microsoft address=204.182.144.0/24
+/ip firewall address-list add list=microsoft address=204.255.244.0/23
+/ip firewall address-list add list=microsoft address=205.248.126.0/23
+/ip firewall address-list add list=microsoft address=206.138.168.0/21
