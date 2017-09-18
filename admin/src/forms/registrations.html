@@ -1,7 +1,14 @@
-<h1>Регистрации <small ng-if=startdate  class="form-inline">
+<h1>Регистрации <small ng-if=startdate  class="form-inline pull-right">
        <input class="form-control" type="month" ng-model=startdate ng-change="changestart(startdate,stopdate)" /> &mdash;
        <input class="form-control" type="month" ng-model=stopdate ng-change="changestop(startdate,stopdate)" />
-     </small></h1>
+
+
+                  <button class="btn btn-default" type="button" ng-csv="registred_exp(registred)"
+                    filename="Регистрации-{{startdate|date: 'yyMM'}}-{{stopdate|date: 'yyMM'}}.csv" lazy-load="true"
+                    csv-header = "['username','check','phone','mac','registred','registred uam','last seen','last seen at']"
+                    ><span class="glyphicon glyphicon-save-file" aria-hidden="true"></span></button>
+</small></h1>
+
   <table class="table table-hover table-condensed table-bordered">
   <thead>
     <tr>

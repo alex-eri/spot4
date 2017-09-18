@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('admin',['ngRoute', 'ngResource','nzToggle'])
+var app = angular.module('admin',['ngRoute', 'ngResource','nzToggle', 'ngSanitize', 'ngCsv'])
 window.app = app;
 var waittemplate = '<center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>';
 
@@ -79,7 +79,7 @@ app.config(['$routeProvider','$locationProvider',
         ,controller: 'Voucher'
       }).
       when('/flows/stats/', {
-        templateUrl: '/static/admin-forms/flows-statshtml'
+        templateUrl: '/static/admin-forms/flows-stats.html'
         ,controller: 'Flows'
       }).
       when('/administrator/', {
@@ -102,6 +102,24 @@ app.config(['$routeProvider','$locationProvider',
       });
   }
 ]);
+
+
+function num2ip(num) {
+
+if ( num ) {
+  var d = num%256;
+    for (var i = 3; i > 0; i--)
+    {
+        num = Math.floor(num/256);
+        d = num%256 + '.' + d;
+    }
+    return d;
+  } else {
+    return false;
+  }
+
+}
+
 
 
 
@@ -459,6 +477,47 @@ function intervalFactory($scope,$routeParams,load) {
 app.controller('Accs',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource, $routeParams){
 
+
+        $scope.export = function (registred){
+
+          var resp = [];
+
+          registred.forEach( function(day) {
+
+            day.accts.forEach( function(session) {
+
+
+
+
+              var rdate = new Date();
+              rdate.setTime(session.start_date.$date)
+              var sdate = new Date();
+              sdate.setTime(session.stop_date.$date)
+
+              resp.push(
+               [
+                (day._id.year + "-" + day._id.month + "-" + day._id.day),
+                session.username,
+                session.caller,
+                num2ip(session.ip),
+                session.nas,
+                session.callee,
+                rdate.toISOString(),
+                sdate.toISOString(),
+                session.session_time,
+                session.input_bytes,
+                session.output_bytes
+               ])
+
+            })
+
+
+          } )
+
+        return resp;
+        }
+
+
         function load(startdate,stopdate) {
 
             $resource('/db/accounting').save(
@@ -494,6 +553,31 @@ app.controller('Regs',  ['$scope','$resource','$routeParams',
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
+
+        $scope.registred_exp = function (registred){
+
+          var resp = [];
+
+          registred.forEach( function(user) {
+
+            user.devs.forEach( function(dev) {
+
+              var rdate = new Date();
+              rdate.setTime(dev.registred.$date)
+              var sdate = new Date();
+              sdate.setTime(dev.seen.$date)
+
+              resp.push( [user._id.username, dev.checked, dev.phone, dev.mac, rdate.toISOString(), dev.callee , sdate.toISOString(), dev.seen_callee ])
+
+            })
+
+
+          } )
+
+        return resp;
+        }
+
+
         function load(startdate,stopdate) {
               $resource('/db/devices').save(
                   [
@@ -904,20 +988,11 @@ if (transformedInput.length > 4) {
 })
 
 
+
+
+
 app.filter('ip',  function() {
-  return function(num) {
-  if ( num ) {
-  var d = num%256;
-    for (var i = 3; i > 0; i--)
-    {
-        num = Math.floor(num/256);
-        d = num%256 + '.' + d;
-    }
-    return d;
-  } else {
-    return false;
-  }
-  };
+  return num2ip;
 })
 
 

@@ -1,13 +1,12 @@
 all: clean ../static
 
-bower_components:
+bower_components: bower.json
 	npm install
 
-node_modules:
+node_modules: package.json
 	npm install
 
-../static: bower_components
-	install -d ../static/js
+../static: bower_components ../static/js ../static/js/libuam.js ../static/js/libadmin.js
 	install -d ../static/css
 	install -d ../static/fonts
 	install -d ../static/icons
@@ -23,6 +22,10 @@ node_modules:
 		bower_components/json2/json2.js \
 		> ../static/js/compat.js
 
+../static/js:
+	install -d ../static/js
+
+../static/js/libuam.js: ../static/js
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/es5-shim/es5-shim.js \
 		bower_components/es5-shim/es5-sham.js \
@@ -33,6 +36,8 @@ node_modules:
 		js/md5.js \
 		> ../static/js/libuam.js
 
+
+../static/js/libadmin.js: ../static/js
 	node_modules/uglify-js/bin/uglifyjs \
 		bower_components/jquery/dist/jquery.min.js \
 		bower_components/moment/moment.js \
@@ -44,6 +49,8 @@ node_modules:
 		bower_components/angular-i18n/angular-locale_ru-ru.js \
 		bower_components/bootstrap/dist/js/bootstrap.min.js \
 		bower_components/nz-toggle/dist/nz-toggle.min.js \
+		bower_components/angular-sanitize/angular-sanitize.min.js \
+		bower_components/ng-csv/build/ng-csv.min.js \
 		> ../static/js/libadmin.js
 
 clean:
