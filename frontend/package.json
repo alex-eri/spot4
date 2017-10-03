@@ -1,17 +1,30 @@
 {
   "name": "spot4",
   "private": true,
-  "version": "0.0.0",
+  "version": "4.6.0",
   "license": "Custom",
   "devDependencies": {
-    "bower": "^1.7.7",
-    "http-server": "^0.9.0",
     "uglify-js": "^2.7.0",
     "html-minifier": "^3.3.x"
   },
-  "scripts": {
-    "postinstall": "bower install",
-    "prestart": "npm install; make",
-    "start": "http-server ./build/mikrotik -a localhost -p 8000 -c-1"
+  "dependencies": {
+    "angular": "1.6.x",
+    "angular-animate": "1.6.x",
+    "angular-mocks": "1.6.x",
+    "angular-resource": "1.6.x",
+    "angular-route": "1.6.x",
+    "angular-cookies": "1.6.x",
+    "angular-i18n": "1.6.x",
+    "angular-sanitize": "1.6.x",
+    "bootstrap": "3.x.x",
+    "jquery": "2.2.x",
+    "moment": "2.x",
+    "moment-timezone": "0.5.x",
+    "ua-parser-js": "0.7.x",
+    "nz-toggle": "2.x.x",
+    "html5shiv": "3.x.x",
+    "json2": "",
+    "es5-shim": "",
+    "ng-csv": "0.3.x"
   }
 }

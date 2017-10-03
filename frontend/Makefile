@@ -1,62 +1,62 @@
-all: clean ../static
-
-bower_components: bower.json
-	npm install
+all: ../static ../static/js/libuam.js ../static/js/libadmin.js ../static/js/compat.js
 
 node_modules: package.json
 	npm install
+	touch node_modules
 
-../static: bower_components ../static/js ../static/js/libuam.js ../static/js/libadmin.js
+../static: node_modules
 	install -d ../static/css
 	install -d ../static/fonts
 	install -d ../static/icons
 	cp ./icons/* ../static/icons/
 	install ./css/animations.css ../static/css/
 
-	cp bower_components/bootstrap/dist/css/*.min* ../static/css/
-	cp bower_components/nz-toggle/dist/nz-toggle.min.css ../static/css/
-	cp bower_components/bootstrap/dist/fonts/* ../static/fonts/
+	cp node_modules/bootstrap/dist/css/*.min* ../static/css/
+	cp node_modules/nz-toggle/dist/nz-toggle.min.css ../static/css/
+	cp node_modules/bootstrap/dist/fonts/* ../static/fonts/
 
+
+../static/js/compat.js: node_modules
 	node_modules/uglify-js/bin/uglifyjs \
-		bower_components/html5shiv/dist/html5shiv.min.js \
-		bower_components/json2/json2.js \
+		node_modules/html5shiv/dist/html5shiv.min.js \
+		node_modules/json2/lib/JSON2/static/json2.js \
 		> ../static/js/compat.js
 
 ../static/js:
 	install -d ../static/js
 
-../static/js/libuam.js: ../static/js
+../static/js/libuam.js: ../static/js node_modules
 	node_modules/uglify-js/bin/uglifyjs \
-		bower_components/es5-shim/es5-shim.js \
-		bower_components/es5-shim/es5-sham.js \
-		bower_components/angular/angular.js \
-		bower_components/angular-route/angular-route.js \
-		bower_components/angular-resource/angular-resource.js \
-		bower_components/angular-cookies/angular-cookies.js \
+		node_modules/es5-shim/es5-shim.js \
+		node_modules/es5-shim/es5-sham.js \
+		node_modules/angular/angular.js \
+		node_modules/angular-route/angular-route.js \
+		node_modules/angular-resource/angular-resource.js \
+		node_modules/angular-cookies/angular-cookies.js \
 		js/md5.js \
 		> ../static/js/libuam.js
 
 
-../static/js/libadmin.js: ../static/js
+../static/js/libadmin.js: ../static/js node_modules
 	node_modules/uglify-js/bin/uglifyjs \
-		bower_components/jquery/dist/jquery.min.js \
-		bower_components/moment/moment.js \
-		bower_components/angular/angular.min.js \
-		bower_components/angular-resource/angular-resource.min.js \
-		bower_components/angular-animate/angular-animate.min.js \
-		bower_components/angular-route/angular-route.min.js \
-		bower_components/angular-i18n/angular-locale_ru.js \
-		bower_components/angular-i18n/angular-locale_ru-ru.js \
-		bower_components/bootstrap/dist/js/bootstrap.min.js \
-		bower_components/nz-toggle/dist/nz-toggle.min.js \
-		bower_components/angular-sanitize/angular-sanitize.min.js \
-		bower_components/ng-csv/build/ng-csv.min.js \
+		node_modules/jquery/dist/jquery.min.js \
+		node_modules/moment/moment.js \
+		node_modules/angular/angular.min.js \
+		node_modules/angular-resource/angular-resource.min.js \
+		node_modules/angular-animate/angular-animate.min.js \
+		node_modules/angular-route/angular-route.min.js \
+		node_modules/angular-i18n/angular-locale_ru.js \
+		node_modules/angular-i18n/angular-locale_ru-ru.js \
+		node_modules/bootstrap/dist/js/bootstrap.min.js \
+		node_modules/nz-toggle/dist/nz-toggle.min.js \
+		node_modules/angular-sanitize/angular-sanitize.min.js \
+		node_modules/ng-csv/build/ng-csv.min.js \
 		> ../static/js/libadmin.js
 
 clean:
 	rm -rf ../static
 
-fullclean:
+fullclean: clean
 	rm -rf bower_components node_modules
 
 compress: ../static node_modules
