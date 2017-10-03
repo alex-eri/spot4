@@ -726,6 +726,17 @@ app.controller('Limit',  ['$scope','$resource',
 
         $scope.limits = { default:{_id:'default'}}
 
+    $scope.remove = function(name) {
+
+      var a=confirm("Удалить "+name+"?");
+      if (a) {
+          $resource('/db/limit').save([{remove:[{_id:name}]}], function(response){
+            delete $scope.limits[name];
+          })
+        }
+        return false;
+    }
+
 /*
         $resource('/db/accounting').save(
 
@@ -1108,21 +1119,38 @@ app.filter('ip',  function() {
 })
 
 
+
+
+
+
 app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
     function ( $scope, $resource,$timeout,$location){
         $scope.label = "";
         $scope.interval = intervalt;
         $scope.t = datefymd;
 
-    function removePropertyAndApply(obj, prop) {
-          obj[prop] = null;
+function removePropertyAndApply(obj, prop) {
+  obj[prop] = null;
 
-          $timeout(function () {
-            obj[prop] = undefined;
-          });
-        };
+  $timeout(function () {
+    obj[prop] = undefined;
+    delete obj[prop]
+  });
+};
 
-      $scope.removePropertyAndApply =  removePropertyAndApply;
+    $scope.removePropertyAndApply =  removePropertyAndApply;
+
+    $scope.remove = function(name) {
+
+      var a=confirm("Удалить "+name+"?");
+      if (a) {
+          $resource('/db/uamconfig').save([{remove:[{_id:name}]}], function(response){
+            delete $scope.limits[name];
+          })
+        }
+      return false;
+    }
+
 
     $scope.$location = $location
 

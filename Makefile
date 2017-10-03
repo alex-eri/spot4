@@ -17,6 +17,8 @@ build: server/build
 	cp -R ./server/build/exe* ./build/bin
 	mkdir -p ./build/mikrotik
 	mkdir -p ./build/uam/theme/
+	mkdir -p ./build/data/
+	mkdir -p ./data/
 	cp -R ./static/* ./build/static/
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/

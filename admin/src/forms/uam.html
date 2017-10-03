@@ -8,6 +8,9 @@
 <i class="glyphicon glyphicon-menu-hamburger"></i>
    {{router._id}}<span ng-if="router._id=='default'">&nbsp;-&nbsp;По умолчанию</span>
 
+<a  class="pull-right" ng-if="router._id!='default'" ng-click="remove(router._id)"><i class="glyphicon glyphicon-trash"></i></a>
+
+
 </th>
 
 <!--

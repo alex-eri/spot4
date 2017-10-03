@@ -6,6 +6,9 @@
 <tr data-target="#form{{id}}" data-toggle="collapse">
 <th>
 <i class="glyphicon glyphicon-menu-hamburger"></i>&nbsp; {{limit._id}}
+
+<a class="pull-right" ng-if="limit._id!='default'" ng-click="remove(limit._id)"><i class="glyphicon glyphicon-trash"></i></a>
+
 </th>
 
   <td>
