@@ -31,8 +31,12 @@
   <tr ng-repeat="a in n.accts">
     <td>
       {{a.username}} / {{a.caller}}
-      <span class="pull-right" ng-if="! a.termination_cause">
-        <i class="glyphicon glyphicon-transfer"></i>
+      <span class="pull-right">
+        <i class="glyphicon glyphicon-transfer" ng-if="! a.termination_cause"></i>
+
+        <a ng-href="/admin/flows/session/?start_time={{a.start_time}}&event_time={{a.event_time}}&ip={{a.ip}}&sensor={{a.sensor}}" ng-if="a.event_time">
+          <i class="glyphicon glyphicon-eye-open"></i>
+        </a>
       </span>
     </td>
     <td>{{a.nas}} / {{a.callee}}</td>

@@ -8,7 +8,9 @@ from .logger import *
 from datetime import datetime, timedelta
 from .front import get_uam_config
 
-REREG = timedelta(days=3)
+
+REREG_DAYS = 3
+REREG = timedelta(days=REREG_DAYS)
 DEVMAX = 4
 
 async def nextuser(db):
@@ -66,16 +68,21 @@ async def phone_handler(request):
 
     upd = {'try': 0 }
 
+    if uam.get('rereg'):
+        rereg = timedelta(days=uam.get('rereg'))
+    else:
+        rereg = REREG
 
-    count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-REREG)}} ).count()
-    if count >= DEVMAX:
+    count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-rereg)}} ).count()
+
+    if count >= uam.get('devmax', DEVMAX):
         uam['smssend'] = False
 
     if device.get('username'):
         reg = False
         if device.get('checked'):
             pass
-        elif (now - device.get('registred',now)) > REREG:
+        elif (now - device.get('registred',now)) > rereg:
             reg = True
         elif uam.get('smssend',False) and not device.get('sms_sent'):
             reg = True

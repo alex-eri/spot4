@@ -3,3 +3,9 @@ echo "deb http://repo.mongodb.org/apt/debian jessie/mongodb-org/3.4 main" | sudo
 
 sudo apt-get update
 sudo apt-get install -y mongodb-org
+
+
+cp systemd/firewalld-services-spot.xml /etc/firewalld/services/spot.xml
+firewall-cmd --permanent --zone=public --add-service=spot
+
+setsebool -P httpd_can_network_connect 1

@@ -1,0 +1,44 @@
+<section>
+
+  <h1>Детализация сессии {{ip|ip}}
+    <small class="form-inline pull-right">
+                              на {{sensor|ip}} <!--select class="form-control" ng-model="sensor" ng-options="(s|ip) for s in sensors"></select-->
+
+    <button class="btn btn-default" type="button" ng-csv="export(flows)"
+                    filename="Детализация-{{ip|ip}}-{{(start*1000)| date: 'yyMMdd_HHmmss'}}-{{(stop*1000)| date: 'yyMMdd_HHmmss'}}.csv" lazy-load="true"
+                    csv-header = "['srcaddr','srcport','dstaddr','dstport','prot','dOctets','dPkts','first','last','nexthop']"
+                    ><span class="glyphicon glyphicon-save-file" aria-hidden="true"></span></button>
+
+                            </small></h1>
+<p>c {{(start*1000)| date: 'medium'}} по {{(stop*1000)| date: 'medium'}}</p>
+
+
+<table class="table table-hover table-condensed table-bordered">
+
+  <tr>
+    <th>От</th>
+    <th>К</th>
+    <th>Байт</th>
+    <th>Пакетов</th>
+    <th>Начало</th>
+    <th>Конец</th>
+  </tr>
+
+  <tr ng-repeat="a in flows">
+
+    <td>
+      {{ a.srcaddr | ip}}:{{a.srcport}}
+    </td>
+    <td>
+      {{ a.dstaddr | ip}}:{{a.dstport}}/{{ a.prot | proto }}
+    </td>
+
+    <td>{{a.dOctets | mega }}</td>
+    <td>{{a.dPkts | mega }}</td>
+    <td>{{(a.first*1000) | date: 'medium'}}</td>
+    <td>{{(a.last*1000) | date: 'medium'}}</td>
+
+  </tr>
+
+</table>
+</section>

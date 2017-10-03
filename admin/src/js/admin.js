@@ -122,6 +122,96 @@ if ( num ) {
 
 
 
+app.controller('FlowSession',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
+
+       $scope.ip =  parseInt($routeParams.ip);
+       $scope.start =  parseInt($routeParams.start_time);
+       $scope.stop =  parseInt($routeParams.event_time);
+       $scope.sensor =  parseInt($routeParams.sensor);
+       $scope.sensors = []
+
+
+        $scope.export = function (flows){
+
+          var resp = [];
+
+          flows.forEach( function(f) {
+
+
+
+
+
+
+              var first = new Date();
+              first.setTime(f.first*1000)
+              var last = new Date();
+              last.setTime(f.last*1000)
+
+              resp.push(
+               [num2ip(f.srcaddr),
+               f.srcport,
+               num2ip(f.dstaddr),
+               f.dstport,
+               num2proto(f.prot),
+               f.dOctets,
+               f.dPkts,
+               first.toISOString(),
+               last.toISOString(),
+               num2ip(f.nexthop)]
+               )
+
+            })
+
+
+        return resp;
+        }
+
+
+       function onresponse(response){
+         $scope.flows = response.response;
+       }
+
+
+       function load() {
+           if($scope.sensor && $scope.ip) {
+
+              var match = {
+                      first:{
+                        $lte: $scope.stop
+                      },
+                      last: {
+                        $gte: $scope.start
+                      },
+                      $or:[
+                        {srcaddr:$scope.ip},
+                        {dstaddr:$scope.ip}
+                      ],
+                      sensor: $scope.sensor
+
+              };
+
+
+              $resource('/db/collector').save([{aggregate:
+                {pipeline:
+                [
+
+                {$match: match},
+
+                ]}
+               }],onresponse)
+       }
+       }
+
+       $resource('/db/collector').save([{distinct:['sensor']}], function(response){ $scope.sensors = response.response; })
+       load()
+
+}])
+
+
+
+
+
 
 app.controller('FlowSensors',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource, $routeParams){
@@ -145,18 +235,21 @@ app.controller('Flows',  ['$scope','$resource','$routeParams',
 
         function load(startdate,stopdate) {
 
+
+            var match  = {
+                      first:{
+                        $gte: Math.floor(startdate.getTime()/1000),
+                        $lte: Math.floor(stopdate.getTime()/1000)
+                      }
+                    }
+
             $resource('/db/collector').save(
                 [
 
                 {aggregate:
                 {pipeline:
                 [
-                    {$match: {
-                      first:{
-                        $gte: Math.floor(startdate.getTime()/1000),
-                        $lte: Math.floor(stopdate.getTime()/1000)
-                      }
-                    }},
+                    {$match: match},
 
                     { $facet: {
 
@@ -263,7 +356,7 @@ app.controller("Iam"['$rootScope','$resource',
 app.controller("Admins", ['$scope','$resource',
     function ( $scope, $resource ){
 
-        $scope.uams = {}
+        $scope.uams = []
         //$scope.admins = [{'_id': '5904ffdeec988d449aa10a7f', 'name': 'admin', 'password': 'testing123'}];
 
 
@@ -284,7 +377,7 @@ app.controller("Admins", ['$scope','$resource',
             }
         )
 
-
+/*
         $resource('/db/accounting').save(
 
         [
@@ -294,6 +387,20 @@ app.controller("Admins", ['$scope','$resource',
 
             }
         )
+*/
+
+    	$resource('/db/uamconfig').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+
+            response.response.forEach( function(item){
+              $scope.uams.push(item._id)
+            })
+        });
+
+
 
         $scope.create = function() {
             $scope.admins.push( {name : "username", password:""} )
@@ -619,6 +726,7 @@ app.controller('Limit',  ['$scope','$resource',
 
         $scope.limits = { default:{_id:'default'}}
 
+/*
         $resource('/db/accounting').save(
 
         [
@@ -632,7 +740,7 @@ app.controller('Limit',  ['$scope','$resource',
             })
             }
         )
-
+*/
 
         $resource('/db/limit').save(
             [
@@ -647,6 +755,7 @@ app.controller('Limit',  ['$scope','$resource',
         })
         $scope.update = function(router){
             var id = router._id
+            router.auto = false
 
             //router.redir = router.redir.replace(/http\:\/\/\//g,"/")
 
@@ -959,8 +1068,8 @@ app.filter('mega', function() {
   };
 })
 
-app.filter('proto', function() {
-  return function(input) {
+
+function num2proto(input){
 switch(input) {
     case 6: return 'tcp'
     case 17: return 'udp'
@@ -970,7 +1079,10 @@ switch(input) {
     case 41: return 'IPv6-in-IP'
     default:return input;
     }
-  };
+}
+
+app.filter('proto', function() {
+  return num2proto;
 })
 
 app.filter('dash', function() {
@@ -1025,6 +1137,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
 
         $scope.limits = { default:{_id:'default'}}
 
+/*
         $resource('/db/accounting').save(
 
         [
@@ -1038,7 +1151,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
             })
             }
         )
-
+*/
 
         $resource('/db/uamconfig').save(
             [
@@ -1053,7 +1166,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
         })
         $scope.update = function(router){
             var id = router._id
-            router.newbie = undefined;
+            router.auto = false;
 
             $resource('/db/uamconfig').save([{
             find_and_modify:{
