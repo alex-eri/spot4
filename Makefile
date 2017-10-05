@@ -1,24 +1,25 @@
-all: clean build build/config
+all: clean build build/config build/bin
 
-dist: build
+dist: build/*
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell git rev-list --all --count).tar.gz ./
 
-server/build:
+build/bin: build server
 	make -C ./server
 
-build: server/build
+build/data: build
+	mkdir -p ./build/data/
+	mkdir -p ./data
+
+build: frontend uam mikrotik admin
 	make -C ./frontend ../static
 	make -C ./uam
 	make -C ./mikrotik
 	make -C ./admin
 	make -C ./frontend compress
 	mkdir -p ./build/static/
-	cp -R ./server/build/exe* ./build/bin
 	mkdir -p ./build/mikrotik
 	mkdir -p ./build/uam/theme/
-	mkdir -p ./build/data/
-	mkdir -p ./data/
 	cp -R ./static/* ./build/static/
 	cp -R ./uam/theme/* ./build/uam/theme/
 	cp -R ./mikrotik/* ./build/mikrotik/
@@ -26,8 +27,12 @@ build: server/build
 build/config:
 	mkdir -p ./build/data/
 	mkdir -p ./build/config/
-	mkdir -p ./build/systemd/
-	install -m 664 ./systemd/spot.service ./build/systemd/
+	mkdir -p ./build/etc/systemd/
+	mkdir -p ./build/etc/firewalld/services/
+
+	install -m 664 ./systemd/spot.service ./build/etc/systemd/
+	ln -s etc/systemd/ ./build/systemd
+	install -m 664 ./systemd/firewalld-services-spot.xml ./build/etc/firewalld/services/
 	install -m 664 ./config/config.json ./build/config/config.json.example
 
 
@@ -39,7 +44,6 @@ clean:
 
 start:
 	cd ./build/bin* ; ./spot4.exe
-
 
 
 submodule:

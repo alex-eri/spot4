@@ -80,7 +80,7 @@ async def filter_for_admin(administrator,collection,data,db):
 
     if not field: return
 
-    if command in ['find','find_and_modify']:
+    if command in ['find','find_and_modify','remove']:
         opts = data[0][command]
 
         if not opts:
@@ -88,10 +88,12 @@ async def filter_for_admin(administrator,collection,data,db):
             data[0][command][0][field] = {'$in':filters}
 
         elif type(opts) == dict:
-            data[0][command]['query'][field] = {'$in':filters}
+            if not data[0][command]['query'][field] in filters:
+                data[0][command]['query'][field] = {'$in':filters}
 
         elif type(opts) == list:
-            data[0][command][0][field] = {'$in':filters}
+            if not data[0][command]['query'][field] in filters:
+                data[0][command][0][field] = {'$in':filters}
 
     elif command == 'distinct':
         data.insert(0,{'find': [{field: {'$in':filters} }]})

@@ -1187,7 +1187,7 @@ function removePropertyAndApply(obj, prop) {
         ], function(response){
             response.response.forEach( function(item){
                 var id = item._id;
-                var item_name=id.replace(/[.:-]/g,"_");
+                var item_name=id.replace(/[\ .:-]/g,"_");
                 $scope.limits[item_name]=item;
             })
 

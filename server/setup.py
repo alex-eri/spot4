@@ -145,5 +145,5 @@ cx_setup(  name = "spot4",
         description = "Spot 4",
         options = {"build_exe": build_exe_options},
         executables = executables,
-        data_files = ['config.json']
+        data_files = []
         )
