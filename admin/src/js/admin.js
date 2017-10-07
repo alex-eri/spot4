@@ -1037,7 +1037,7 @@ app.controller('Top',  ['$scope','$resource','$routeParams',
 
     }]);
 
-app.controller("MenuCtrl", function($scope,$resource, $location) {
+app.controller("MenuCtrl", function($rootScope,$resource, $location) {
 
         $resource('/admin/whoami').save(
           function(response){
