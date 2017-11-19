@@ -1,4 +1,4 @@
-Spot 4.4.177 для Debian 8
+Spot 4.4.193 для Debian 8
 =========================
 
 Команды для установки
@@ -39,6 +39,14 @@ nano /opt/spot4/config/config.json
 	"SERVER": "mongodb://127.0.0.1:27017",
 	"NAME":"spot4"
 },
+
+Ключик
+++++++
+Также в формате json в файл конфигурации добавить после первой "{".
+
+"LIC": "Имя лецинзиата::gJQDr7FQzO2Wrsf5iLNu2EeMShO6NbLbzhNgt2YSEnRsf0Rxe9jKZZICNhsDtNeY0+0KgD3rjGoyjkKIjBgpUMbGVo0NF9Dcj/kJZZw5q1+oM/S0MAhplwsEpmWYCk3LKza76sgdv8gUsr8OFw7CTRyCDcVuOMipxTDrkA4qK1wTKr9GoAVovmkYYXg6uVJHrTAcHS0C5F1GBjSHg64RwpIAtFHiPLsO9ROa3bbJm8J+7ZhxI4jpxhbihjoqxNdIM4nHTFavxWVCeuEpDZSFppevIi7nOprl9MyaE/iIo86LOFX6JoeWMb9opbHLil5u5yxI2YfQgjR+cZqPxgfmSw==",
+
+
 
 SMS рассылка.
 +++++++++++++

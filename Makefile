@@ -12,7 +12,7 @@ build/data: build
 	mkdir -p ./data
 
 build: frontend uam mikrotik admin
-	make -C ./frontend ../static
+	make -C ./frontend all
 	make -C ./uam
 	make -C ./mikrotik
 	make -C ./admin
