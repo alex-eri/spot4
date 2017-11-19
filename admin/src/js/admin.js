@@ -1041,11 +1041,11 @@ app.controller("MenuCtrl", function($rootScope,$resource, $location) {
 
         $resource('/admin/whoami').save(
           function(response){
-              $scope.selfuser = response.response;
+              $rootScope.selfuser = response.response;
           }
         )
 
-  $scope.menuClass = function(page) {
+  $rootScope.menuClass = function(page) {
     var current = $location.path().substring(1);
     return current.startsWith(page) ? "active" : "";
   };
