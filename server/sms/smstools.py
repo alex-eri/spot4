@@ -37,7 +37,7 @@ class Client(_sms.Client):
 
             with open(path,'r') as f:
                 e = email.message_from_file(f)
-                num = "+" + e.get('From')
+                num = "+" + e.get('From','*')
                 self.logger.debug(num)
                 alphabet = e.get('Alphabet','ISO')
                 text = e.get_payload()
