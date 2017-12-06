@@ -47,7 +47,7 @@ c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
 
     if module == "radius":
         import radius
-        radius.TTL = 1
+        radius.TTL = 2
         radius.SESSIONLIMIT = 600
 
     elif module == "zte":
