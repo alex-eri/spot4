@@ -47,8 +47,9 @@ def find_libs():
 
     for p in prefix:
         for f in files:
-            a = os.path.join(p,f)
-            print(a)
+            if f:
+                a = os.path.join(p,f)
+            print(f)
             if os.path.isfile(a):
                 yield a
 
