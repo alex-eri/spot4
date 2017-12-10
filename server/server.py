@@ -8,6 +8,8 @@ from multiprocessing import Manager
 logger = logging.getLogger('main')
 debug = logger.debug
 
+manager = Manager()
+
 def modem_setup(config):
 
     procs = []
@@ -82,13 +84,11 @@ def setup_log(config):
     #TODO https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
     logging.basicConfig(format = FORMAT, level=level, filename = logfile )
 
-
 def setup(services=[],args=None):
     import api
     import radius
     import json
     import codecs
-    manager = Manager()
 
     config = json.load(codecs.open('../config/config.json','r','utf-8'))
 
