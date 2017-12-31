@@ -216,12 +216,13 @@ class Client(_httpclient.Client):
         cap = await self._capacity_info()
         inbox = int(cap.get('sms_sim_rev_total',0)) + int(cap.get('sms_nv_rev_total',0))
         sent =  int(cap.get('sms_sim_send_total',0)) + int(cap.get('sms_nv_send_total',0))
+        other = int(cap.get('sms_nv_draftbox_total',0))
         capacity = max(int(cap.get('sms_nv_total',0)), int(cap.get('sms_sim_total',0)))
 
         ret = {
             'inbox': inbox,
             'sent': sent,
-            'total': inbox + sent,
+            'total': inbox + sent + other,
             'capacity': capacity or 100
         }
 
