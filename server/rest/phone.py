@@ -39,6 +39,8 @@ async def phone_handler(request):
         DATA = await request.post()
     phone = DATA.get('phone')
 
+    call = DATA.get('call','sms')
+
     try:
         phcheck(phone)
     except:
@@ -94,6 +96,10 @@ async def phone_handler(request):
     if reg:
         if uam.get('nosms',False):
             upd['checked'] = True
+        elif call=="out":
+            pass
+        elif call=="in":
+            pass
         else:
             numbers = request.app['config'].get('numbers')
             if uam.get('smsrecieve',False) and numbers:

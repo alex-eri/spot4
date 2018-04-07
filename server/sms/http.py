@@ -11,7 +11,7 @@ class Client(_httpclient.Client):
         assert method in ['get','post'], 'wrong http method'
         self.request = getattr(self,method)
         self.query =  kw.pop('query')
-        self.reciever = kw.pop('reciever',False) and False
+        self.reciever = kw.get('reciever',False) and False
         self.callie = kw.get('number','http')
         self.strip =  kw.get('strip',False)
         super(Client,self).__init__( *a, **kw)

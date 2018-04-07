@@ -75,7 +75,6 @@ class Client(_httpclient.Client):
 
         """
         Request URL:http://192.168.0.1/goform/goform_get_cmd_process?isTest=false&cmd=sms_capacity_info&_=1477750277341
-
             returns {
             'sms_nv_send_total': '6',
             'sms_sim_rev_total': '0',
