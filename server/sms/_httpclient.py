@@ -28,16 +28,16 @@ def get_xml(fu):
 
 
 class Client(_sms.Client):
-    def __init__(self,*a,**kw):
+    def __init__(self, *a, **kw):
 
-        headers = kw.pop('headers',{})
-        self.get_headers = kw.pop('get_headers',headers)
-        self.post_headers = kw.pop('post_headers',headers)
-        self.encoding = kw.pop('encoding','utf-8')
+        headers = kw.pop('headers', {})
+        self.get_headers = kw.pop('get_headers', headers)
+        self.post_headers = kw.pop('post_headers', headers)
+        self.encoding = kw.pop('encoding', 'utf-8')
         self.sema = asyncio.Lock()
-        super(Client,self).__init__(*a,**kw)
+        super(Client, self).__init__(*a, **kw)
 
-    def get(self,uri,data=None):
+    def get(self, uri, data=None):
         if isinstance(data, (dict,list,tuple)):
             data = urllib.parse.urlencode(data)
         if isinstance(data, str):

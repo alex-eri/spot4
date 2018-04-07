@@ -5,6 +5,8 @@ import urllib.parse
 class Client(_httpclient.Client):
 
     def __init__(self,*a,**kw):
+        print(a)
+        print(kw)
         self.logger = logging.getLogger('http')
         self.base_url = kw.pop('url')
         method = kw.pop('method','get').lower()

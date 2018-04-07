@@ -12,9 +12,7 @@ class DES:
 
 def str_to_key56(key_str):
     ""
-    if len(key_str) < 7:
-        key_str = key_str + b'\000\000\000\000\000\000\000'[:(7 - len(key_str))]
-    key_56 = key_str[:7]
+    key_56 = key_str.ljust(7, b'\0')[:7]
     return key_56
 
 def key56_to_key64(key_56):

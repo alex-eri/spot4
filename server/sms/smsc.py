@@ -7,9 +7,10 @@ import datetime
 
 TZ = format(-time.timezone//3600, "+d")
 
+
 class Client(http.Client):
     def __init__(self, *a, **kw):
-        super(Client, self).__init__(*a, **kw)
+        super(Client, self).__init__(url=None, query=None, *a, **kw)
         self.reciever = kw.pop('reciever', False)
         self.login = kw.pop('login', False)
         self.password = kw.pop('password', False)
@@ -18,7 +19,7 @@ class Client(http.Client):
             password=self.password,
             encoding=self.encoding
             )
-        self.url = "http://smsc.ru/sys/send.php"
+        self.base_url = "http://smsc.ru/sys/send.php"
 
         self.url2 = "http://smsc.ru/sys/get.php"
         self.query2 = "get_answers=1&login={login}&psw={password}&fmt=3".format(
