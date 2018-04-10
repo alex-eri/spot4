@@ -766,7 +766,7 @@ app.controller('Limit',  ['$scope','$resource',
             //router.redir = router.redir.replace(/http\:\/\/\//g,"/")
 
             if (router.payable) {
-              router.redir = 'rel:///voucher/'
+              router.redir = 'rel:///uam/voucher/'
             }
 
             $resource('/db/limit').save([{
@@ -951,6 +951,11 @@ app.controller('Tarifs',  ['$scope','$resource',
             else {
               q = { name: tarif.name }
             }
+
+            if (tarif.limit.redir = '0') {
+              tarif.limit.redir = "rel:///uam/status/"
+            }
+
             $resource('/db/tarif').save([{
             find_and_modify:{
                 query:q,
