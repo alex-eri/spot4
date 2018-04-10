@@ -138,11 +138,6 @@ app.controller('FlowSession',  ['$scope','$resource','$routeParams',
 
           flows.forEach( function(f) {
 
-
-
-
-
-
               var first = new Date();
               first.setTime(f.first*1000)
               var last = new Date();
@@ -770,6 +765,10 @@ app.controller('Limit',  ['$scope','$resource',
 
             //router.redir = router.redir.replace(/http\:\/\/\//g,"/")
 
+            if (router.payable) {
+              router.redir = 'rel:///voucher/'
+            }
+
             $resource('/db/limit').save([{
             find_and_modify:{
                 query:{_id:id},
@@ -940,18 +939,18 @@ app.controller('Tarifs',  ['$scope','$resource',
         })
 
         $scope.create = function() {
-
-          $scope.update({name:"Новый", limit:{}});
-
+          $scope.tarifs['_new'] = {name:"Новый", limit:{}};
         }
 
 
-        $scope.update = function(tarif){ //TODO плохой инсерт. перетирается один тариф
+        $scope.update = function(tarif, item_name){ //TODO плохой инсерт. перетирается один тариф
 
             var id = tarif._id
             var q = {}
             if (id) {q = {_id: tarif._id}}
-            console.log(id)
+            else {
+              q = { name: tarif.name }
+            }
             $resource('/db/tarif').save([{
             find_and_modify:{
                 query:q,
@@ -961,11 +960,29 @@ app.controller('Tarifs',  ['$scope','$resource',
                 }
             }], function(response){
                 console.log(response)
+                if (item_name = '_new') {
+                  //removePropertyAndApply($scope.tarifs, '_new')
+                  delete $scope.tarifs[item_name];
+                }
                 var id = response.response._id.$oid;
-                var item_name=id.replace(/[.:-]/g,"_");
+                item_name = id.replace(/[.:-]/g,"_");
                 $scope.tarifs[item_name] = response.response;
             })
         }
+
+        $scope.remove = function(tarif, item_name){
+
+
+      var a=confirm("Удалить "+tarif.name+"?");
+      if (a) {
+          $resource('/db/tarif').save([{remove:[{_id:tarif._id}]}], function(response){
+            delete $scope.tarifs[item_name];
+//                  removePropertyAndApply($scope.tarifs, item_name)
+          })
+        }
+      return false;
+    }
+
 
     }]);
 
@@ -1120,15 +1137,6 @@ app.filter('ip',  function() {
 
 
 
-
-
-
-app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
-    function ( $scope, $resource,$timeout,$location){
-        $scope.label = "";
-        $scope.interval = intervalt;
-        $scope.t = datefymd;
-
 function removePropertyAndApply(obj, prop) {
   obj[prop] = null;
 
@@ -1137,6 +1145,15 @@ function removePropertyAndApply(obj, prop) {
     delete obj[prop]
   });
 };
+
+
+
+
+app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
+    function ( $scope, $resource,$timeout,$location){
+        $scope.label = "";
+        $scope.interval = intervalt;
+        $scope.t = datefymd;
 
     $scope.removePropertyAndApply =  removePropertyAndApply;
 

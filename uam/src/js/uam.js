@@ -132,7 +132,7 @@ app.config(['$routeProvider','$locationProvider',
         template: waittemplate,
         controller: 'Login'
       }).
-      when('/voucher/gtc/', {
+      when('/voucher/', {
         templateUrl: '/static/uam-forms/gtc.html'
         ,controller: 'VoucherGTC'
       }).
