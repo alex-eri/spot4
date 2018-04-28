@@ -51,8 +51,16 @@
 			"reciever": false,
 			"query":"api_id=B3251567-5EEB-4xxxxxxx&to={phone}&msg={text}&json=1",
 			"encoding":"utf-8"
+			},
+			{
+			"driver":"smsc",
+			"method":"get",
+			"sender": true,
+			"reciever": false,
+			"encoding":"utf-8",
+			"login":"user",
+			"password":"passw"
 			}
-
 		]
 }
 }

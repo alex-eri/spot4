@@ -1218,6 +1218,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
             var id = router._id
             router.auto = false;
 
+
             $resource('/db/uamconfig').save([{
             find_and_modify:{
                 query:{_id:id},
