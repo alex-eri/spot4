@@ -1,0 +1,36 @@
+# Ubuntu upstart file at /etc/init/spot.conf
+
+limit fsize unlimited unlimited
+limit cpu unlimited unlimited
+limit as unlimited unlimited
+limit nofile 64000 64000
+limit rss unlimited unlimited
+limit nproc 64000 64000
+limit memlock unlimited unlimited
+
+kill timeout 300 # wait 300s between SIGTERM and SIGKILL.
+
+pre-start script
+  sleep 2
+end script
+
+start on runlevel [2345]
+stop on runlevel [06]
+
+script
+  ENABLE_SPOT="yes"
+  DAEMON=/opt/spot4/bin/spot4.exe
+  DAEMONUSER=${DAEMONUSER:-www-data}
+  DAEMONGROUP=${DAEMONGROUP:-www-data}
+
+  if [ -f /etc/default/spot ]; then . /etc/default/spot; fi
+
+  if [ "x$ENABLE_SPOT" = "xyes" ]
+  then
+    exec start-stop-daemon --start \
+        --chuid $DAEMONUSER:$DAEMONGROUP \
+        --pidfile /var/run/spot.pid \
+        --make-pidfile \
+        --exec $DAEMON $DAEMON_OPTS
+  fi
+end script

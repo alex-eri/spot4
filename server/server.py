@@ -89,10 +89,12 @@ def setup(services=[],args=None):
     import radius
     import json
     import codecs
+    import caller
 
     config = json.load(codecs.open('../config/config.json','r','utf-8'))
 
     config['numbers'] = manager.list()
+    config['call_numbers'] = manager.list()
 
     if args.noreindex :
         logger.info('no reindexing')
@@ -106,6 +108,8 @@ def setup(services=[],args=None):
     services.extend( api.setup(config) )
 
     services.extend( modem_setup(config) )
+
+    services.extend( caller.setup(config) )
 
     if config.get('NETFLOW'):
         import netflow
