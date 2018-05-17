@@ -20,7 +20,7 @@ retoken = re.compile('([0-9]{%d})' % SMSLEN)
 from itertools import cycle
 from collections import defaultdict
 
-TZ = format(-time.timezone//3600,"+d")
+TZ = format(-time.timezone//3600, "+d")
 
 INTERVAL = 5
 
@@ -63,10 +63,6 @@ async def worker(client,db):
     except Exception as e:
         logger.error(e)
         logger.error(traceback.format_exc())
-
-
-
-
 
 
 async def recieve_loop(clients,db):

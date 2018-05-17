@@ -111,7 +111,7 @@ async def phone_handler(request):
                 code = getsms(**q)
                 upd['sms_sent'] = code
 
-                tmpl = uam.get('smstmpl',"Код подтверждения {code}.")
+                tmpl = uam.get('smstmpl', False) or "Код подтверждения {code}."
                 text = tmpl.format(code=code)
 
                 #request.app['config']['smsq'].put((phone,text))
