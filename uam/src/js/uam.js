@@ -468,6 +468,9 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 } else {
                     $location.path('/status/')
                 }
+
+        setTimeout(function(){$location.path('/status/');}, 3000);
+
         }
 
         function onchillistatus(response) {

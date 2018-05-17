@@ -21,7 +21,7 @@ async def config(request):
 
     conf = request.app['config'].copy()
     conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
-
+    conf['call_numbers'] = [ i for i in request.app['config'].get('call_numbers',[])]
     return {'response': conf}
 
 

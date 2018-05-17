@@ -89,7 +89,7 @@ def setup(services=[],args=None):
     import radius
     import json
     import codecs
-    import caller
+    #import caller
 
     config = json.load(codecs.open('../config/config.json','r','utf-8'))
 
@@ -109,7 +109,7 @@ def setup(services=[],args=None):
 
     services.extend( modem_setup(config) )
 
-    services.extend( caller.setup(config) )
+    #services.extend( caller.setup(config) )
 
     if config.get('NETFLOW'):
         import netflow
