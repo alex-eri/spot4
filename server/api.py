@@ -39,7 +39,6 @@ def setup_web(config, https=False, port=8080):
 
     if https:
         try:
-
             ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
             ssl_context.load_cert_chain('../config/server.pem')
             web.run_app(app,port=port,ssl_context=ssl_context)
@@ -57,13 +56,13 @@ def setup(config):
 
     port = config.get('HTTP_PORT',8080)
     if port:
-        web = Process(target=setup_web, args=(config,False,port))
+        web = Process(target=setup_web, args=(config, False,port))
         web.name = 'http'
         procs.append(web)
 
-    port = config.get('HTTPS_PORT',False)
+    port = config.get('HTTPS_PORT', False)
     if port:
-        web = Process(target=setup_web, args=(config,True,port))
+        web = Process(target=setup_web, args=(config, True, port))
         web.name = 'https'
         procs.append(web)
 

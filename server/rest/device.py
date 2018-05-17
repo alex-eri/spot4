@@ -42,7 +42,6 @@ async def device_handler(request):
             await asyncio.sleep(n)
     else:
         device = await coll.find_one(q)#,fields=FIELDS)
-    debug(q)
     if device:
         if device.get('checked'):
             #username = device.get('username')
@@ -51,9 +50,9 @@ async def device_handler(request):
             debug('checked')
             device['password'] = getpassw(device['username'], device['mac'])
         else:
-            numbers = request.app['config'].get('numbers')
-            if device.get('sms_callie') in numbers:
-                debug(numbers)
+            numbers = request.app['config'].get('numbers', [])
+            if device.get('sms_callie', None) and device.get('sms_callie', None) in numbers:
+                debug("%s in %s" % (device.get('sms_callie'), numbers))
             elif numbers:
                 device['sms_callie'] = callie = random.choice(numbers)
                 request.app.logger.debug(q)
