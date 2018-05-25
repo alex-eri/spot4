@@ -11,7 +11,7 @@ from .front import get_uam_config
 
 REREG_DAYS = 3
 REREG = timedelta(days=REREG_DAYS)
-DEVMAX = 4
+DEVMAX = 10
 
 async def nextuser(db):
     n = await db.counters.find_and_modify({'_id':'userid'},{ '$inc': { 'seq': 1 } }, new=True)
@@ -75,7 +75,7 @@ async def phone_handler(request):
     else:
         rereg = REREG
 
-    count = await coll.find( {'mac':q['mac'],'seen': {'$lt': (now-rereg)}} ).count()
+    count = await coll.find( {'mac':q['mac'],'seen': {'$gt': (now-rereg)}} ).count()
 
     if count >= uam.get('devmax', DEVMAX):
         uam['smssend'] = False
@@ -84,7 +84,7 @@ async def phone_handler(request):
         reg = False
         if device.get('checked'):
             pass
-        elif (now - device.get('registred',now)) > rereg:
+        elif (now - device.get('registred', now)) > rereg:
             reg = True
         elif uam.get('smssend',False) and not device.get('sms_sent'):
             reg = True
@@ -101,14 +101,16 @@ async def phone_handler(request):
         elif call=="in":
             pass
         else:
+            debug('sms')
             numbers = request.app['config'].get('numbers')
+            debug(numbers)
             if uam.get('smsrecieve',False) and numbers:
                 code = getsms(**q)
                 upd['sms_waited'] = code
                 upd['sms_callie'] = random.choice(numbers)
-
             if uam.get('smssend',False):
                 code = getsms(**q)
+                debug(code)
                 upd['sms_sent'] = code
 
                 tmpl = uam.get('smstmpl', False) or "Код подтверждения {code}."
