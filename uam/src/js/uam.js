@@ -469,7 +469,11 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                     $location.path('/status/')
                 }
 
-        setTimeout(function(){$location.path('/status/');}, 3000);
+        setTimeout(function(){
+          console.log("originalURL timed out")
+          //$location.path('/status/')
+          window.location.href='/uam/status/'
+          }, 3000); //generate_204 не закрывает окно
 
         }
 
