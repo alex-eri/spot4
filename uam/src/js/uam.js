@@ -359,7 +359,7 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
 
                 },
                 function(error) {
-                    $window.alert('Не сработало...Может Интернет сломался.');
+                    $window.alert('Не сработало...');
                     //window.location.replace('/register/');
                     $location.path('/register/');
                 });
