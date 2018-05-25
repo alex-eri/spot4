@@ -22,11 +22,13 @@ class Client(http.Client):
         self.base_url = "http://smsc.ru/sys/send.php"
 
         self.url2 = "http://smsc.ru/sys/get.php"
-        self.query2 = "get_answers=1&login={login}&psw={password}&fmt=3".format(
+        self.query2 = "get_answers=1&login={login}&psw={password}&fmt=3&charset={encoding}".format(
             login=self.login,
-            password=self.password
+            password=self.password,
+            encoding=self.encoding
         )
-        self.last_id = None
+        self.last_id = 0
+
 
     def unread(self):
         '''returns async'''
@@ -38,7 +40,9 @@ class Client(http.Client):
             last = "&after_id={}".format(self.last_id)
         else:
             last = "&hour=1"
-        return self.request(self.url2, self.query2+last)
+        res = await self.request(self.url2, self.query2+last)
+        #print(res.read())
+        return res
 
     async def messages(self):
         msgs = await self._get_messages()
