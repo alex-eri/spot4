@@ -16,16 +16,23 @@
 	"SERVER": "mongodb://127.0.0.1:27017",
 	"NAME":"spot4"
 },
+"CALL":{
+	"enabled":true,
+	"pool" [
+	{
+	"driver": "ami",
+	"username": "spot",
+	"secret": "somesecret",
+	"address": "127.0.0.1",
+	"port": 5038,
+	"reciever": true,
+	"numbers": ["0000","1234"],
+	}
+	]
+},
 "SMS": {
 	"enabled": true,
 	"pool": [
-			{
-			"driver":"huawei",
-			"url":"http://192.168.8.1",
-			"number": "+79158190408",
-			"sender": false,
-			"reciever": false
-			},
 			{
 			"driver":"zte",
 			"url":"http://192.168.0.1",
