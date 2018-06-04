@@ -2,7 +2,7 @@ from . import _sms
 import uuid
 import os.path
 import os
-import email
+import email, email.parser, email.policy
 import pytz
 
 
@@ -14,6 +14,7 @@ class Client(_sms.Client):
         self.readbox = kw.pop('readbox', "/var/spool/sms/read")
         self.callie = kw.get('number', '')
         os.makedirs(self.readbox, exist_ok=True)
+        self.parser = email.parser.BytesParser(policy=email.policy.HTTP)
         super(Client, self).__init__(*a, **kw)
 
     async def send(self, phone, text, *a, **kw):
@@ -36,19 +37,25 @@ class Client(_sms.Client):
             if not os.path.isfile(path):
                 continue
 
-            with open(path, 'r') as f:
-                e = email.message_from_file(f)
+            with open(path, 'rb') as f:
+                e = self.parser.parse(f)
                 num = "+" + e.get('From', '*')
                 self.logger.debug(num)
                 alphabet = e.get('Alphabet', 'ISO')
-                text = e.get_payload()
                 # if alphabet == "UCS2":
                 #     e.set_charset('utf-16be')
                 #     text = e.get_payload()
                 #     text = codecs.decode(text,'base64')
                 #     text = codecs.decode(text,'utf-16be')
                 if alphabet == "UCS2":
-                    text = text.encode().decode('utf-16be')
+                    payload = e.get_payload(decode=True)
+                    if isinstance(payload, bytes):
+                        text = payload.decode('utf-16be')
+                    else:
+                        self.logger.warning('Bad payload %s', path)
+                        self.logger.debug(payload)
+                else:
+                    text = e.get_payload()
                 self.logger.debug(text)
 
                 date = e.get('Sent') or e.get('Received')
