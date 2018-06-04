@@ -158,7 +158,8 @@ def setup_clients(db, config):
 
         if modem.get('number',False) and modem.get('reciever',True):
             config['numbers'].append(modem['number'])
-
+        if modem.get('numbers',False) and modem.get('reciever',True):
+            config['numbers'].extend(modem['numbers'])
 
     """
     for modem in ztes:

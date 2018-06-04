@@ -1,0 +1,6 @@
+spot4 (212) stable; urgency=low
+
+  * fix mp.manager
+
+ -- Aleksandr Stepanov <alex-eri@ya.ru>  Tue, 22 May 2018 14:17:11 +0300
+

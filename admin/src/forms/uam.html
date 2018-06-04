@@ -48,6 +48,21 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 
 
 
+<fieldset>
+<div class="form-group">
+<label class="col-sm-2 control-label">Кнопка "В Интернет"</label>
+<div class="col-sm-4">
+       <nz-toggle tri-toggle
+        val-null=undefined
+        ng-model="router.loginbtn"></nz-toggle>
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+реальный вход в интернет только после нажатия кнопки
+</p></div>
+</div>
+</fieldset>
+
+
 <fieldset if="fieldset_vk">
 <div class="form-group">
 <label class="col-sm-2 control-label">Вконтакте</label>
@@ -125,7 +140,6 @@ pattern="[0-9]*" />
 
 
 </fieldset>
-
 
 
 <fieldset>

@@ -1,0 +1,12 @@
+Source: spot4
+Section: net
+Build-Depends: make, awk (>=3.6), npm, git, gzip
+Maintainer: Aleksandr Stepanov <alex-eri@ya.ru>
+
+Package: spot4
+Provides: spot4
+Architecture: amd64
+Section: net
+Depends: libc6 (>= 2.24), mongodb-org-server (>=3.4), awk
+Description: Spot4
+ Wifi by SMS

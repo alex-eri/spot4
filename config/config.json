@@ -18,7 +18,7 @@
 },
 "CALL":{
 	"enabled":true,
-	"pool" [
+	"pool": [
 	{
 	"driver": "ami",
 	"username": "spot",
@@ -26,7 +26,7 @@
 	"address": "127.0.0.1",
 	"port": 5038,
 	"reciever": true,
-	"numbers": ["0000","1234"],
+	"numbers": ["0000","1234"]
 	}
 	]
 },
@@ -62,10 +62,10 @@
 			{
 			"driver":"smsc",
 			"method":"get",
-			"sender": true,
+			"sender": false,
 			"reciever": false,
 			"encoding":"utf-8",
-			"login":"user",
+			"login":"login",
 			"password":"passw"
 			}
 		]
