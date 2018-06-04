@@ -129,7 +129,7 @@ app.config(['$routeProvider','$locationProvider',
         controller: 'Check'
       }).
       when('/login/', {
-        template: waittemplate,
+        templateUrl: '/static/uam-forms/login.html',
         controller: 'Login'
       }).
       when('/voucher/', {
@@ -437,8 +437,8 @@ app.controller('VoucherGTC',  ['$scope','$resource','$cookies','$location','$htt
     }]);
 
 
-app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
-    function ( $window, $resource, $cookies ,$location,$http){
+app.controller('Login',  ['$window','$resource','$cookies','$location','$http','$rootScope',
+    function ( $window, $resource, $cookies ,$location, $http, $scope ){
         var username = $location.$$search.username ;
         var password = $location.$$search.password;
         var ischilli = $cookies.get('uamip');
@@ -468,6 +468,13 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 } else {
                     $location.path('/status/')
                 }
+
+        setTimeout(function(){
+          console.log("originalURL timed out")
+          //$location.path('/status/')
+          window.location.href='/uam/status/'
+          }, 3000); //generate_204 не закрывает окно
+
         }
 
         function onchillistatus(response) {
@@ -507,24 +514,35 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http',
                 if (response.redir.logoutURL) $cookies.put('linklogout', response.redir.logoutURL);
         }
 
+        function login(){
+              console.log(1)
+              if(ischilli) {
+                  //chilli
+                  $resource(chilli+'status', { },
+                  {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
+                  ).get(onchillistatus,onerror)
+              } else {
+                  //mikrotik
+                  console.log(2)
+                  $resource($cookies.get('linklogin'),
+                  {
+                      target:'jsonp',
+                  },
+                  {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onmikrotikstatus,onerror)
+                  console.log(3)
+              }
 
-        if (username && password) {
-            if(ischilli) {
-                //chilli
-                $resource(chilli+'status', { },
-                {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
-                ).get(onchillistatus,onerror)
-            } else {
-                //mikrotik
+        }
 
-                $resource($cookies.get('linklogin'),
-                {
-                    target:'jsonp',
-                },
-                {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onmikrotikstatus,onerror)
-            }
+        $scope.login = login;
+
+        if ($scope.config.loginbtn) {
         } else {
+          if (username && password) {
+            login()
+          } else {
             onerror({})
+          }
         }
 
 }]);

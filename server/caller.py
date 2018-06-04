@@ -7,6 +7,7 @@ import json
 
 
 def setup_reciever(db,config,clients):
+    pass
 
 
 

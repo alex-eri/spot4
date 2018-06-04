@@ -2,7 +2,6 @@ from .phone import *
 from .device import *
 from .decorators import json
 import aiohttp.web
-from aiohttp.file_sender import FileSender
 import logging
 logger = logging.getLogger('http')
 debug = logger.debug

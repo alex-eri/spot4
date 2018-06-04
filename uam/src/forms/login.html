@@ -1,0 +1,14 @@
+<p>
+<form name="loginform" class="form-inline">
+<p><label>
+Регистрация успешна.
+</label></p>
+
+  <div class="form-group" ng-if="config.loginbtn" >
+          <input class="btn btn-default form-control" type="submit" ng-click="login()" value="В Интернет" />
+  </div>
+  <div ng-if="waiting">
+    <center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>
+  </div>
+</form>
+</p>
