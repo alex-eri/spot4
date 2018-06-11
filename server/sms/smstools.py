@@ -4,7 +4,7 @@ import os.path
 import os
 import email, email.parser, email.policy
 import pytz
-
+import glob
 
 class Client(_sms.Client):
     def __init__(self, *a, **kw):
@@ -13,6 +13,7 @@ class Client(_sms.Client):
         self.sentbox = kw.pop('sentbox', "/var/spool/sms/sent")
         self.readbox = kw.pop('readbox', "/var/spool/sms/read")
         self.callie = kw.get('number', '')
+        self.modem = kw.get('modem', None)
         os.makedirs(self.readbox, exist_ok=True)
         self.parser = email.parser.BytesParser(policy=email.policy.HTTP)
         super(Client, self).__init__(*a, **kw)
@@ -23,6 +24,8 @@ class Client(_sms.Client):
         with open(path, 'wb') as f:
             f.write(b'To: %s\n' % phone[1:].encode('ascii'))
             f.write(b'Alphabet: UCS\n')
+            if self.modem:
+                f.write(b'Modem: %s\n' % self.modem.encode('ascii'))
             f.write(b'\n')
             f.write(text.encode('utf-16be'))
         self.logger.debug(u)
@@ -32,13 +35,24 @@ class Client(_sms.Client):
            returns list of dict{phone,text,to}
         '''
         ret = []
-        for n in os.listdir(self.incomming):
-            path = os.path.join(self.incomming, n)
+
+        if self.modem:
+            modem_file = self.modem + '.*'
+        else:
+            modem_file = "*"
+
+        for path in glob.glob(os.path.join(self.incomming, modem_file)):
+            # ... in os.listdir(self.incomming):
+            # path = os.path.join(self.incomming, n)
             if not os.path.isfile(path):
                 continue
 
             with open(path, 'rb') as f:
-                e = self.parser.parse(f)
+                try:
+                    e = self.parser.parse(f)
+                except:
+                    self.logger.error('Bad file %s' % path)
+                    continue
                 num = "+" + e.get('From', '*')
                 self.logger.debug(num)
                 alphabet = e.get('Alphabet', 'ISO')

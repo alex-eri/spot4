@@ -25,7 +25,7 @@ TZ = format(-time.timezone//3600, "+d")
 INTERVAL = 5
 
 
-async def handle(m,db,client):
+async def handle(m, db, client):
     t = retoken.search(m['text'])
     q = None
 
@@ -40,19 +40,20 @@ async def handle(m,db,client):
 
     if q:
         device = await db.devices.find_and_modify(q, {
-              '$set':{ 'checked': True },
-              '$currentDate':{'check_date':True}
+              '$set': {'checked': True},
+              '$currentDate': {'check_date': True}
             }, upsert=False)
         if device:
-            m['callee'] = device.get('callee','default')
+            m['callee'] = device.get('callee', 'default')
     logger.info(m)
 
-async def worker(client,db):
+
+async def worker(client, db):
     try:
         msgs = []
         #async
         for m in await client.unread():
-            await handle(m,db,client)
+            await handle(m, db, client)
             msgs.append(m)
 
         if msgs: db.sms_received.insert(msgs)
@@ -104,13 +105,15 @@ async def send_loop(clients,db):
 
     from pymongo.cursor import CursorType
 
-    last = await db.sms_sent.find().sort([('_id' , -1)]).to_list(1)
-    if last: last = last[0].get('_id')
+    last = await db.sms_sent.find().sort([('_id', -1)]).to_list(1)
+    if last:
+        last = last[0].get('_id')
     q = None
 
     while True:
-        if last: q = {"_id":{'$gt':last}}
-        cursor = db.sms_sent.find(q,cursor_type=CursorType.TAILABLE_AWAIT)
+        if last:
+            q = {"_id": {'$gt': last}}
+        cursor = db.sms_sent.find(q, cursor_type=CursorType.TAILABLE_AWAIT)
         while cursor.alive:
             async for sms in cursor:
                 p = sms.get('callee', 'default')
@@ -119,7 +122,7 @@ async def send_loop(clients,db):
                     client = next(xclients[p])
                 else:
                     client = next(roundrobin)
-                last = sms.get('_id',last)
+                last = sms.get('_id', last)
                 try:
                     res = await client.send(**sms)
                     logger.info(res)
