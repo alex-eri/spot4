@@ -5,26 +5,33 @@ from .logger import logger
 
 import base64
 
+
 def check_auth(handler):
     async def middleware_handler(request):
         if request.headers.get('AUTHORIZATION') is None:
-            raise web.HTTPUnauthorized(headers={'WWW-Authenticate':'Basic realm="Spot4 API"'})
+            raise web.HTTPUnauthorized(headers={
+                'WWW-Authenticate': 'Basic realm="Spot4 API"'
+                })
         else:
             method, secret = request.headers.get('AUTHORIZATION').split()
             login, password = base64.b64decode(secret).decode('utf-8').split(':')
 
             coll = request.app['db'].administrator
 
-            request.administrator = await coll.find_one({'name':login,'password':password})
+            request.administrator = await coll.find_one({
+                'name': login, 'password': password
+                 })
             logger.debug(request.administrator)
             if not request.administrator:
-                raise web.HTTPForbidden()
+                raise web.HTTPUnauthorized(headers={
+                    'WWW-Authenticate': 'Basic realm="Spot4 API: not allowed here"'
+                    })
 
         return await handler(request)
     return middleware_handler
 
 
-def json( handler):
+def json(handler):
     async def middleware_handler(request):
         resp = await handler(request)
 
