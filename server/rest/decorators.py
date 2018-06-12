@@ -13,7 +13,7 @@ def check_auth(handler):
                 'WWW-Authenticate': 'Basic realm="Spot4 API"'
                 })
         else:
-            method, secret = request.headers.get('AUTHORIZATION').split()
+            method, secret = request.headers.get('AUTHORIZATION').split(maxsplit=1)
             login, password = base64.b64decode(secret).decode('utf-8').split(':')
 
             coll = request.app['db'].administrator
