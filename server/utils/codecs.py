@@ -1,6 +1,9 @@
 import codecs
 import socket
 import struct
+import logging
+
+logger=logging.getLogger('codecs')
 
 def ip2int(addr):
     return struct.unpack("!I", socket.inet_aton(addr))[0]
@@ -14,8 +17,10 @@ def trydecodeHexUcs2(a):
         a = codecs.decode(a, "hex")
         return a.decode('utf-16be')
         #return decodeUcs2(iter(a),len(a))
-    except:
-        pass
+    except Exception as e:
+        logger.error('Decode UCS2 failed')
+        logger.error(e)
+        logger.error(repr(a))
     return a
 
 
