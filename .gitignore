@@ -17,3 +17,5 @@ tests/*
 ~*
 .~*
 *.pem
+package-json.lock
+
