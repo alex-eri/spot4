@@ -203,6 +203,7 @@ def premain():
     import utils.procutil
     if args.config_dir:
         utils.procutil.chdir(args.config_dir)
+        dir_ = args.config_dir
     else:
         if getattr(sys, 'frozen', False):
             # frozen
@@ -211,9 +212,7 @@ def premain():
         else:
             # unfrozen
             dir_ = os.path.dirname(os.path.realpath(__file__))
-        utils.procutil.chdir(
-            dir_
-            )
+        utils.procutil.chdir(dir_)
 
     print(dir_)
 

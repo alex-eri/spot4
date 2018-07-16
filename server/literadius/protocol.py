@@ -493,8 +493,7 @@ class Auth:
 
         if req.get(rad.CallingStationId) == req.get(rad.UserName):
             uam = await get_uam_config(self.db, callee)
-            debug(uam)
-            if uam.get('macauth',False):
+            if uam and uam.get('macauth',False):
                 session = await self.db.rad_sessions.find_one(
                     { 'caller':mac, 'callee': callee, 'stop':{'$gt':now} },
                     sort=[("$natural", pymongo.DESCENDING)]
