@@ -3,12 +3,10 @@ import reindex
 
 #sys.path.insert(0, '.')
 
-from multiprocessing import Manager
-
 logger = logging.getLogger('main')
 debug = logger.debug
 
-manager = Manager()
+manager = None
 
 def modem_setup(config):
 
@@ -181,8 +179,11 @@ def main(args=None):
 
 
 def premain():
+    global manager
     print('starting spot4')
     import multiprocessing,os
+    from multiprocessing import Manager
+    manager = Manager()
     multiprocessing.freeze_support()
     import argparse
 

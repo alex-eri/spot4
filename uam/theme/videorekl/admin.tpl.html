@@ -1,0 +1,37 @@
+<fieldset  ng-include="'/uam/theme/default/admin.tpl.html'" />
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Обложка</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_cover||''}}"
+   class="form-control" ng-model="router.theme_cover" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+ссылка на файл с расширениями jpg.
+</p></div>
+</div>
+
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Видео mp4</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_video_mp4||''}}"
+   class="form-control" ng-model="router.theme_video_mp4" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+ссылка на файл с расширениями mp4. IE и Chrome.
+</p></div>
+</div>
+
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Видео webm</label>
+<div class="col-sm-4">
+<input type="url" placeholder="{{limits.default.theme_video_webm||''}}"
+   class="form-control" ng-model="router.theme_video_webm" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+ссылка на файл с расширениями webm. Firefox и мобильные.
+</p></div>
+</div>
+

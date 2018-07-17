@@ -67,6 +67,7 @@ class Client(_httpclient.Client):
         return []
 
     async def clean(self):
+        pass
 
 
     def unread(self):
