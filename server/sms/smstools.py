@@ -5,6 +5,7 @@ import os
 import email, email.parser, email.policy
 import pytz
 import glob
+import shutil
 
 class Client(_sms.Client):
     def __init__(self, *a, **kw):
@@ -87,7 +88,7 @@ class Client(_sms.Client):
 
                 ret.append(m)
 
-            os.rename(path, os.path.join(self.readbox, n))
+            shutil.move(path, self.readbox)
         self.logger.debug(ret)
         return ret
 
