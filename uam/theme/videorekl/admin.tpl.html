@@ -1,9 +1,9 @@
 <fieldset  ng-include="'/uam/theme/default/admin.tpl.html'" />
 
 <div class="form-group">
-<label class="col-sm-2 control-label">Обложка</label>
+<label class="col-sm-2 control-label">Обложка на фон</label>
 <div class="col-sm-4">
-<input type="url" placeholder="{{limits.default.theme_cover||''}}"
+<input type="text" placeholder="{{limits.default.theme_cover||''}}"
    class="form-control" ng-model="router.theme_cover" />
 </div>
 <div class="col-sm-6"><p class="form-control-static">
@@ -11,11 +11,22 @@
 </p></div>
 </div>
 
+<div class="form-group">
+<label class="col-sm-2 control-label">Картинка</label>
+<div class="col-sm-4">
+<input type="text" placeholder="{{limits.default.theme_video_jpg||''}}"
+   class="form-control" ng-model="router.theme_video_jpg" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+ссылка на файл с расширениями jpg. На случай если нет видео или оно не поддерживается.
+</p></div>
+</div>
+
 
 <div class="form-group">
 <label class="col-sm-2 control-label">Видео mp4</label>
 <div class="col-sm-4">
-<input type="url" placeholder="{{limits.default.theme_video_mp4||''}}"
+<input type="text" placeholder="{{limits.default.theme_video_mp4||''}}"
    class="form-control" ng-model="router.theme_video_mp4" />
 </div>
 <div class="col-sm-6"><p class="form-control-static">
@@ -27,7 +38,7 @@
 <div class="form-group">
 <label class="col-sm-2 control-label">Видео webm</label>
 <div class="col-sm-4">
-<input type="url" placeholder="{{limits.default.theme_video_webm||''}}"
+<input type="text" placeholder="{{limits.default.theme_video_webm||''}}"
    class="form-control" ng-model="router.theme_video_webm" />
 </div>
 <div class="col-sm-6"><p class="form-control-static">
@@ -35,3 +46,25 @@
 </p></div>
 </div>
 
+<div class="form-group">
+<label class="col-sm-2 control-label">Задержка для показа ролика</label>
+<div class="col-sm-4">
+<input type="number" min=0 max=600 placeholder="{{limits.default.counter||''}}"
+   class="form-control" ng-model="router.counter" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+скрыть кнопку "в интернет" на несколько секунд.
+</p></div>
+</div>
+
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Ссылка</label>
+<div class="col-sm-4">
+<input type="url"  placeholder="{{limits.default.theme_video_link||''}}"
+   class="form-control" ng-model="router.theme_video_link" />
+</div>
+<div class="col-sm-6"><p class="form-control-static">
+для перехода по клику на видео.
+</p></div>
+</div>

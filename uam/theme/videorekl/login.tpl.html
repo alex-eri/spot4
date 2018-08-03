@@ -20,14 +20,14 @@ video {
     position: fixed;
     top: 50%;
     left: 50%;
-    min-width: 100%;
+    max-width: 100%;
     min-height: 100%;
     width: auto;
     height: auto;
     z-index: -100;
     transform: translateX(-50%) translateY(-50%);
   transition: 1s opacity;
-
+  object-fit: contain;
 }
 
 .well {
@@ -53,11 +53,13 @@ video {
 <div ng-init="$root.counter=0">
 
 <span ng-if="onlocation('/login/')" ng-init="$root.counter=config.counter||5">
-  <video id="theme_video" poster="{{config.theme_cover}}"
-  autoplay loop tabindex="0"  muted  playsinline>
-  <source ng-src="{{config.theme_video_mp4}}" type='video/mp4' />
-  <source ng-src="{{config.theme_video_webm}}" type='video/webm; codecs="vp8, vorbis"' />
-</video>
+<a href="{{config.theme_video_link}}" target=_blank>
+  <video id="theme_video" poster="{{config.theme_video_jpg}}"
+      autoplay loop tabindex="0"  muted  playsinline>
+    <source ng-src="{{config.theme_video_mp4}}" type='video/mp4' />
+    <source ng-src="{{config.theme_video_webm}}" type='video/webm; codecs="vp8, vorbis"' />
+  </video>
+</a>
 
 <button class="mute pull-right btn btn-default btn-sm"
   onclick="document.getElementById('theme_video').muted = ! document.getElementById('theme_video').muted; return false">

@@ -1,0 +1,1 @@
+https://bintray.com/vszakats/generic/openssl

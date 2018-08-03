@@ -1,12 +1,12 @@
 import logging,sys
 import reindex
 
-#sys.path.insert(0, '.')
+sys.path.insert(0, '.')
 
 logger = logging.getLogger('main')
 debug = logger.debug
 
-manager = None
+#manager = None
 
 def modem_setup(config):
 
@@ -58,7 +58,7 @@ c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
 
 
 def setup_log(config):
-
+    import logging.handlers
     if config.get('LOGFILE'):
         FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
     else:
@@ -75,12 +75,19 @@ def setup_log(config):
     else:
         level = logging.WARNING
 
-
-
     logfile = config.get('LOGFILE', None)
+    logging.basicConfig(format = FORMAT, level=level, filename=logfile)
+
+    if False and logfile:
+        h = logging.handlers.RotatingFileHandler(logfile, 'a', 300, 10)
+        f = logging.Formatter(FORMAT)
+        h.setFormatter(f)
+        root = logging.getLogger()
+        root.addHandler(h)
+
 
     #TODO https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
-    logging.basicConfig(format = FORMAT, level=level, filename = logfile )
+
 
 def setup(services=[],args=None):
     import api
@@ -91,8 +98,8 @@ def setup(services=[],args=None):
 
     config = json.load(codecs.open('../config/config.json','r','utf-8'))
 
-    config['numbers'] = manager.list()
-    config['call_numbers'] = manager.list()
+    #config['numbers'] = manager.list()
+    #config['call_numbers'] = manager.list()
 
     if args.noreindex :
         logger.info('no reindexing')
@@ -116,7 +123,7 @@ def setup(services=[],args=None):
     return services
 
 
-def main(args=None):
+def main(args=None,daemon=False):
 
     import signal,os
     from multiprocessing import Lock
@@ -126,22 +133,38 @@ def main(args=None):
     services = []
 
     def start(*a):
+        logger.info('Main at %s starting' % os.getpid())
+        sys.running = True
         for proc in services:
+            proc.daemon=True
             proc.start()
+            logger.info('Started %s at %s' % (proc.name, proc.pid))
 
     def stop(*a):
         for proc in services:
             if proc.is_alive():
+                debug('stoping %s' % proc.name)
                 if os.name == 'posix':
                     os.kill(proc.pid, signal.SIGINT)
-                elif os.name == 'nt':
-                    os.kill(proc.pid, signal.CTRL_C_EVENT)
-                    os.kill(proc.pid, signal.CTRL_C_EVENT)
+                elif os.name == 'nt' and not daemon:
+                    os.kill(proc.pid, signal.SIGBREAK)
+                    try:
+                        os.kill(proc.pid, signal.CTRL_C_EVENT)
+                    except:
+                        debug('CTRL_C_EVENT %s failed' % proc.name)
+                else:
+                    os.kill(proc.pid, signal.SIGINT)
 
     def kill(*a):
+        debug('kill(%s)'%repr(a))
+        sys.running = False
         for proc in services:
             debug('terminate %s' % proc.name)
-            proc.terminate()
+            if proc:
+                try:
+                    proc.terminate()
+                except:
+                    logger.error('terminate %s' % proc.name)
 
     def wait(n=1):
         for proc in services:
@@ -149,8 +172,6 @@ def main(args=None):
 
     def restart(*a):
         restart_lock.acquire()
-        #stop()
-        #wait(10)
         kill()
         wait(10)
         while services:
@@ -162,11 +183,20 @@ def main(args=None):
     if os.name == 'posix':
         signal.signal(signal.SIGUSR1, restart)
 
+    if os.name == 'nt':
+        signal.signal(signal.SIGBREAK, kill)
+
+    signal.signal(signal.SIGINT, kill)
+    #signal.signal(signal.CTRL_C_EVENT, kill)
 
     setup(services,args=args)
+    if daemon:
+        return (start,stop,wait,kill)
+
     start()
 
     sys.running = True
+
     while sys.running:
         try:
             wait()
@@ -174,17 +204,16 @@ def main(args=None):
             logger.error(e)
             sys.running = False
             break
-
+    stop()
     kill()
 
 
-def premain():
-    global manager
-    print('starting spot4')
+def premain(daemon=False):
+    #global manager
+    debug('starting spot4')
     import multiprocessing,os
-    from multiprocessing import Manager
-    manager = Manager()
     multiprocessing.freeze_support()
+    #from multiprocessing import Manager
     import argparse
 
     parser = argparse.ArgumentParser(description='Spot4 Hotspot controller')
@@ -193,7 +222,7 @@ def premain():
 
     parser.add_argument('--noreindex', action='store_true', help='Fast start')
 
-    if os.name == 'nt':
+    if os.name == 'nt' and False:
         parser.add_argument('--service',
                              dest='service', action='store_true', help='Windows service')
         parser.add_argument('--fg',
@@ -208,21 +237,21 @@ def premain():
     else:
         if getattr(sys, 'frozen', False):
             # frozen
-            print('frozen')
+            debug('frozen')
             dir_ = os.path.dirname(sys.executable)
         else:
             # unfrozen
             dir_ = os.path.dirname(os.path.realpath(__file__))
         utils.procutil.chdir(dir_)
 
-    print(dir_)
+    debug(dir_)
 
     import json,codecs
     config = json.load(codecs.open('../config/config.json','r','utf-8'))
     setup_log(config)
+    #manager = Manager()
 
-
-    if os.name == 'nt':
+    if os.name == 'nt' and False:
         if args.fg:
             main(args)
         if args.service:
@@ -239,7 +268,7 @@ def premain():
             import utils.windows
             utils.windows.start(sys.modules[__name__],  argv, exeargs)
     else:
-        main(args)
+        return main(args,daemon=daemon)
 
 if "__main__" in __name__ :
     premain()
