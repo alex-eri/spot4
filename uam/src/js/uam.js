@@ -502,7 +502,12 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http','
 
         function onmikrotikstatus(response){
                 var dst = $cookies.get('linkorig') || "/uam/status/";
-                var charpassw = hexMD5(response.chapid + password + response.challenge);
+
+                if (response.challenge) {
+                  var charpassw = hexMD5(response.chapid + password + response.challenge);
+                } else {
+                  var charpassw = password;
+                }
                 $resource($cookies.get('linklogin'),
                 {
                     target:'jsonp',

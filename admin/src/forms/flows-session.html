@@ -17,7 +17,7 @@
 
   <tr>
     <th>От</th>
-    <th>К</th>
+    <th>Протокол</th>
     <th>Байт</th>
     <th>Пакетов</th>
     <th>Начало</th>
@@ -27,12 +27,11 @@
   <tr ng-repeat="a in flows">
 
     <td>
-      {{ a.srcaddr | ip}}:{{a.srcport}}
+      {{ a._id.srcaddr | ip}}
     </td>
     <td>
-      {{ a.dstaddr | ip}}:{{a.dstport}}/{{ a.prot | proto }}
+      {{ a._id.prot | proto }}
     </td>
-
     <td>{{a.dOctets | mega }}</td>
     <td>{{a.dPkts | mega }}</td>
     <td>{{(a.first*1000) | date: 'medium'}}</td>
