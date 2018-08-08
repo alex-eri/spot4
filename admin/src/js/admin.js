@@ -192,13 +192,18 @@ app.controller('FlowSession',  ['$scope','$resource','$routeParams',
                 [
 
                 {$match: match},
-
+                  {$group : {'_id': {'srcaddr': '$srcaddr','prot': '$prot'},
+                        'dOctets': {'$sum': '$dOctets'},
+                        'dPkts' : {'$sum': '$dPkts'},
+                        'first': {'$first': '$first'},
+                        'last': {'$last': '$last'}
+                      }},
                 ]}
                }],onresponse)
        }
        }
 
-       $resource('/db/collector').save([{distinct:['sensor']}], function(response){ $scope.sensors = response.response; })
+       //$resource('/db/collector').save([{distinct:['sensor']}], function(response){ $scope.sensors = response.response; })
        load()
 
 }])

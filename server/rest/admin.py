@@ -16,12 +16,15 @@ async def config(request):
 
     if request.administrator.get('filters'):
         conf = {}
-        conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
+        #conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
         return {'response': conf}
 
     conf = request.app['config'].copy()
-    conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
-    conf['call_numbers'] = [ i for i in request.app['config'].get('call_numbers',[])]
+    #conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
+    #conf['call_numbers'] = [ i for i in request.app['config'].get('call_numbers',[])]
+
+    conf['numbers'] = await request.app['db'].numbers.find({'sms_recv':True}).to_list(length=1000)
+
     return {'response': conf}
 
 

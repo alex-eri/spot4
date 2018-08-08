@@ -5,10 +5,10 @@ set accept=yes
 /ip traffic-flow
 set cache-entries=64k enabled=yes inactive-flow-timeout=5m
 /ip traffic-flow target
-add dst-address={IP} version=5
+add dst-address={IP} version=5 port=2055
 
 /ip hotspot profile
-add html-directory-override={IP} login-by=http-chap,http-pap name=spot4 radius-interim-update=5m use-radius=yes
+add html-directory-override={PROTO}.{IP}.{PORT} login-by=http-chap,http-pap name=spot4 radius-interim-update=5m use-radius=yes
 
 /ip hotspot
 add address-pool=hotspotpool disabled=no idle-timeout=30m interface=hotspot keepalive-timeout=30m login-timeout=30m name=server1 profile=spot4

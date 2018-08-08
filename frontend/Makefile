@@ -27,6 +27,7 @@ node_modules: package.json
 
 ../static/js/libuam.js: ../static/js node_modules
 	node_modules/uglify-js/bin/uglifyjs \
+		node_modules/jquery/dist/jquery.min.js \
 		node_modules/es5-shim/es5-shim.js \
 		node_modules/es5-shim/es5-sham.js \
 		node_modules/angular/angular.js \

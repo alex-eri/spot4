@@ -68,6 +68,8 @@ app.directive('codeValidation', function(){
    };
 });
 
+
+
 var waittemplate = '<center><div class="spinner"><div class="bounce1"></div><div class="bounce2"></div><div class="bounce3"></div></div></center>';
 
 
@@ -82,8 +84,6 @@ app.config( [
 
 app.config(['$routeProvider','$locationProvider',
   function($routeProvider, $locationProvider) {
-
-
 
     $locationProvider.html5Mode(
         {
@@ -502,7 +502,12 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http','
 
         function onmikrotikstatus(response){
                 var dst = $cookies.get('linkorig') || "/uam/status/";
-                var charpassw = hexMD5(response.chapid + password + response.challenge);
+
+                if (response.challenge) {
+                  var charpassw = hexMD5(response.chapid + password + response.challenge);
+                } else {
+                  var charpassw = password;
+                }
                 $resource($cookies.get('linklogin'),
                 {
                     target:'jsonp',
@@ -647,13 +652,25 @@ app.controller('Status',  ['$rootScope','$resource','$cookies',
     }]);
 
 
-app.run(['$route','$location','$rootScope','$resource','$cookies',
- function ($route,$location,$scope,$resource,$cookies) {
+app.run(['$route','$location','$rootScope','$resource','$cookies','$interval',
+ function ($route,$location,$scope,$resource,$cookies,$interval) {
     console.log($location);
     console.log($route);
 
     $scope.$location = $location;
     $scope.$cookies = $cookies;
+
+
+    $scope.onlocation = function(location) {
+      return ($location.$$path.indexOf(location) == 0)
+    }
+
+
+    $scope.countdown = function() {
+      var start = $scope.counter;
+      $interval( function(){ $scope.counter--}, 1000, start)
+    }
+
 
     for (var key in $location.$$search){
         $cookies.put(key, $location.$$search[key]);

@@ -1,0 +1,90 @@
+<link rel="stylesheet" href="/static/css/bootstrap-theme.min.css" />
+<style>
+video {
+   max-width:720px;
+}
+
+
+html,body,.container
+  {
+  min-height: 100%;
+  }
+
+body {
+  background: url('{{config.theme_cover}}') no-repeat;
+  background-size: cover;
+  }
+
+
+video {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    max-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    z-index: -100;
+    transform: translateX(-50%) translateY(-50%);
+  transition: 1s opacity;
+  object-fit: contain;
+}
+
+.well {
+  border-top: none;
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-top-right-radius:0;
+  border-top-left-radius:0;
+  max-width: 400px;
+  }
+
+.mute {
+ margin-top: 15px;
+ margin-left: 5px;
+  }
+
+</style>
+
+<script>
+
+</script>
+
+<div ng-init="$root.counter=0">
+
+<span ng-if="onlocation('/login/')" ng-init="$root.counter=config.counter||5">
+<a href="{{config.theme_video_link}}" target=_blank>
+  <video id="theme_video" poster="{{config.theme_video_jpg}}"
+      autoplay loop tabindex="0"  muted  playsinline>
+    <source ng-src="{{config.theme_video_mp4}}" type='video/mp4' />
+    <source ng-src="{{config.theme_video_webm}}" type='video/webm; codecs="vp8, vorbis"' />
+  </video>
+</a>
+
+<button class="mute pull-right btn btn-default btn-sm"
+  onclick="document.getElementById('theme_video').muted = ! document.getElementById('theme_video').muted; return false">
+  <span class="glyphicon glyphicon-volume-off" aria-hidden="true"></span>
+  </button>
+
+
+<span ng-if="(counter > 0)"  ng-init="countdown()">
+  <button class="mute pull-right btn btn-default btn-sm" disabled>
+  <span class="glyphicon glyphicon-forward" aria-hidden="true"></span> Пропустить {{counter}}
+  </button>
+</span>
+</span>
+
+<div class="well" ng-show="(!counter)" >
+
+<center ng-show="(! onlocation('/register/')) || $root.comfirmed">
+    <div ng-view></div>
+</center>
+<div  ng-if="onlocation('/register/') && ! $root.comfirmed">
+<p>Уважаемый пользователь!</p>
+<p>{{config.theme_text1 || "В соответствии с действующим законодательством Российской Федерации в области связи, при предоставлении услуг передачи данных и доступа к информационно-телекоммуникационной сети «Интернет» Оператором осуществляется идентификация пользователя и используемого им оконечного оборудования."}}</p>
+<p>{{config.theme_text2 || "Просим Вас ввести в специальное поле Ваш мобильный номер (например: +79031234567) и следовать инструкциям."}}</p>
+<label><input type=checkbox ng-model=$root.comfirmed></input> Согласен с правилами предоставления услуг</label>
+
+</div>
+</div>
+</div>

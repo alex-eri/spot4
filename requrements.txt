@@ -3,8 +3,11 @@ cchardet>=1.0.0
 cstruct>=1.0
 #cx-Freeze==5.0.1
 cx-Freeze
-motor>=0.6.2
+motor<2.0.0
+pymongo<3.7
 pyotp>=2.1.1
 pytz
 #git+https://github.com/alex-eri/ctypescrypto.git@py3#egg=ctypescrypto
-git+https://github.com/vbwagner/ctypescrypto.git#egg=ctypescrypto
+#git+https://github.com/vbwagner/ctypescrypto.git#egg=ctypescrypto
+https://github.com/vbwagner/ctypescrypto/archive/master.zip#egg=ctypescrypto
+lxml

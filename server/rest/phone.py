@@ -102,12 +102,13 @@ async def phone_handler(request):
             pass
         else:
             debug('sms')
-            numbers = request.app['config'].get('numbers')
+            numberscursor = request.app['db'].numbers.find({'sms_recv':True}) #request.app['config'].get('numbers')
+            numbers = await numberscursor.to_list(length=1000)
             debug(numbers)
             if uam.get('smsrecieve',False) and numbers:
                 code = getsms(**q)
                 upd['sms_waited'] = code
-                upd['sms_callie'] = random.choice(numbers)
+                upd['sms_callie'] = random.choice(numbers).get('number','~')
             if uam.get('smssend',False):
                 code = getsms(**q)
                 debug(code)

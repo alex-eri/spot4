@@ -15,3 +15,7 @@ mikrotik/hotspot/*
 tests/*
 *.7z
 ~*
+.~*
+*.pem
+package-json.lock
+

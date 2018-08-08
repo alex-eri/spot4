@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 USE_CYTHON = False
 
 from cx_Freeze import Executable
@@ -8,7 +9,7 @@ sys.path.insert(1,'lib/python3.6')
 sys.path.insert(1,'lib/python36.zip')
 
 
-packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms", "idna", "encodings"] #,"pandas"]
+packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms", "idna", "encodings","logging.handlers", 'utils.ServiceHandler','codecs'] #,"pandas"]
 excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses","Xmultidict._multidict"]
 
 build_exe_options = {
@@ -57,7 +58,7 @@ def find_libs():
 
 import os
 if os.name == 'posix':
-
+    excludes.append('cx_Logging')
     build_exe_options['include_files'].extend(
 
         [ x for x in find_libs() ]
@@ -70,12 +71,18 @@ base_service = base
 initScript="ConsoleSetLibPath"
 
 if os.name == 'nt':
+    packages.append('cx_Logging')
+    p_path = os.path.dirname(sys.executable)
+
+
     build_exe_options['packages'].extend(['win32serviceutil'])
     build_exe_options['include_files'].extend(
         [
-            'openssl.exe',
-            'libeay32.dll',
-            'ssleay32.dll'
+            #os.path.join(p_path,'libeay32.dll'),
+            #os.path.join(p_path,'ssleay32.dll')
+            "windows.dll/libcrypto-1_1-x64.dll",
+            "windows.dll/libssl-1_1-x64.dll",
+            ("windows.dll/libcrypto-1_1-x64.dll","libeay32.dll")
         ]
     )
     initScript="Console"
@@ -99,6 +106,11 @@ executables = [Executable(
     ]
 
 
+if os.name == 'nt':
+    executables.append(
+        Executable('winservice.py', base='Win32Service',
+               targetName='Spot4Service.exe')
+    )
 
 if USE_CYTHON:
     from distutils.extension import Extension

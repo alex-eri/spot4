@@ -44,6 +44,7 @@ def setup_loop(config):
     )
 
     async def handler(modem,number,text,called_number):
+        pass
 
 
 

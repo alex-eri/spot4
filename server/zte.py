@@ -66,6 +66,19 @@ async def worker(client, db):
         logger.error(traceback.format_exc())
 
 
+async def get_numbers(db, config):
+    pool =  config['SMS'].get('pool',[])
+    numbers = []
+    for modem in pool:
+        if not modem.get('reciever', False):
+            continue
+        if modem.get('number',False):
+            numbers.append(modem['number'])
+        if modem.get('numbers',False):
+            numbers.extend(modem['numbers'])
+    await sms_recv_numbers(db,numbers)
+
+
 async def recieve_loop(clients,db):
     debug('starting reciever')
     name = current_process().name
@@ -134,6 +147,13 @@ async def send_loop(clients,db):
             #
 
 
+async def sms_recv_numbers(db,numbers):
+    await db.numbers.remove({'sms_recv':True})
+    if numbers:
+        await db.numbers.insert_many([{'sms_recv': True, 'number': n} for n in numbers])
+
+
+
 def setup_clients(db, config):
     #from sms import zte, at
     #ztes = config['SMS'].get('ZTE',[])
@@ -159,32 +179,6 @@ def setup_clients(db, config):
 
         clients.append( module.Client(**modem ))
 
-        if modem.get('number',False) and modem.get('reciever',True):
-            config['numbers'].append(modem['number'])
-        if modem.get('numbers',False) and modem.get('reciever',True):
-            config['numbers'].extend(modem['numbers'])
-
-    """
-    for modem in ztes:
-        clients.append( zte.Client(**modem ))
-        config['numbers'].append(modem['number'])
-
-
-    smsd = config['SMS'].get('SMSTOOLS3',{})
-    if smsd:
-        from sms import smstools
-        clients.append( smstools.Client(
-            callie='smstools3',
-            sender=smsd['sender']
-            ))
-        config['numbers'].extend(smsd.get('numbers',[]))
-
-    gsm = config['SMS'].get('AT',[])
-
-    for modem in gsm:
-        clients.append( at.Client(**modem ))
-        config['numbers'].append(modem['number'])
-    """
     return clients
 
 def setup_loop(config):
@@ -214,8 +208,8 @@ def setup_loop(config):
 
     clients = setup_clients(db, config)
 
-
     try:
+        loop.create_task(get_numbers(db, config))
         loop.create_task(recieve_loop(clients,db))
         loop.create_task(send_loop(clients,db))
 
@@ -227,35 +221,6 @@ def setup_loop(config):
         loop.close()
 
 
-'''
-def setup_reader(config):
-    executor = None
-    name = current_process().name
-    procutil.set_proc_name(name)
-
-    loop = asyncio.get_event_loop()
-    import storage
-
-    db = storage.setup(
-        config['DB']['SERVER'],
-        config['DB']['NAME']
-    )
-
-    from pymongo.cursor import CursorType
-
-    while True:
-
-        cursor = db.sms_received.find(cursor_type=CursorType.TAILABLE_AWAIT)
-        while cursor.alive:
-            for client in clients:
-                if (await cursor.fetch_next):
-                        sms = cursor.next_object()
-                        try:
-                            await client.send_sms(**sms)
-                        except Exception as e:
-                            self.logger.error(e)
-            await asyncio.sleep(INTERVAL)
-'''
 def setup(config):
     smsd = Process(target=setup_loop,args=(config,))
     smsd.name = 'smser'
