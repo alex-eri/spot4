@@ -88,7 +88,7 @@ executables = [Executable(
     initScript=initScript,
     base=base_service,
     targetName='spot4.exe',
-    copyright='Aleksandr Stepanov, eerie.su'
+    copyright='Aleksandr Stepanov, eri.su'
     ),
     Executable(
     "migrate.py",
