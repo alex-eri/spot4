@@ -95,8 +95,22 @@ async def recieve_loop(clients,db):
         await asyncio.sleep(INTERVAL)
 
 
+def get_gate(sms, count, xclients, roundrobin):
+    callee = sms.get('callee', 'default')
+    phone = sms.get('phone')
 
-async def send_loop(clients,db):
+    if callee in xclients.keys():
+        client = next(xclients[callee])
+    else:
+        client = next(roundrobin)
+
+    if client.filter.match(phone) or count <= 0:
+        return client
+    else:
+        return get_gate(sms, count-1, xclients, roundrobin)
+
+
+async def send_loop(clients, db):
     debug('starting sender')
     clients = list(filter(lambda x: x.sender, clients))
     if not clients: return
@@ -129,12 +143,7 @@ async def send_loop(clients,db):
         cursor = db.sms_sent.find(q, cursor_type=CursorType.TAILABLE_AWAIT)
         while cursor.alive:
             async for sms in cursor:
-                p = sms.get('callee', 'default')
-
-                if p in xclients.keys():
-                    client = next(xclients[p])
-                else:
-                    client = next(roundrobin)
+                client = get_gate(sms, len(clients), xclients, roundrobin)
                 last = sms.get('_id', last)
                 try:
                     res = await client.send(**sms)
