@@ -144,16 +144,13 @@ app.controller('FlowSession',  ['$scope','$resource','$routeParams',
               last.setTime(f.last*1000)
 
               resp.push(
-               [num2ip(f.srcaddr),
-               f.srcport,
-               num2ip(f.dstaddr),
-               f.dstport,
-               num2proto(f.prot),
+               [num2ip(f._id.srcaddr),
+               num2proto(f._id.prot),
                f.dOctets,
                f.dPkts,
                first.toISOString(),
-               last.toISOString(),
-               num2ip(f.nexthop)]
+               last.toISOString()
+               ]
                )
 
             })

@@ -6,7 +6,7 @@
 
     <button class="btn btn-default" type="button" ng-csv="export(flows)"
                     filename="Детализация-{{ip|ip}}-{{(start*1000)| date: 'yyMMdd_HHmmss'}}-{{(stop*1000)| date: 'yyMMdd_HHmmss'}}.csv" lazy-load="true"
-                    csv-header = "['srcaddr','srcport','dstaddr','dstport','prot','dOctets','dPkts','first','last','nexthop']"
+                    csv-header = "['srcaddr','prot','dOctets','dPkts','first','last']"
                     ><span class="glyphicon glyphicon-save-file" aria-hidden="true"></span></button>
 
                             </small></h1>

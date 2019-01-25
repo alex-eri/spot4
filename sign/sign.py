@@ -2,7 +2,7 @@ from ctypescrypto.pkey import PKey
 from base64 import b64encode
 
 
-key = open('/home/eri/Projects/CA/my/spot4.key','rb')
+key = open('../../CA/my/spot4.key','rb')
 verifier = PKey(privkey=key.read())
 
 

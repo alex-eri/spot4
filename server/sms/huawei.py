@@ -63,6 +63,87 @@ class Client(_httpclient.Client):
         self.logger.debug(ret)
         return ret
 
+    """
+    http://192.168.8.1/api/sms/sms-list
+
+<?xml version="1.0" encoding="UTF-8"?><request><PageIndex>1</PageIndex><ReadCount>50</ReadCount><BoxType>1</BoxType><SortType>0</SortType><Ascending>0</Ascending><UnreadPreferred>0</UnreadPreferred></request>
+
+    <?xml version="1.0" encoding="utf-8"?>
+<response>
+	<Count>6</Count>
+	<Messages>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40005</Index>
+			<Phone>+79624118643</Phone>
+			<Content>1342</Content>
+			<Date>2018-11-08 12:09:59</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>1</Smstat> <-- read
+			<Index>40004</Index>
+			<Phone>+79624118643</Phone>
+			<Content>Анд </Content>
+			<Date>2018-11-08 08:51:41</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40003</Index>
+			<Phone>+79624118643</Phone>
+			<Content>So </Content>
+			<Date>2018-11-07 09:29:45</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40002</Index>
+			<Phone>+79624118643</Phone>
+			<Content>Do </Content>
+			<Date>2018-11-07 09:14:15</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40001</Index>
+			<Phone>+79624118643</Phone>
+			<Content>Dj </Content>
+			<Date>2018-11-07 09:11:06</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+		<Message>
+			<Smstat>0</Smstat>
+			<Index>40000</Index>
+			<Phone>+79624118643</Phone>
+			<Content>Dj </Content>
+			<Date>2018-11-07 08:58:23</Date>
+			<Sca></Sca>
+			<SaveType>4</SaveType>
+			<Priority>0</Priority>
+			<SmsType>1</SmsType>
+		</Message>
+	</Messages>
+</response>
+
+    """
+
+
     async def messages(self):
         return []
 

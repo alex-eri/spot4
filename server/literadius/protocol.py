@@ -215,7 +215,7 @@ class Auth:
     async def billing(self,user,callee,limit):
         now = datetime.utcnow()
         invoice = await self.db.invoice.find_one( {
-            'callee':callee,
+            'callee': callee,
             'username': user.get('_id',None),
             'paid':True,
             'start':{'$lte':now},
