@@ -1,4 +1,3 @@
-'use strict';
 
 var app = angular.module('admin',['ngRoute', 'ngResource','nzToggle', 'ngSanitize', 'ngCsv'])
 window.app = app;

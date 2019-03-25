@@ -7,7 +7,7 @@ from .logger import *
 #from .device import FIELDS
 from datetime import datetime, timedelta
 from .front import get_uam_config
-
+from monthdelta import monthdelta
 
 REREG_DAYS = 3
 REREG = timedelta(days=REREG_DAYS)
@@ -18,14 +18,14 @@ async def nextuser(db):
     return str(n.get('seq')).zfill(6)
 
 
-async def setuser(db,reg):
+async def setuser(db, reg):
 
     user = \
-        await db.users.find_one({'with':reg})
+        await db.users.find_one({'with': reg})
     if user:
         return user['_id']
 
-    return await db.users.insert({'with':reg,'_id': await nextuser(db)})
+    return await db.users.insert({'with': reg, '_id': await nextuser(db)})
 
 
 @json
@@ -39,7 +39,7 @@ async def phone_handler(request):
         DATA = await request.post()
     phone = DATA.get('phone')
 
-    call = DATA.get('call','sms')
+    call = DATA.get('call', 'sms')
 
     try:
         phcheck(phone)
@@ -49,6 +49,18 @@ async def phone_handler(request):
     uam = await get_uam_config(request.app['db'], DATA.get('profile','default'))
     debug(uam)
     uam = uam or {}
+
+    sms_limit = uam.get('sms_limit', -1)
+
+    if uam.get('smssend', False) and sms_limit > 0:
+        sms_limit -= await request.app['db'].count(
+            {
+                'callee': uam.get('_id', 'default'),
+                'sent': {'$gt': (now - monthdelta(1))}
+             }
+             )
+    else:
+        sms_limit = 1
 
     q = dict(
         phone = phone,
@@ -102,14 +114,14 @@ async def phone_handler(request):
             pass
         else:
             debug('sms')
-            numberscursor = request.app['db'].numbers.find({'sms_recv':True}) #request.app['config'].get('numbers')
+            numberscursor = request.app['db'].numbers.find({'sms_recv': True}) #request.app['config'].get('numbers')
             numbers = await numberscursor.to_list(length=1000)
             debug(numbers)
-            if uam.get('smsrecieve',False) and numbers:
+            if uam.get('smsrecieve', False) and numbers:
                 code = getsms(**q)
                 upd['sms_waited'] = code
-                upd['sms_callie'] = random.choice(numbers).get('number','~')
-            if uam.get('smssend',False):
+                upd['sms_callie'] = random.choice(numbers).get('number', '~')
+            if uam.get('smssend', False) and sms_limit > 0:
                 code = getsms(**q)
                 debug(code)
                 upd['sms_sent'] = code
@@ -120,10 +132,10 @@ async def phone_handler(request):
                 #request.app['config']['smsq'].put((phone,text))
                 request.app['db'].sms_sent.insert(
                     {
-                        'phone':phone,
-                        'text':text,
-                        'sent':now,
-                        'callee': uam.get('_id','default')
+                        'phone': phone,
+                        'text': text,
+                        'sent': now,
+                        'callee': uam.get('_id', 'default')
                     })
 
         updq = {
@@ -131,7 +143,7 @@ async def phone_handler(request):
         }
 
         debug(upd)
-        device = await coll.find_and_modify({'_id':device['_id']}, updq, new=True)#,fields=FIELDS)
+        device = await coll.find_and_modify({'_id': device['_id']}, updq, new=True)#,fields=FIELDS)
         debug(device.__repr__())
 
     if device:
