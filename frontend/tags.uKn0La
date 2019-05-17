@@ -1,0 +1,36 @@
+all	Makefile	/^all: ..\/static ..\/static\/js\/libuam.js ..\/static\/js\/libadmin.js ..\/static\/js\/compat.js$/;"	t
+node_modules	Makefile	/^node_modules: package.json$/;"	t
+../static	Makefile	/^..\/static: node_modules$/;"	t
+../static/js/compat.js	Makefile	/^..\/static\/js\/compat.js: node_modules$/;"	t
+../static/js	Makefile	/^..\/static\/js:$/;"	t
+../static/js/libuam.js	Makefile	/^..\/static\/js\/libuam.js: ..\/static\/js node_modules$/;"	t
+../static/js/libadmin.js	Makefile	/^..\/static\/js\/libadmin.js: ..\/static\/js node_modules$/;"	t
+clean	Makefile	/^clean:$/;"	t
+fullclean	Makefile	/^fullclean: clean$/;"	t
+compress	Makefile	/^compress: ..\/static node_modules$/;"	t
+name	package.json	/^  "name": "spot4",$/;"	s
+private	package.json	/^  "private": true,$/;"	b
+version	package.json	/^  "version": "4.6.0",$/;"	s
+license	package.json	/^  "license": "Custom",$/;"	s
+uglify-js	package.json	/^    "uglify-js": "^2.7.0",$/;"	s	object:devDependencies
+html-minifier	package.json	/^    "html-minifier": "^3.3.x"$/;"	s	object:devDependencies
+devDependencies	package.json	/^  "devDependencies": {$/;"	o
+angular	package.json	/^    "angular": "^1.6",$/;"	s	object:dependencies
+angular-animate	package.json	/^    "angular-animate": "^1.6",$/;"	s	object:dependencies
+angular-mocks	package.json	/^    "angular-mocks": "^1.6",$/;"	s	object:dependencies
+angular-resource	package.json	/^    "angular-resource": "^1.6",$/;"	s	object:dependencies
+angular-route	package.json	/^    "angular-route": "^1.6",$/;"	s	object:dependencies
+angular-cookies	package.json	/^    "angular-cookies": "^1.6",$/;"	s	object:dependencies
+angular-i18n	package.json	/^    "angular-i18n": "^1.6",$/;"	s	object:dependencies
+angular-sanitize	package.json	/^    "angular-sanitize": "^1.6",$/;"	s	object:dependencies
+bootstrap	package.json	/^    "bootstrap": "3.x.x",$/;"	s	object:dependencies
+jquery	package.json	/^    "jquery": "^2",$/;"	s	object:dependencies
+moment	package.json	/^    "moment": "^2.19",$/;"	s	object:dependencies
+moment-timezone	package.json	/^    "moment-timezone": "0.5.x",$/;"	s	object:dependencies
+ua-parser-js	package.json	/^    "ua-parser-js": "0.7.x",$/;"	s	object:dependencies
+nz-toggle	package.json	/^    "nz-toggle": "2.x.x",$/;"	s	object:dependencies
+html5shiv	package.json	/^    "html5shiv": "3.x.x",$/;"	s	object:dependencies
+json2	package.json	/^    "json2": "",$/;"	s	object:dependencies
+es5-shim	package.json	/^    "es5-shim": "",$/;"	s	object:dependencies
+ng-csv	package.json	/^    "ng-csv": "0.3.x"$/;"	s	object:dependencies
+dependencies	package.json	/^  "dependencies": {$/;"	o

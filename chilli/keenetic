@@ -1,0 +1,11 @@
+http://192.168.117.33:8080/uam/register/sms/?
+res=notyet&
+uamip=10.1.30.1&
+uamport=3990&
+challenge=6858d4ee4f009ae731a074b4c1f59498&
+called=50-FF-20-07-1C-4E&
+mac=7C-B0-C2-74-6C-CE&
+ip=10.1.30.2&
+nasid=keenetic&
+sessionid=5b7a723e00000001&
+userurl=http://nmcheck.gnome.org/

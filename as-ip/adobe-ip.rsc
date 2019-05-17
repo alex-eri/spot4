@@ -1,0 +1,10 @@
+/ip firewall address-list add list=adobe address=192.147.117.0/24
+/ip firewall address-list add list=adobe address=192.147.120.0/24
+/ip firewall address-list add list=adobe address=192.147.124.0/24
+/ip firewall address-list add list=adobe address=192.150.1.0/24
+/ip firewall address-list add list=adobe address=192.150.8.0/24
+/ip firewall address-list add list=adobe address=192.150.20.0/24
+/ip firewall address-list add list=adobe address=193.104.215.0/24
+/ip firewall address-list add list=adobe address=193.105.139.0/24
+/ip firewall address-list add list=adobe address=193.105.140.0/24
+/ip firewall address-list add list=adobe address=195.35.86.0/24
