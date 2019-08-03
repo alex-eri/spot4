@@ -53,7 +53,7 @@ async def phone_handler(request):
     sms_limit = uam.get('sms_limit', -1)
 
     if uam.get('smssend', False) and sms_limit > 0:
-        sms_limit -= await request.app['db'].count(
+        sms_limit -= await request.app['db'].sms_sent.count(
             {
                 'callee': uam.get('_id', 'default'),
                 'sent': {'$gt': (now - monthdelta(1))}
