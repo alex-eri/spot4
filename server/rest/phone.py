@@ -47,7 +47,6 @@ async def phone_handler(request):
         raise web.HTTPForbidden()
 
     uam = await get_uam_config(request.app['db'], DATA.get('profile','default'))
-    debug(uam)
     uam = uam or {}
 
     sms_limit = uam.get('sms_limit', -1)
@@ -78,7 +77,6 @@ async def phone_handler(request):
         }
 
     device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
-    debug(device.__repr__())
 
     upd = {'try': 0 }
 
@@ -98,7 +96,7 @@ async def phone_handler(request):
             pass
         elif (now - device.get('registred', now)) > rereg:
             reg = True
-        elif uam.get('smssend',False) and not device.get('sms_sent'):
+        elif uam.get('smssend', False) and not device.get('sms_sent'):
             reg = True
     else:
         reg = True
@@ -106,7 +104,7 @@ async def phone_handler(request):
 
 
     if reg:
-        if uam.get('nosms',False):
+        if uam.get('nosms', False):
             upd['checked'] = True
         elif call=="out":
             pass

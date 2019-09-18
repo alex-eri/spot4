@@ -5,6 +5,7 @@ import time
 import datetime
 from utils.codecs import trydecodeHexUcs2,encodeUcs2
 import pytz
+import random
 
 TZ = format(-time.timezone//3600,"+d")
 
@@ -28,7 +29,36 @@ class Client(_httpclient.Client):
         }
         self.max = 100
         self.callie = kw.get('number','')
+
+        self.loginpassword = kw.get('login',None), kw.get('password',None)
+
         super(Client,self).__init__(get_headers=headers,post_headers=headers, *a, **kw)
+
+
+    async def login(self):
+        if not self.loginpassword[1]:
+            return
+        lucknum = random.randrange(1000000)
+        self.set_cookie(self.base_url, lucknum=lucknum)
+
+        data = dict(
+
+            goformId='LOGIN',
+            lucknum=lucknum,
+            systemDate='',
+            languageSelect='en',
+            user=self.loginpassword[0],
+            psw=self.loginpassword[1],
+
+        )
+
+        uri = "{base}/goform/goform_process".format(
+                base=self.base_url
+            )
+        r = await self.post(uri, data)
+        self.logger.debug(r)
+        self.logger.debug(r.read())
+
 
     @_httpclient.get_json
     def _send_sms(self,phone,text,**kw):
@@ -179,6 +209,8 @@ class Client(_httpclient.Client):
         '''
         messages from modem
         '''
+
+        await self.login()
 
         msgs = await self._get_messages(tags=tags,limit=limit)
         msgs = msgs.get('messages',[])

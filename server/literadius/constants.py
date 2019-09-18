@@ -153,6 +153,6 @@ TCPortUnneeded  =         12
 TCPortPreempted =         13
 TCPortSuspended =         14
 TCServiceUnavailable =    15
-TCCallback      =          16
+TCCallback      =         16
 TCUserError     =         17
 TCHostRequest   =         18
