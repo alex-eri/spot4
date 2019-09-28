@@ -1,6 +1,8 @@
 <h1>SMS&nbsp;&nbsp;</h1>
 <ul class="nav nav-tabs" role="tablist" >
-<li role="presentation" ng-class="{active:smstab==1 || ! smstab}">
+<li role="presentation" ng-class="{active:smstab==0 || ! smstab}">
+  <a ng-click="smstab=0">Статистика по отправленным</a></li>
+  <li role="presentation" ng-class="{active:smstab==1}">
   <a ng-click="smstab=1">Принятые</a></li>
 <li role="presentation" ng-class="{active:smstab==2}">
   <a ng-click="smstab=2">Отправленные</a></li>
@@ -8,7 +10,27 @@
 </ul>
 
 <div class="tab-content">
-<div role="tabpanel" ng-show="smstab==1 || ! smstab" >
+
+
+<div role="tabpanel" ng-show="smstab==0 || ! smstab" >
+  <table class="table table-hover table-condensed table-bordered">
+    <tr>
+      <th>Профиль</th>
+      <th>Месяц</th>
+      <th>Всего</th>
+    </tr>
+    <tr ng-repeat="a in sms_stat">
+      <td>{{a._id}}</td>
+      <td>{{a.month}}</td>
+      <td>{{a.total}}</td>
+    </tr>
+  </table>
+
+</div>
+
+
+
+<div role="tabpanel" ng-show="smstab==1" >
   <table class="table table-hover table-condensed table-bordered">
     <tr>
       <th>Время</th>

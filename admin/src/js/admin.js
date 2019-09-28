@@ -444,6 +444,30 @@ app.controller('Sms',  ['$scope','$resource',
         $scope.label = "в сети"
         $scope.interval = intervalt;
         $scope.t = datefymd;
+
+        var monthago =new Date();
+        monthago.setMonth(monthago.getMonth() - 1);
+
+        $resource('/db/sms_sent').save(
+            [
+
+                {aggregate:[[
+                {"$project": {
+                item:1,
+                callee:"$callee",
+                month:{"$cond": [{"$gt": ["$sent", {"$date":monthago}]},1,0]
+                }
+                }},
+                {"$group": {_id:"$callee", total: {"$sum":1}, month: {"$sum":"$month"}}}
+
+                ]]
+                }]
+
+        , function(response){
+            $scope.sms_stat = response.response;
+        }
+        )
+
         $resource('/db/sms_received/0/23').save(
             [
             {find:{}},

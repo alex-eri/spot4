@@ -35,26 +35,33 @@
 </td>
 
 </tr>
+
+
+
 <tr id="form{{id}}" class="collapse"><td colspan=4>
   <form class="form-horizontal" >
 
     <div ng-include="'/static/admin-forms/limit.html'"></div>
 
-      <div class="form-group">
-    <label class="col-sm-2 control-label">Платный доступ</label>
+
+
+
+    <div class="form-group">
+    <label class="col-sm-2 control-label">Ограниченный доступ</label>
     <div class="col-sm-4">
 
     <nz-toggle ng-model="limit.payable" tri-toggle val-false=0></nz-toggle>
     </div>
     <div class="col-sm-6"><p class="form-control-static">
-          проверка оплаты по билингу.
-          Если существует подходящая оплата, то ограничения с неё перекрывают данные.
+          Если существует подходящая оплата или активый ваучер, то ограничения с неё перекрывают ограничения портала.
+          Включает интернет по ограничениям портвала и запрашивает ваучер, если тариф не применился.
     </p></div>
   <div class="form-group">
     <div class="col-sm-offset-2 col-sm-10">
     <input class="btn btn-primary" type="submit" ng-click="update(limit)" value="Сохранить" />
     </div>
   </div>
+    </div>
 </form>
 
 </td></tr>

@@ -10,7 +10,6 @@ from .front import get_uam_config
 from monthdelta import monthdelta
 
 REREG_DAYS = 3
-REREG = timedelta(days=REREG_DAYS)
 DEVMAX = 10
 
 async def nextuser(db):
@@ -61,31 +60,32 @@ async def phone_handler(request):
     else:
         sms_limit = 1
 
-    q = dict(
-        phone = phone,
-        mac = DATA.get('mac').upper().replace('-',':')
-        )
+    q = {
+        "phone": phone,
+        "mac": DATA.get('mac').upper().replace('-', ':')
+        }
 
     updq = {
-        '$set':{
-            'seen':now,
-            'ua': request.headers.get('User-Agent',''),
-            'seen_callee': DATA.get('profile','default')
+        '$set': {
+            'seen': now,
+            'ua': request.headers.get('User-Agent', ''),
+            'seen_callee': DATA.get('profile', 'default')
             },
-        '$setOnInsert':{'registred': now, 'callee': DATA.get('profile','default') },
+        '$setOnInsert': {'registred': now, 'callee': DATA.get('profile', 'default') },
         #, "$set" {'sensor': request.ip }
         }
 
     device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
 
-    upd = {'try': 0 }
+    upd = {'try': 0}
 
-    if uam.get('rereg'):
-        rereg = timedelta(days=uam.get('rereg'))
-    else:
-        rereg = REREG
+    rereg = timedelta(days=uam.get('rereg', REREG_DAYS))
 
-    count = await coll.find( {'mac':q['mac'],'seen': {'$gt': (now-rereg)}} ).count()
+    count = await coll.find({
+            'mac': q['mac'],
+            'seen': {'$gt': (now-rereg)},
+            'checked': {'$ne': True}
+        }).count()
 
     if count >= uam.get('devmax', DEVMAX):
         uam['smssend'] = False
@@ -96,22 +96,25 @@ async def phone_handler(request):
             pass
         elif (now - device.get('registred', now)) > rereg:
             reg = True
-        elif uam.get('smssend', False) and not device.get('sms_sent'):
-            reg = True
+        elif uam.get('smssend', False):
+            if not device.get('sms_sent'):
+                reg = True
+            elif not device.get('sms_time'):
+                reg = True
+            elif now - device.get('sms_time') > timedelta(minutes=uam.get('sms_timeout', 300)):
+                reg = True
     else:
         reg = True
         upd['username'] = (await setuser(request.app['db'],phone))
 
-
     if reg:
         if uam.get('nosms', False):
             upd['checked'] = True
-        elif call=="out":
+        elif call == "out":
             pass
-        elif call=="in":
+        elif call == "in":
             pass
         else:
-            debug('sms')
             numberscursor = request.app['db'].numbers.find({'sms_recv': True}) #request.app['config'].get('numbers')
             numbers = await numberscursor.to_list(length=1000)
             debug(numbers)
@@ -120,11 +123,12 @@ async def phone_handler(request):
                 upd['sms_waited'] = code
                 upd['sms_callie'] = random.choice(numbers).get('number', '~')
             if uam.get('smssend', False) and sms_limit > 0:
-                code = getsms(**q)
+                code = device.get('sms_sent', getsms(**q))
                 debug(code)
                 upd['sms_sent'] = code
+                upd['sms_time'] = now
 
-                tmpl = uam.get('smstmpl', False) or "Код подтверждения {code}."
+                tmpl = uam.get('smstmpl', False) or "wifi: {code}."
                 text = tmpl.format(code=code)
 
                 #request.app['config']['smsq'].put((phone,text))
