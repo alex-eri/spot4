@@ -90,24 +90,31 @@ async def phone_handler(request):
     if count >= uam.get('devmax', DEVMAX):
         uam['smssend'] = False
 
+
+    debug(device)
+
     if device.get('username'):
         reg = False
         if device.get('checked'):
+            debug("checked")
             pass
         elif (now - device.get('registred', now)) > rereg:
+            debug(now)
+            debug(device.get('registred'))
+            debug("rereg")
             reg = True
         elif uam.get('smssend', False):
+            debug("smssend")
             if not device.get('sms_sent'):
                 reg = True
             elif not device.get('sms_time'):
-                reg = True
-            elif now - device.get('sms_time') > timedelta(minutes=uam.get('sms_timeout', 300)):
                 reg = True
     else:
         reg = True
         upd['username'] = (await setuser(request.app['db'],phone))
 
     if reg:
+
         if uam.get('nosms', False):
             upd['checked'] = True
         elif call == "out":
@@ -122,7 +129,10 @@ async def phone_handler(request):
                 code = getsms(**q)
                 upd['sms_waited'] = code
                 upd['sms_callie'] = random.choice(numbers).get('number', '~')
-            if uam.get('smssend', False) and sms_limit > 0:
+            if uam.get('smssend', False)\
+                    and sms_limit > 0 \
+                    and now - device.get('sms_time') > timedelta(minutes=uam.get('sms_timeout', 300)):
+
                 code = device.get('sms_sent', getsms(**q))
                 debug(code)
                 upd['sms_sent'] = code
