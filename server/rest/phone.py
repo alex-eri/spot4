@@ -129,9 +129,10 @@ async def phone_handler(request):
                 code = getsms(**q)
                 upd['sms_waited'] = code
                 upd['sms_callie'] = random.choice(numbers).get('number', '~')
+
             if uam.get('smssend', False)\
                     and sms_limit > 0 \
-                    and now - device.get('sms_time') > timedelta(minutes=uam.get('sms_timeout', 300)):
+                    and now - device.get('sms_time', now) > timedelta(minutes=uam.get('sms_timeout', 300)):
 
                 code = device.get('sms_sent', getsms(**q))
                 debug(code)
