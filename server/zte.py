@@ -70,13 +70,19 @@ async def get_numbers(db, config):
     pool =  config['SMS'].get('pool',[])
     numbers = []
     for modem in pool:
+        debug(modem)
         if not modem.get('reciever', False):
+            debug('not recv')
             continue
+
         if modem.get('number',False):
+            debug(modem['number'])
             numbers.append(modem['number'])
         if modem.get('numbers',False):
+            debug(modem['numbers'])
             numbers.extend(modem['numbers'])
-    await sms_recv_numbers(db,numbers)
+
+    await sms_recv_numbers(db, numbers)
 
 
 async def recieve_loop(clients,db):
@@ -157,10 +163,11 @@ async def send_loop(clients, db):
 
 
 async def sms_recv_numbers(db,numbers):
+    debug(numbers)
     await db.numbers.remove({'sms_recv':True})
     if numbers:
-        await db.numbers.insert_many([{'sms_recv': True, 'number': n} for n in numbers])
-
+        r= await db.numbers.insert_many([{'sms_recv': True, 'number': n} for n in numbers])
+    debug(r)
 
 
 def setup_clients(db, config):
