@@ -90,8 +90,12 @@ async def phone_handler(request):
     if count >= uam.get('devmax', DEVMAX):
         uam['smssend'] = False
 
-
+    debug(uam)
     debug(device)
+
+
+    sms_timeout = uam.get('sms_timeout', 30)
+    sms_timeout = timedelta(minutes=sms_timeout)
 
     if device.get('username'):
         reg = False
@@ -106,11 +110,18 @@ async def phone_handler(request):
         elif uam.get('smssend', False):
             debug("smssend")
             if not device.get('sms_sent'):
+                debug("reg not sent")
                 reg = True
             elif not device.get('sms_time'):
+                debug("reg no time")
                 reg = True
-            elif now - device.get('sms_time') > timedelta(minutes=uam.get('sms_timeout', 30)):
-                reg = True
+            else:
+                if now - device.get('sms_time') > sms_timeout:
+                    reg = True
+
+                debug(now - device.get('sms_time'))
+                debug(sms_timeout)
+                debug("reg timeout")
     else:
         reg = True
         upd['username'] = (await setuser(request.app['db'],phone))
@@ -142,7 +153,7 @@ async def phone_handler(request):
                 debug('not enabled smssend')
             elif sms_limit <= 0:
                 debug('smssend limited')
-            elif device.get('sms_time') and now - device.get('sms_time') < timedelta(minutes=uam.get('sms_timeout', 30)):
+            elif device.get('sms_time') and now - device.get('sms_time') < sms_timeout:
                 debug('smssend timeout')
                 code = device.get('sms_sent', getsms(**q))
                 debug("old code %s" % code)

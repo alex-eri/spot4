@@ -7,7 +7,7 @@ async def get_uam_config(db,profile):
     if default:
         conf = await db.uamconfig.find_and_modify({'_id':profile}, {'$setOnInsert': { 'auto': True }}, upsert=True, new=False)
         if conf:
-            conf = {k: v for k, v in conf.items() if v or v is False }
+            conf = {k: v for k, v in conf.items() if v or v is False or v == 0 }
             if not conf.get('theme',False):
                 conf = {k: v for k, v in conf.items() if not k.startswith('theme_')}
             default.update(conf)
