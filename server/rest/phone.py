@@ -129,11 +129,19 @@ async def phone_handler(request):
                 code = getsms(**q)
                 upd['sms_waited'] = code
                 upd['sms_callie'] = random.choice(numbers).get('number', '~')
+            else:
+                debug("smsrecieve disabled")
 
-            if uam.get('smssend', False)\
-                    and sms_limit > 0 \
-                    and now - device.get('sms_time', now) > timedelta(minutes=uam.get('sms_timeout', 300)):
-
+            if not uam.get('smssend', False):
+                debug('not enabled smssend')
+            elif sms_limit <= 0:
+                debug('smssend limited')
+            elif device.get('sms_time') and now - device.get('sms_time') < timedelta(minutes=uam.get('sms_timeout', 300)):
+                debug('smssend timeout')
+                code = device.get('sms_sent', getsms(**q))
+                debug("old code %s" % code)
+                upd['sms_sent'] = code
+            else:
                 code = device.get('sms_sent', getsms(**q))
                 debug(code)
                 upd['sms_sent'] = code
