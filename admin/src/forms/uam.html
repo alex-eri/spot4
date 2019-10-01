@@ -231,11 +231,11 @@ ng-model="router.smsrecieve"></nz-toggle>
 <div class="col-sm-4">
 
 <input type="number" class="form-control" ng-model="router.sms_timeout"
-  placeholder="{{limits.default.sms_timeout || '-1'}}" step=1 min=-1 />
+  placeholder="{{limits.default.sms_timeout || '-1'}}" step=1 min=-2 />
 
 </div>
 <div class="col-sm-6"><p class="form-control-static">
-минут, через какое время отправлять новую смс. 0 - всегда, -1 - никогда.
+минут, через какое время отправлять новую смс. 0 - всегда, -1 - таймаут перерегистрации, -2 - никогда.
 </p></div>
 </div>
 
