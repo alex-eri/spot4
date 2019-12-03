@@ -1,6 +1,9 @@
 all: clean build build/config build/bin
 
-dist: build/*
+deb:
+	dpkg-buildpackage -B -d --no-sign
+
+dist: build/bin
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell git rev-list --all --count).tar.gz ./
 

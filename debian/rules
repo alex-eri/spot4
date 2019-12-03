@@ -1,4 +1,22 @@
 #!/usr/bin/make -f
 
 clean:
-	make -C .. clean
+	make -C . clean
+	rm -rf debian/spot4
+
+build:
+	make -C . all dist
+
+binary: build
+	mkdir -p debian/spot4
+	mkdir -p debian/spot4/opt/spot4
+	tar -C debian/spot4 -xf dist/spot4*.tar.gz
+	dh_gencontrol
+	dh_builddeb
+
+
+binary-arch: binary
+
+#build-arch: build
+
+

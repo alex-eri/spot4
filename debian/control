@@ -1,7 +1,7 @@
 Source: spot4
 Section: net
 Build-Depends: make, awk (>=3.6), npm, git, gzip
-Maintainer: Aleksandr Stepanov <alex-eri@ya.ru>
+Maintainer: Aleksandr Stepanov <sa@eri.su>
 
 Package: spot4
 Provides: spot4
