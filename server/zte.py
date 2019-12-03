@@ -167,7 +167,7 @@ async def sms_recv_numbers(db,numbers):
     await db.numbers.remove({'sms_recv':True})
     if numbers:
         r= await db.numbers.insert_many([{'sms_recv': True, 'number': n} for n in numbers])
-    debug(r)
+        debug(r)
 
 
 def setup_clients(db, config):
