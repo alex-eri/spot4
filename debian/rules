@@ -5,13 +5,19 @@ clean:
 	rm -rf debian/spot4
 
 build:
-	make -C . all dist
+	make -C . all
 
 binary: build
 	mkdir -p debian/spot4
-	mkdir -p debian/spot4/opt/spot4
-	tar -C debian/spot4 -xf dist/spot4*.tar.gz
+	mkdir -p debian/spot4/opt/spot4/data
+	mkdir -p debian/spot4/etc/systemd/system
+	mkdir -p debian/spot4/etc/firewalld/services
+	#tar -C debian/spot4 -xf dist/spot4*.tar.gz
+	cp -R build/bin build/config build/mikrotik build/static build/uam debian/spot4/opt/spot4/
+	cp systemd/spot.service debian/spot4/etc/systemd/system/
+	cp systemd/firewalld-services-spot.xml debian/spot4/etc/firewalld/services/spot.xml
 	dh_gencontrol
+	cp debian/postinst debian/spot4/DEBIAN/
 	dh_builddeb
 
 
