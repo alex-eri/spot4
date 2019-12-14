@@ -61,7 +61,7 @@ fullclean: clean
 	rm -rf bower_components node_modules
 
 compress: ../static node_modules
-	./node_modules/.bin/html-minifier --html5 --keep-closing-slash \
+	./node_modules/.bin/html-minifier  --keep-closing-slash \
 		--collapse-whitespace \
 		--conservative-collapse \
 		--collapse-inline-tag-whitespace \

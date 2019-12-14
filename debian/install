@@ -1,4 +1,7 @@
+echo "Добавление службы"
 systemctl enable spot
+echo "Добавление исключений в фаервол"
 firewall-cmd --permanent --zone=public --add-service=spot || true
+echo "Добавление исключений в политики безопасности"
 setsebool -P httpd_can_network_connect 1 || true
-cp /opt/spot4/config/config.json.example /opt/spot4/config/config.json
+exit 0
