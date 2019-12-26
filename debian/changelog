@@ -1,6 +1,7 @@
-spot4 (267) stable; urgency=low
+spot4 (271) stable; urgency=low
 
   * Tarif on start
+  * admin fixes
 
  -- Aleksandr Stepanov <sa@eri.su>  Thu, 26 Dec 2019 12:35:32 +0300
 

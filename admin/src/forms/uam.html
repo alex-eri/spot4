@@ -63,15 +63,20 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 </fieldset>
 
   <div class="form-group">
-    <label class="col-sm-4 control-label">Тариф</label>
+    <label class="col-sm-2 control-label">Тариф</label>
     <div class="col-sm-4">
-<select class="form-control" required
+<select class="form-control"
 ng-model="router.tarif" ng-options="t.name for t in tarifs track by t._id">
+  <option value="">-нет-</option>
 </select>
     </div>
     <div class="col-sm-4"><p class="form-control-static">
 
     </p></div>
+    <div class="col-sm-6">
+<p class="form-control-static">
+При входе пользователя установить ему тариф. В отличии от глобальных ограничений, ограничения по времени и трафику на тарифе не сбрасываются при переподключении.
+</p></div>
   </div>
 
 
@@ -268,19 +273,19 @@ pattern=".*\{code\}.*" />
 <div class="form-group" ng-if="router.smssend && !router.nosms" >
 
   <label class="col-sm-2 control-label">Перерегистрация</label>
-<div class="col-sm-2">
+<div class="col-sm-1">
 
 <input type="number" class="form-control" ng-model="router.devmax"
   placeholder="{{limits.default.devmax || '4'}}" step=1 min=1 />
   </div>
-  <div class="col-sm-1">
+  <div class="col-sm-2">
   <p class="form-control-static">незарегистрированных устройств за</p>
 </div>
-<div class="col-sm-2">
+<div class="col-sm-1">
 <input type="number" class="form-control" ng-model="router.rereg"
   placeholder="{{limits.default.rereg || '3'}}" step=1 min=0 />
 </div>
-  <div class="col-sm-5">
+  <div class="col-sm-6">
 <p class="form-control-static">
 дней на один номер телефона.
 </p></div>
