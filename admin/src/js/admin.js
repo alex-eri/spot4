@@ -1227,6 +1227,13 @@ app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
             }
         )
 */
+      	$resource('/db/tarif').save(
+            [
+            {find: {} }
+        ], function(response){
+            console.log(response)
+            $scope.tarifs = response.response
+        });
 
         $resource('/db/uamconfig').save(
             [

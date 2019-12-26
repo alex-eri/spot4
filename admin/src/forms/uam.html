@@ -62,6 +62,18 @@ ng-model="router.theme" ng-options="theme for theme in themes">
 </div>
 </fieldset>
 
+  <div class="form-group">
+    <label class="col-sm-4 control-label">Тариф</label>
+    <div class="col-sm-4">
+<select class="form-control" required
+ng-model="router.tarif" ng-options="t.name for t in tarifs track by t._id">
+</select>
+    </div>
+    <div class="col-sm-4"><p class="form-control-static">
+
+    </p></div>
+  </div>
+
 
 <fieldset if="fieldset_vk" >
 <div class="form-group" ng-if="router.vk">
