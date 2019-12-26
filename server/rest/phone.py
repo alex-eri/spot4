@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from .front import get_uam_config
 from monthdelta import monthdelta
 
+from billing import addinvoice
+
 REREG_DAYS = 3
 DEVMAX = 10
 
@@ -133,9 +135,6 @@ async def phone_handler(request):
         upd['username'] = (await setuser(request.app['db'],phone))
 
 
-
-
-
     if reg:
 
         if uam.get('nosms', False):
@@ -194,6 +193,8 @@ async def phone_handler(request):
         device['sms_sent'] = device.get('sms_sent') and True
         if device.get('checked'):
             device['password'] = getpassw(device.get('username'), device.get('mac'))
+            if uam.get('tarif'):
+                await addinvoice(request.app['db'], device, uam)
         return device
     else:
         raise web.HTTPNotFound()

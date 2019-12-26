@@ -247,7 +247,7 @@ class Auth:
         accs = await self.db.accounting.aggregate([
             {'$match':{
                     'username': username,
-                    'callee':callee,
+                    'callee': callee,
                     'start_date' : {'$gte': start}
             }},
             {'$group': {

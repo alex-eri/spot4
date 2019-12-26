@@ -5,9 +5,10 @@ from aiohttp import web
 import random
 from bson.objectid import ObjectId
 import asyncio
-
+from billing import addinvoice
 
 #FIELDS=['username','sms_callie','sms_waited','checked','sms_sent','mac','try']
+
 
 @json
 async def device_handler(request):
@@ -49,6 +50,8 @@ async def device_handler(request):
             #user.get('password') or
             debug('checked')
             device['password'] = getpassw(device['username'], device['mac'])
+            if uam.get('tarif'):
+                await addinvoice(request.app['db'], device, uam)
         else:
             numbers = request.app['config'].get('numbers', [])
             if device.get('sms_callie', None) and device.get('sms_callie', None) in numbers:
@@ -58,7 +61,7 @@ async def device_handler(request):
                 request.app.logger.debug(q)
                 r = await coll.update(q, {'$set':{'sms_callie': callie}})
                 request.app.logger.debug(r)
-        device['sms_sent']=device.get('sms_sent') and True
+        device['sms_sent'] = device.get('sms_sent') and True
         device['phone'] = 'saved'
 
         debug(device.__repr__())

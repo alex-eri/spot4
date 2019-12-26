@@ -1,4 +1,4 @@
 systemctl enable spot
 firewall-cmd --permanent --zone=public --add-service=spot || true
 setsebool -P httpd_can_network_connect 1 || true
-cp /opt/spot4/config/config.json.example /opt/spot4/config/config.json
+#cp /opt/spot4/config/config.json.example /opt/spot4/config/config.json

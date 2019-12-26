@@ -11,6 +11,42 @@ V_COUNT = 200
 RANDOM_RANGE = 10 ** CHARS
 
 
+async def addinvoice(db, device, uam):
+    now = datetime.utcnow()
+
+    invoice = await db.invoice.find_one( {
+            'callee': uam["_id"],
+            'username': device.get('username', None),
+            'paid': True,
+            'start': {'$lte': now},
+            'stop': {'$gt': now},
+            })
+    if invoice:
+        pass
+    else:
+        tarif = await db.tarif.find_one({'_id': uam['tarif']})
+
+        if tarif.get('duration') > 0:
+            stop = now + timedelta(days=tarif['duration'])
+        else:
+            stop = 0
+
+        invoice = await db.invoice.insert(
+            {
+                'username': voucher['username'],
+                'paid': True,
+                'start': now,
+                'stop': stop,
+                'voucher': None,
+                'tarif': tarif['_id'],
+                'limit': tarif.get('limit',{}),
+                'callee' : uam["_id"]
+             }
+        )
+
+    return invoice
+
+
 @json
 async def voucher(request):
     now = datetime.utcnow()
