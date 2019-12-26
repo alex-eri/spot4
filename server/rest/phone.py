@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from .front import get_uam_config
 from monthdelta import monthdelta
 
-from billing import addinvoice
+from .billing import addinvoice
 
 REREG_DAYS = 3
 DEVMAX = 10

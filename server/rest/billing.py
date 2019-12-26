@@ -12,7 +12,10 @@ RANDOM_RANGE = 10 ** CHARS
 
 
 async def addinvoice(db, device, uam):
+    print('+'*20)
+    print(db, device, uam)
     now = datetime.utcnow()
+    print(now)
 
     invoice = await db.invoice.find_one( {
             'callee': uam["_id"],
@@ -21,10 +24,13 @@ async def addinvoice(db, device, uam):
             'start': {'$lte': now},
             'stop': {'$gt': now},
             })
+    print(invoice)
     if invoice:
         pass
     else:
+
         tarif = await db.tarif.find_one({'_id': uam['tarif']})
+        print(tarif)
 
         if tarif.get('duration') > 0:
             stop = now + timedelta(days=tarif['duration'])
@@ -43,6 +49,7 @@ async def addinvoice(db, device, uam):
                 'callee' : uam["_id"]
              }
         )
+        print(invoice)
 
     return invoice
 

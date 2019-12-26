@@ -66,13 +66,10 @@ ng-model="router.theme" ng-options="theme for theme in themes">
     <label class="col-sm-2 control-label">Тариф</label>
     <div class="col-sm-4">
 <select class="form-control"
-ng-model="router.tarif" ng-options="t.name for t in tarifs track by t._id">
+ng-model="router.tarif" ng-options="t._id as t.name for t in tarifs track by t._id.$oid">
   <option value="">-нет-</option>
 </select>
     </div>
-    <div class="col-sm-4"><p class="form-control-static">
-
-    </p></div>
     <div class="col-sm-6">
 <p class="form-control-static">
 При входе пользователя установить ему тариф. В отличии от глобальных ограничений, ограничения по времени и трафику на тарифе не сбрасываются при переподключении.
