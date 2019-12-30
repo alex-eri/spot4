@@ -19,7 +19,7 @@ async def addinvoice(db, device, uam):
 
     invoice = await db.invoice.find_one( {
             'callee': uam["_id"],
-            'username': device.get('username', None),
+            'username': device['username'],
             'paid': True,
             'start': {'$lte': now},
             'stop': {'$gt': now},
@@ -39,7 +39,7 @@ async def addinvoice(db, device, uam):
 
         invoice = await db.invoice.insert(
             {
-                'username': voucher['username'],
+                'username':  device['username'],
                 'paid': True,
                 'start': now,
                 'stop': stop,

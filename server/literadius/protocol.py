@@ -212,7 +212,7 @@ class Auth:
         return nas
 
 
-    async def billing(self,user,callee,limit):
+    async def billing(self,user,callee, climit):
         now = datetime.utcnow()
         invoice = await self.db.invoice.find_one( {
             'callee': callee,
@@ -224,23 +224,29 @@ class Auth:
 
         if invoice:
             tarif = invoice.get('limit',{})
-            for k,v in tarif.items():
-                debug((k,v))
-                if v in [0,"0"]:
-                    limit.pop(k,None)
-                elif v:
-                    limit[k] = v
 
-            limit = await self.reduce_limits(user['_id'],callee,limit,invoice.get('start'))
+            for k,v in tarif.items():
+                if v in [0, "0"]:
+                    climit.pop(k,None)
+
+            tarif = await self.reduce_limits(user['_id'],callee,tarif,invoice.get('start'))
 
             if invoice.get('stop'):
                 t = round((invoice['stop'] - now).total_seconds())+28
-                if limit.get('time'):
-                    limit['time'] = min(limit.get('time'),t)
+                if tarif.get('time', None) is None:
+                    tarif['time'] = t
                 else:
-                    limit['time'] = t
+                    tarif['time'] = min(tarif.get('time'), t)
 
-        return limit
+            for k,v in tarif.items():
+                if type(v) == int and v <= 0:
+                    return climit
+
+            for k,v in tarif.items():
+                climit[k] = v
+
+
+        return climit
 
 
     async def reduce_limits(self,username,callee,limit,start):
