@@ -1,11 +1,12 @@
 from .decorators import json
 from utils.password import getsms, getpassw
-from .logger import *
+from .logger import debug
 from aiohttp import web
 import random
 from bson.objectid import ObjectId
 import asyncio
 from .billing import addinvoice
+from .front import get_uam_config
 
 #FIELDS=['username','sms_callie','sms_waited','checked','sms_sent','mac','try']
 
@@ -36,7 +37,7 @@ async def device_handler(request):
             device = trydevice
         else:
             debug(q)
-            device = await coll.find_and_modify(q,{ '$inc': {'try':1} }, new=True)#,fields=FIELDS)
+            device = await coll.find_and_modify(q, {'$inc': {'try': 1}}, new=True) # ,fields=FIELDS)
             n = device.get('try')
             if n > 7: raise web.HTTPForbidden()
             if n > 3: n*=5
@@ -50,6 +51,10 @@ async def device_handler(request):
             #user.get('password') or
             debug('checked')
             device['password'] = getpassw(device['username'], device['mac'])
+
+            uam = await get_uam_config(request.app['db'], device.get('seen_callee', 'default'))
+            uam = uam or {}
+
             if uam.get('tarif'):
                 await addinvoice(request.app['db'], device, uam)
         else:
@@ -59,7 +64,7 @@ async def device_handler(request):
             elif numbers:
                 device['sms_callie'] = callie = random.choice(numbers)
                 request.app.logger.debug(q)
-                r = await coll.update(q, {'$set':{'sms_callie': callie}})
+                r = await coll.update(q, {'$set': {'sms_callie': callie}})
                 request.app.logger.debug(r)
         device['sms_sent'] = device.get('sms_sent') and True
         device['phone'] = 'saved'
