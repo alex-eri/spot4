@@ -223,7 +223,7 @@ class Auth:
             })
 
         if invoice:
-            tarif = invoice.get('limit',{})
+            tarif = invoice.get('limit', {})
 
             for k,v in tarif.items():
                 if v in [0, "0"]:
@@ -276,7 +276,7 @@ class Auth:
             if limit.get('time'):
                 limit['time'] -= accs[0]['time']
             if limit.get('bytes'):
-                limit['bytes'] -= accs[0]['bytes']
+                limit['bytes'] -= accs[0]['bytes'] >> 20
             if limit.get('ports'):
                 limit['ports'] -= accs[0]['count'] - accs[0]['closed']
         return limit
