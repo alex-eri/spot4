@@ -1233,6 +1233,7 @@ app.controller('Uam',  ['$scope','$resource','$timeout', '$location',
         ], function(response){
             console.log(response)
             $scope.tarifs = response.response
+            $scope.tarifs.unshift({_id: null, name: '--нет--'})
         });
 
         $resource('/db/uamconfig').save(

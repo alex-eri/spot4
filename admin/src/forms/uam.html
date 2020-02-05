@@ -66,8 +66,8 @@ ng-model="router.theme" ng-options="theme for theme in themes">
     <label class="col-sm-2 control-label">Тариф</label>
     <div class="col-sm-4">
 <select class="form-control"
-ng-model="router.tarif" ng-options="t._id as t.name for t in tarifs track by value.$oid">
-  <option value="">-нет-</option>
+ng-model="router.tarif" ng-options="t._id as t.name for t in tarifs">
+
 </select>
     </div>
     <div class="col-sm-6">
