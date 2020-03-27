@@ -40,7 +40,7 @@ class Client(_sms.Client):
 
         self.cookie = http.cookiejar.MozillaCookieJar()
         cookiehandler = urllib.request.HTTPCookieProcessor(self.cookie)
-        sslhandler = urllib.request.HTTPSHandler(context =  ssl._create_unverified_context())
+        sslhandler = urllib.request.HTTPSHandler(context=ssl._create_unverified_context())
         self.opener = urllib.request.build_opener(sslhandler, cookiehandler)
 
         super(Client, self).__init__(*a, **kw)
@@ -53,7 +53,7 @@ class Client(_sms.Client):
         if ":" in domain:
             domain, port = domain.split(':')
 
-        for k,v in kw.items():
+        for k, v in kw.items():
             # Cookie(version, name, value, port, port_specified, domain,
             # domain_specified, domain_initial_dot, path, path_specified,
             # secure, discard, comment, comment_url, rest)
@@ -65,13 +65,13 @@ class Client(_sms.Client):
         if isinstance(data, (dict,list,tuple)):
             data = urllib.parse.urlencode(data)
         if isinstance(data, str):
-            uri = '?'.join((uri,data))
+            uri = '?'.join((uri, data))
         self.logger.debug(uri)
         req = urllib.request.Request(uri, headers=self.get_headers, method="GET")
         return self.urlopen(req)
 
-    def post(self,uri,data):
-        if isinstance(data, (dict,list,tuple)):
+    def post(self, uri, data):
+        if isinstance(data, (dict, list, tuple)):
             data = urllib.parse.urlencode(data,)
         if isinstance(data, str):
             data = data.encode(self.encoding)
@@ -81,7 +81,7 @@ class Client(_sms.Client):
 
         return self.urlopen(req)
 
-    async def urlopen(self,req):
+    async def urlopen(self, req):
         await self.sema.acquire()
         try:
             ret = self.opener.open(req, timeout=5)

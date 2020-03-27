@@ -81,7 +81,7 @@ async def phone_handler(request):
 
     upd = {'try': 0}
 
-    rereg = timedelta(days=uam.get('rereg', REREG_DAYS))
+    rereg = timedelta(days=uam.get('rereg', REREG_DAYS)) or REREG_DAYS
 
     count = await coll.find({
             'mac': q['mac'],

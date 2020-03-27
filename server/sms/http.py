@@ -2,6 +2,8 @@ import logging
 from . import _httpclient
 import urllib.parse
 
+import traceback
+
 class Client(_httpclient.Client):
 
     def __init__(self,*a,**kw):
@@ -13,9 +15,10 @@ class Client(_httpclient.Client):
         assert method in ['get','post'], 'wrong http method'
         self.request = getattr(self,method)
         self.query =  kw.pop('query')
-        self.reciever = kw.get('reciever',False) and False
-        self.callie = kw.get('number','http')
-        self.strip =  kw.get('strip',False)
+        self.reciever = kw.get('reciever', False) and False
+        self.callie = kw.get('number', 'http')
+        self.strip =  kw.get('strip', False)
+        self.quote =  kw.get('quote', True)
         super(Client,self).__init__( *a, **kw)
 
     def _send_sms(self,phone,text):
@@ -27,13 +30,15 @@ class Client(_httpclient.Client):
 
     async def send(self,phone,text,*a,**kw):
         #text = urllib.parse.quote(text)
-        text = urllib.parse.quote(text, safe='/%',encoding=self.encoding)
+        if self.quote:
+            text = urllib.parse.quote(text, safe='/%', encoding=self.encoding)
         try:
-            ret = await self._send_sms(phone,text)
+            ret = await self._send_sms(phone, text)
             self.logger.info(ret.read())
             #assert res.get("result") == "success", 'Modem cant send message'
         except Exception as e:
             self.logger.error(e)
+            self.logger.error(traceback.format_exc())
             return False
         else:
             return True
