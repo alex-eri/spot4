@@ -17,7 +17,7 @@
     "angular-i18n": "^1.7",
     "angular-sanitize": "^1.7",
     "bootstrap": "3.x.x",
-    "jquery": "^2",
+    "jquery": "^3",
     "moment": "^2.19",
     "moment-timezone": "0.5.x",
     "ua-parser-js": "0.7.x",
