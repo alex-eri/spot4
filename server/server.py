@@ -120,6 +120,9 @@ def setup(services=[],args=None):
         import netflow
         services.extend(netflow.setup(config))
 
+    import exporter
+    services.extend(exporter.setup(config))
+
     return services
 
 

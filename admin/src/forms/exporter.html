@@ -1,0 +1,78 @@
+<form class="form-horizontal" >
+<div class="form-group">
+<label class="col-sm-2 control-label">Выгрузка в файл</label>
+<div class="col-sm-4">
+<label class="form-control" >
+  <input type="checkbox" name="enabled" ng-model="exporter.enabled" />
+  включить
+</label>
+
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+
+  <div class="form-group">
+<label class="col-sm-2 control-label">Создавать папки с датой:</label>
+<div class="col-sm-4">
+<label class="form-control" >
+  <input type="checkbox" name="year" ng-model="exporter.year" />
+  год
+</label>
+<label class="form-control" >
+  <input type="checkbox" name="month" ng-model="exporter.month" />
+  месяц
+</label>
+<label class="form-control" >
+  <input type="checkbox" name="day" ng-model="exporter.day" />
+  день
+</label>
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Дата последней загрузки</label>
+<div class="col-sm-4">
+  <input class="form-control"  type="datetime-local" name="date" ng-model="exporter.date" step="any"/>
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+
+<div class="form-group">
+<label class="col-sm-2 control-label">Интервал</label>
+<div class="col-sm-4">
+  <input class="form-control"  type="number" name="step" ng-model="exporter.step" />
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+
+  <div class="form-group">
+<label class="col-sm-2 control-label">ftp</label>
+<div class="col-sm-4">
+  <input class="form-control"  type="url" name="ftp" ng-model="exporter.ftp" />
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+
+
+  <div class="form-group">
+<label class="col-sm-2 control-label">username</label>
+<div class="col-sm-4">
+  <input  class="form-control" type="text" name="username" ng-model="exporter.username" />
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+
+    <div class="form-group">
+<label class="col-sm-2 control-label">password</label>
+<div class="col-sm-4">
+  <input class="form-control"  type="password" name="password" ng-model="exporter.password" />
+</div>
+<div class="col-sm-6"><p class="form-control-static"></p></div>
+</div>
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+    <input class="btn btn-primary" type="submit" ng-click="update()" value="Сохранить" />
+    </div>
+  </div>
+</form>

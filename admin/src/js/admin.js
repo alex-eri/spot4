@@ -96,6 +96,11 @@ app.config(['$routeProvider','$locationProvider',
         ,controller: 'FlowSession'
       }).
 
+      when('/exporter/', {
+        templateUrl: '/static/admin-forms/exporter.html'
+        ,controller: 'Exporter'
+      }).
+
       otherwise({
         redirectTo: '/online/'
       });
@@ -223,6 +228,40 @@ app.controller('FlowSensors',  ['$scope','$resource','$routeParams',
 
         }])
 
+
+app.controller('Exporter',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
+
+      $resource('/db/sheduler').save(
+              [{"find_one":[{_id:'exporter'}]}],
+
+              function(response){
+
+                response.response.date = new Date( response.response.date.$date )
+
+                $scope.exporter = response.response;
+            }
+      )
+
+      $scope.update = function() {
+        data = $scope.exporter
+        data.date = {$date: data.date.toISOString() }
+        $resource('/db/sheduler').save( [{
+              find_and_modify:{
+                  query:{_id:'exporter'},
+                  update: data,
+                  new:true
+                  }
+              }],  function(response){
+
+                response.response.date = new Date( response.response.date.$date )
+
+                $scope.exporter = response.response;
+            } )
+
+      }
+
+        }])
 
 
 
