@@ -2,7 +2,7 @@ import asyncio
 import csv
 import logging
 import datetime
-# from multiprocessing import Process, current_process
+from multiprocessing import Process, current_process
 # from collections import namedtuple
 # import ftplib
 import os
