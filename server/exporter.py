@@ -2,9 +2,9 @@ import asyncio
 import csv
 import logging
 import datetime
-from multiprocessing import Process, current_process
-from collections import namedtuple
-import ftplib
+# from multiprocessing import Process, current_process
+# from collections import namedtuple
+# import ftplib
 import os
 import ipaddress
 import concurrent.futures
@@ -26,6 +26,7 @@ def pathtree(cfg, now):
         paths.append(str(now.day).rjust(2,'0'))
     return paths
 
+
 def makepath(cfg, now):
     paths = [cfg.get('dir', '../data/exports')]
     paths += pathtree(cfg, now)
@@ -36,19 +37,20 @@ def makepath(cfg, now):
 
 async def runcurl(cmd):
     proc = await asyncio.create_subprocess_shell(cmd,
-        stderr=asyncio.subprocess.PIPE)
+                                                 stderr=asyncio.subprocess.PIPE)
 
     stderr = await proc.communicate()
     debug(stderr)
     debug(proc.returncode)
 
+
 def upload(name, cfg, loop, now):
-    paths = [cfg.get('ftp', '')]
+    paths = [cfg.get('ftp')]
     paths += pathtree(cfg, now)
     path = os.path.join(*paths)
 
     debug('upload started')
-    username, password =cfg.get('username', 'anonymous'), cfg.get('password', ''),
+    username, password = cfg.get('username', 'anonymous'), cfg.get('password', ''),
 
     cmd = "curl --ftp-create-dirs -T {name} -u {username}:{password} {path}/".format(
         name=name,
@@ -59,14 +61,11 @@ def upload(name, cfg, loop, now):
     loop.create_task(runcurl(cmd))
 
 
-
-
-async def sheduler_callback_async(config, db, loop):
+async def sheduler_callback_async(db, loop):
     cfg = await db.sheduler.find_one({'_id': 'exporter'})
 
     if not(cfg and cfg.get('enabled', False)):
-        loop.call_later(60, sheduler_callback, config, db, loop)
-        debug('exporter disabled')
+        loop.call_later(60, sheduler_callback, db, loop, 'waiting')
         return
 
     now = datetime.datetime.now()
@@ -82,9 +81,9 @@ async def sheduler_callback_async(config, db, loop):
 
     debug(f'export from {then} to {now}')
 
-    ACCOUNTINGfieldnames = ['_id','username','caller','ip','callee','start_date','stop_date']
+    ACCOUNTINGfieldnames = ['_id', 'username', 'caller', 'ip', 'callee', 'start_date', 'stop_date']
 
-    accs = db.accounting.find( { '$and': [
+    accs = db.accounting.find({'$and': [
         {'start_date': {'$lte': now}},
         {'stop_date': {'$gte': then}}
          ]},
@@ -102,10 +101,10 @@ async def sheduler_callback_async(config, db, loop):
 
     if cfg.get('ftp', False):
         loop.call_soon(
-            upload, ACCOUNTINGname,cfg,loop, now
+            upload, ACCOUNTINGname, cfg, loop, now
         )
 
-    REGfieldnames = ['_id','username','checked','phone','mac','registred','callee','seen','seen_callee']
+    REGfieldnames = ['_id', 'username', 'checked', 'phone', 'mac', 'registred', 'callee', 'seen', 'seen_callee']
     regs = db.devices.find( { '$or': [
         {'$and': [
             { 'registred' : {'$gte': then} },
@@ -129,13 +128,13 @@ async def sheduler_callback_async(config, db, loop):
 
     name = 'export at '+(now+step).isoformat()
     debug('call next at '+(now+step).isoformat())
-    loop.call_at(
+    timer = loop.call_at(
         (now+step).timestamp(),
         sheduler_callback,
-        config,
         db,
         loop,
         name)
+    debug(timer)
 
 
 def done_callback(name):
@@ -144,9 +143,9 @@ def done_callback(name):
     return noop
 
 
-def sheduler_callback(config, db, loop, name):
+def sheduler_callback(db, loop, name):
     debug('starting '+name)
-    t = loop.create_task(sheduler_callback_async(config, db, loop))
+    t = loop.create_task(sheduler_callback_async(db, loop))
     t.add_done_callback(done_callback(name))
 
 
@@ -158,7 +157,7 @@ def run(config):
     )
     loop = asyncio.get_event_loop()
 
-    loop.call_soon(sheduler_callback, config, db, loop, 'export on start')
+    loop.call_soon(sheduler_callback, db, loop, 'export on start')
 
     try:
         loop.run_forever()
