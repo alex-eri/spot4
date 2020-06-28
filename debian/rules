@@ -13,6 +13,7 @@ binary: build
 	mkdir -p debian/spot4/opt/spot4/data
 	mkdir -p debian/spot4/etc/systemd/system
 	mkdir -p debian/spot4/etc/firewalld/services
+	mkdir -p debian/spot4/opt/spot4/data/exports
 	#tar -C debian/spot4 -xf dist/spot4*.tar.gz
 	cp -R build/bin build/config build/mikrotik build/static build/uam debian/spot4/opt/spot4/
 	echo 'Храните картинки и скрипты тут. Они доступны на вэб сервере через URL /static/' > debian/spot4/opt/spot4/static/README
