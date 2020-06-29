@@ -62,79 +62,81 @@ def upload(name, cfg, loop, now):
 
 
 async def sheduler_callback_async(db, loop):
-    cfg = await db.sheduler.find_one({'_id': 'exporter'})
+    while True:
+        cfg = await db.sheduler.find_one({'_id': 'exporter'})
 
-    if not(cfg and cfg.get('enabled', False)):
-        loop.call_later(60, sheduler_callback, db, loop, 'waiting')
-        return
+        if not(cfg and cfg.get('enabled', False)):
+            loop.call_later(60, sheduler_callback, db, loop, 'waiting')
+            return
 
-    now = datetime.datetime.now()
-    step = datetime.timedelta(seconds=cfg.get('step', 36000))
+        now = datetime.datetime.now()
+        step = datetime.timedelta(seconds=cfg.get('step', 36000))
 
-    cfg = await db.sheduler.find_and_modify(
-             {'_id': 'exporter'},
-             {'$set': {'date': now}},
-             new=False
-             )
+        cfg = await db.sheduler.find_and_modify(
+                 {'_id': 'exporter'},
+                 {'$set': {'date': now}},
+                 new=False
+                 )
 
-    then = cfg.get('date', now - step)
+        then = cfg.get('date', now - step)
 
-    debug(f'export from {then} to {now}')
+        debug(f'export from {then} to {now}')
 
-    ACCOUNTINGfieldnames = ['_id', 'username', 'caller', 'ip', 'callee', 'start_date', 'stop_date']
+        ACCOUNTINGfieldnames = ['_id', 'username', 'caller', 'ip', 'callee', 'start_date', 'stop_date']
 
-    accs = db.accounting.find({'$and': [
-        {'start_date': {'$lte': now}},
-        {'stop_date': {'$gte': then}}
-         ]},
-         ACCOUNTINGfieldnames)
+        accs = db.accounting.find({'$and': [
+            {'start_date': {'$lte': now}},
+            {'stop_date': {'$gte': then}}
+             ]},
+             ACCOUNTINGfieldnames)
 
-    path = makepath(cfg, now)
-    ACCOUNTINGname = os.path.join(path,('ACCOUNTING{now:%Y%m%d_%H%M%S}.csv'.format(now=now)))
-    REGname = os.path.join(path,('REG{now:%Y%m%d_%H%M%S}.csv'.format(now=now)))
-    debug(f'open {ACCOUNTINGname}')
-    with open(ACCOUNTINGname, 'w', newline='') as f:
-        writer = csv.DictWriter(f, ACCOUNTINGfieldnames)
-        async for line in accs:
-            line['ip'] = ipaddress.IPv4Address(line['ip'])
-            writer.writerow(line)
+        path = makepath(cfg, now)
+        ACCOUNTINGname = os.path.join(path,('ACCOUNTING{now:%Y%m%d_%H%M%S}.csv'.format(now=now)))
+        REGname = os.path.join(path,('REG{now:%Y%m%d_%H%M%S}.csv'.format(now=now)))
+        debug(f'open {ACCOUNTINGname}')
+        with open(ACCOUNTINGname, 'w', newline='') as f:
+            writer = csv.DictWriter(f, ACCOUNTINGfieldnames)
+            async for line in accs:
+                line['ip'] = ipaddress.IPv4Address(line['ip'])
+                writer.writerow(line)
 
-    if cfg.get('ftp', False):
-        loop.call_soon(
-            upload, ACCOUNTINGname, cfg, loop, now
-        )
+        if cfg.get('ftp', False):
+            loop.call_soon(
+                upload, ACCOUNTINGname, cfg, loop, now
+            )
 
-    REGfieldnames = ['_id', 'username', 'checked', 'phone', 'mac', 'registred', 'callee', 'seen', 'seen_callee']
-    regs = db.devices.find( { '$or': [
-        {'$and': [
-            { 'registred' : {'$gte': then} },
-            { 'registred' : {'$lte': now} }
-        ]},{'$and': [
-            { 'seen' : {'$gte': then} },
-            { 'seen' : {'$lte': now} }
-        ]}
-         ]},
-         REGfieldnames)
-    debug(f'open {REGname}')
-    with open(REGname, 'w', newline='') as f:
-        writer = csv.DictWriter(f, REGfieldnames)
-        async for line in regs:
-            writer.writerow(line)
+        REGfieldnames = ['_id', 'username', 'checked', 'phone', 'mac', 'registred', 'callee', 'seen', 'seen_callee']
+        regs = db.devices.find( { '$or': [
+            {'$and': [
+                { 'registred' : {'$gte': then} },
+                { 'registred' : {'$lte': now} }
+            ]},{'$and': [
+                { 'seen' : {'$gte': then} },
+                { 'seen' : {'$lte': now} }
+            ]}
+             ]},
+             REGfieldnames)
+        debug(f'open {REGname}')
+        with open(REGname, 'w', newline='') as f:
+            writer = csv.DictWriter(f, REGfieldnames)
+            async for line in regs:
+                writer.writerow(line)
 
-    if cfg.get('ftp', False):
-        loop.call_soon(
-            upload, REGname, cfg, loop, now
-        )
+        if cfg.get('ftp', False):
+            loop.call_soon(
+                upload, REGname, cfg, loop, now
+            )
+        await asyncio.sleep(step)
 
-    name = 'export at '+(now+step).isoformat()
-    debug('call next at '+(now+step).isoformat())
-    timer = loop.call_at(
-        (now+step).timestamp(),
-        sheduler_callback,
-        db,
-        loop,
-        name)
-    debug(timer)
+    # name = 'export at '+(now+step).isoformat()
+    # debug('call next at '+(now+step).isoformat())
+    # timer = loop.call_at(
+    #     (now+step).timestamp(),
+    #     sheduler_callback,
+    #     db,
+    #     loop,
+    #     name)
+    # debug(timer)
 
 
 def done_callback(name):

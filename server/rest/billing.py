@@ -32,7 +32,7 @@ async def addinvoice(db, device, uam):
         tarif = await db.tarif.find_one({'_id': uam['tarif']})
         print(tarif)
 
-        if tarif.get('duration') > 0:
+        if tarif.get('duration', 0) > 0:
             stop = now + timedelta(days=tarif['duration'])
         else:
             stop = 0
