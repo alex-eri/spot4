@@ -69,7 +69,7 @@ async def sheduler_callback_async(db, loop):
             loop.call_later(60, sheduler_callback, db, loop, 'waiting')
             return
 
-        now = datetime.datetime.now()
+        now = datetime.datetime.utcnow()
         step = datetime.timedelta(seconds=cfg.get('step', 36000))
 
         cfg = await db.sheduler.find_and_modify(
