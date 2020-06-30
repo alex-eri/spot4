@@ -126,7 +126,7 @@ async def sheduler_callback_async(db, loop):
             loop.call_soon(
                 upload, REGname, cfg, loop, now
             )
-        await asyncio.sleep(step)
+        await asyncio.sleep(step.total_seconds())
 
     # name = 'export at '+(now+step).isoformat()
     # debug('call next at '+(now+step).isoformat())
