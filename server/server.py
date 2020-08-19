@@ -15,7 +15,7 @@ def modem_setup(config):
     import ami
 
     procs.extend(zte.setup(config))
-    procs.extent(ami.setup(config))
+    procs.extend(ami.setup(config))
     return procs
 
 
