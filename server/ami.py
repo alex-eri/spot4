@@ -1,6 +1,6 @@
 import asyncio
 import panoramisk
-import phonenumbers
+#import phonenumbers
 
 import logging
 import datetime
@@ -18,8 +18,12 @@ async def call_recv_numbers(db, numbers):
 
 
 async def newchannel_cb(manager, message, db=None, config=None):
-    cid = phonenumbers.parse(message.CallerIDNum, "RU")
-    phone = "+{}{}".format(cid.country_code, cid.national_number)
+    debug(repr(message))
+
+    #cid = phonenumbers.parse(message.CallerIDNum, "RU")
+    #phone = "+{}{}".format(cid.country_code, cid.national_number)
+
+    phone = message.CallerIDNum
 
     now = datetime.datetime.utcnow()
     delta = datetime.timedelta(seconds=config.get('timeout', 120))
