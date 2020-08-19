@@ -12,7 +12,10 @@ def modem_setup(config):
 
     procs = []
     import zte
-    return zte.setup(config)
+    import ami
+
+    procs.extend(zte.setup(config))
+    procs.extent(ami.setup(config))
     return procs
 
 

@@ -131,6 +131,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/uam-forms/wait-sms.html',
         controller: 'Check'
       }).
+      when('/wait/call/', {
+        templateUrl: '/static/uam-forms/wait-call.html',
+        controller: 'Check'
+      }).
       when('/login/', {
         templateUrl: '/static/uam-forms/login.html',
         controller: 'Login'
@@ -354,6 +358,8 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
                         $location.search('username', response.username);
                         $location.path('/login/');
                         }
+                    else if (response.call_waited)
+                        $location.path('/wait/call/')
                     else if (response.sms_sent)
                         $location.path('/check/sms/')
                     else if (response.sms_waited)

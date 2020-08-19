@@ -248,7 +248,6 @@ def main():
     import multiprocessing as mp
     config = json.load(open('config.json','r'))
     logging.basicConfig(level=logging.DEBUG)
-    #config['smsq'] = mp.Queue()
     setup_loop(config)
 
 

@@ -1,0 +1,18 @@
+<p ng-if="device.call_waited">
+  <label>
+    Позвоните на номер <a href="tel:{{device.callie}}">{{device.callie}}</a> для подтверждения.
+  </label>
+</p>
+<p ng-if="device.call_waited">
+Интернет включится после звонка. Стоимость согласно тарифу Вашего оператора.
+Не закрывайте эту страницу или откройте снова после звонка.
+</p>
+
+<p  ng-if="!device.call_waited">
+  <label>На данный момент приём звонка не возможен по техническим причинам.</label>
+</p>
+<p>
+  <a href=check/sms/ ng-if="(device.sms_sent)">Пришло SMS</a>
+  <!--a href=register/>Другой номер</a-->
+</p>
+
