@@ -10,7 +10,7 @@ from multiprocessing import Process
 debug = logging.debug
 
 
-async def call_recv_numbers(db,numbers):
+async def call_recv_numbers(db, numbers):
     await db.numbers.remove({'call_recv':True})
     if numbers:
         return await db.numbers.insert_many([{'call_recv': True, 'number': n} for n in numbers])
@@ -70,7 +70,7 @@ async def init(loop, config):
             numbers.extend(cfg['numbers'])
 
 
-    await call_recv_numbers(numbers)
+    await call_recv_numbers(db, numbers)
 
     for m in managers:
         res = await m.connect()
