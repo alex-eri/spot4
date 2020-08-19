@@ -12,3 +12,5 @@ pytz
 https://github.com/vbwagner/ctypescrypto/archive/master.zip#egg=ctypescrypto
 lxml
 monthdelta
+panoramisk
+phonenumbers
