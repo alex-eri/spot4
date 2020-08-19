@@ -54,13 +54,13 @@ async def init(loop, config):
 
     for cfg in config.get('CALL',{}).get('pool',[]):
         if cfg.get('driver', '~').lower() == 'ami':
-        managers.append(
-            panoramisk.Manager(
-                loop=loop,
-                host=cfg['host'],
-                username=cfg['username'],
-                secret=cfg['secret'])
-        )
+            managers.append(
+                panoramisk.Manager(
+                    loop=loop,
+                    host=cfg['host'],
+                    username=cfg['username'],
+                    secret=cfg['secret'])
+            )
 
         if cfg.get('number', False):
             debug(cfg['number'])
