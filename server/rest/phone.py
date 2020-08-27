@@ -42,6 +42,8 @@ async def phone_handler(request):
 
     method = DATA.get('method', 'sms')
 
+    debug("method="+method)
+
     try:
         phcheck(phone)
     except:
@@ -156,7 +158,7 @@ async def phone_handler(request):
                 upd['sms_callie'] = random.choice(numbers).get('number', '~')
 
 
-            if not uam.get('smssend', False) and method == 'sms':
+            if not (uam.get('smssend', False) and method == 'sms'):
                 debug('not enabled smssend')
             elif sms_limit <= 0:
                 debug('smssend limited')
