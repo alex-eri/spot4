@@ -18,12 +18,10 @@ async def call_recv_numbers(db, numbers):
 
 
 async def newchannel_cb(manager, message, db=None, config=None):
-    debug(repr(message))
-
     #cid = phonenumbers.parse(message.CallerIDNum, "RU")
     #phone = "+{}{}".format(cid.country_code, cid.national_number)
 
-    phone = message.CallerIDNum
+    phone = "+{}".format(str(message.CallerIDNum).strip('+'))
 
     now = datetime.datetime.utcnow()
     delta = datetime.timedelta(seconds=config.get('timeout', 120))
@@ -32,12 +30,13 @@ async def newchannel_cb(manager, message, db=None, config=None):
     device = await db.devices.find_and_modify(q, {
               '$set': {'checked': True},
               '$currentDate': {'check_date': True}
-            }, upsert=False)
+            }, upsert=False,
+                new=True)
+
+    logging.debug(repr(device))
 
     if device:
         await manager.send_action({"Action": "Hangup", "Channel": message.Channel})
-
-    debug(repr(device))
 
 
 async def init(loop, config):

@@ -40,7 +40,7 @@ async def phone_handler(request):
         DATA = await request.post()
     phone = DATA.get('phone')
 
-    call = DATA.get('call', 'sms')
+    method = DATA.get('method', 'sms')
 
     try:
         phcheck(phone)
@@ -141,7 +141,7 @@ async def phone_handler(request):
             upd['checked'] = True
         else:
 
-            if uam.get('callrecieve', False):
+            if uam.get('callrecieve', False) and method == 'call':
                 numberscursor = request.app['db'].numbers.find({'call_recv': True})
                 numbers = await numberscursor.to_list(length=1000)
                 if numbers:
@@ -156,7 +156,7 @@ async def phone_handler(request):
                 upd['sms_callie'] = random.choice(numbers).get('number', '~')
 
 
-            if not uam.get('smssend', False):
+            if not uam.get('smssend', False) and method == 'sms':
                 debug('not enabled smssend')
             elif sms_limit <= 0:
                 debug('smssend limited')

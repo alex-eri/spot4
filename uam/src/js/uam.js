@@ -111,6 +111,10 @@ app.config(['$routeProvider','$locationProvider',
         templateUrl: '/static/uam-forms/register-phone.html',
         controller: 'Register'
       }).
+      when('/register/call/', {
+        templateUrl: '/static/uam-forms/register-phone.html',
+        controller: 'Register'
+      }).
       when('/register/password/', {
         templateUrl: '/static/uam-forms/register-password.html',
         controller: 'RegisterPassword'
@@ -162,6 +166,12 @@ app.controller('PreRegister',  ['$rootScope','$resource','$cookies','$location',
     if ($scope.config.external) {
       c++;
       r=false;
+    }
+
+    if ($scope.config.callrecieve) {
+      r='/register/call/'
+      c++;
+      $scope.config.call = true;
     }
 
     if ($scope.config.nosms || $scope.config.smsrecieve || $scope.config.smssend) {
@@ -337,12 +347,18 @@ app.controller('Register',  ['$rootScope','$resource','$cookies','$location','$w
         var mac = $location.$$search.mac || $cookies.get('mac');
         var called = $location.$$search.called || $cookies.get('called');
 
+        var method = 'sms'
+
+        if ( $location.path() == '/register/call/' )
+
+        method = 'call'
+
         $scope.register = function(form) {
             console.log(form);
             if (form.$valid) {
                 $resource('/register/phone').save(
 
-                    {phone:form.phone.$modelValue, mac: mac, profile:called},
+                    {phone:form.phone.$modelValue, mac: mac, profile:called, method: method},
 
                 function(response) {
                     console.log(response)
@@ -606,7 +622,7 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
             }
 
         $scope.checker = $interval(
-            getdevice, 4000)
+            getdevice, 1000)
 
         $scope.confirm = function(form) {if (form.$valid) {
 
