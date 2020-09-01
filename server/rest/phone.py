@@ -152,11 +152,10 @@ async def phone_handler(request):
             if uam.get('smsrecieve', False):
                 numberscursor = request.app['db'].numbers.find({'sms_recv': True}) #request.app['config'].get('numbers')
                 numbers = await numberscursor.to_list(length=1000)
-                debug(numbers)
-                code = getsms(**q)
-                upd['sms_waited'] = code
-                upd['sms_callie'] = random.choice(numbers).get('number', '~')
-
+                if numbers:
+                    code = getsms(**q)
+                    upd['sms_waited'] = code
+                    upd['sms_callie'] = random.choice(numbers).get('number', '~')
 
             if not (uam.get('smssend', False) and method == 'sms'):
                 debug('not enabled smssend')
@@ -202,6 +201,7 @@ async def phone_handler(request):
         return device
     else:
         raise web.HTTPNotFound()
+
 
 @json
 async def sms_handler(request):
