@@ -358,7 +358,7 @@ app.controller('Config',  ['$scope','$resource',
     function ( $scope, $resource ){
 
       $scope.reload = function(){
-        var a=confirm("Уверенны?");
+        var a=confirm("Уверены?");
         if (a) {
 
         $resource('/admin/kill').save({'reload': true},
