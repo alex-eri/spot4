@@ -51,7 +51,7 @@ def setup_web(config, https=False, port=8080):
 def setup(config):
     procs = []
 
-    port = config.get('HTTP_PORT',8080)
+    port = config.get('HTTP_PORT', 8080)
     if port:
         web = Process(target=setup_web, args=(config, False,port))
         web.name = 'http'

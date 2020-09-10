@@ -8,8 +8,9 @@ from .logger import *
 from datetime import datetime, timedelta
 from .front import get_uam_config
 from monthdelta import monthdelta
-
 from .billing import addinvoice
+from .smsru import smsru_call
+
 
 REREG_DAYS = 3
 DEVMAX = 10
@@ -27,6 +28,8 @@ async def setuser(db, reg):
         return user['_id']
 
     return await db.users.insert({'with': reg, '_id': await nextuser(db)})
+
+
 
 
 @json
@@ -81,7 +84,7 @@ async def phone_handler(request):
 
     device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
 
-    upd = {'try': 0}
+    upd = {'try': 0, 'method': method}
 
     rereg = timedelta(days=uam.get('rereg', REREG_DAYS)) or REREG_DAYS
 
@@ -148,8 +151,12 @@ async def phone_handler(request):
                 numbers = await numberscursor.to_list(length=1000)
                 if numbers:
                     upd['call_waited'] = random.choice(numbers).get('number', '~')
+                if upd['call_waited'].startswith('smsru'):
+                    upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'])
+                    if upd['call_waited']:
+                        upd['method'] = 'smsru/call'
 
-            if uam.get('smsrecieve', False):
+            elif uam.get('smsrecieve', False):
                 numberscursor = request.app['db'].numbers.find({'sms_recv': True}) #request.app['config'].get('numbers')
                 numbers = await numberscursor.to_list(length=1000)
                 if numbers:

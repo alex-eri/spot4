@@ -7,7 +7,7 @@ from bson.objectid import ObjectId
 import asyncio
 from .billing import addinvoice
 from .front import get_uam_config
-
+from .smsru import smsru_check
 #FIELDS=['username','sms_callie','sms_waited','checked','sms_sent','mac','try']
 
 
@@ -57,6 +57,9 @@ async def device_handler(request):
 
             if uam.get('tarif'):
                 await addinvoice(request.app['db'], device, uam)
+        elif device.get('method','sms') == 'smsru/call':
+            if await smsru_check(device.get('check_id')):
+                device = await coll.find_and_modify(q,{'$set':{'checked': True} }, new=True)
         else:
             numbers = request.app['config'].get('numbers', [])
             if device.get('sms_callie', None) and device.get('sms_callie', None) in numbers:

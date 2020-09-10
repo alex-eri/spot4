@@ -64,6 +64,9 @@ async def init(loop, config):
                     username=cfg['username'],
                     secret=cfg['secret'])
             )
+        if cfg.get('driver', '~').lower() == 'smsru':
+            numbers.append('smsru::{api_id}'.format(**cfg))
+            continue
 
         if cfg.get('number', False):
             debug(cfg['number'])
