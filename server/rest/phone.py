@@ -152,7 +152,7 @@ async def phone_handler(request):
                 if numbers:
                     upd['call_waited'] = random.choice(numbers).get('number', '~')
                 if upd['call_waited'].startswith('smsru'):
-                    upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'])
+                    upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'],phone)
                     if upd['call_waited']:
                         upd['method'] = 'smsru/call'
 

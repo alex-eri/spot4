@@ -81,7 +81,7 @@ async def init(loop, config):
     for m in managers:
         res = await m.connect()
         if res:
-            logging.info("Connected: ", repr(m))
+            logging.info("Connected: %s", repr(m))
             m.register_event('Newchannel', functools.partial(newchannel_cb, db=db, config=config ))
 
     return managers
