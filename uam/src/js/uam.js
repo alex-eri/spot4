@@ -168,7 +168,7 @@ app.controller('PreRegister',  ['$rootScope','$resource','$cookies','$location',
       r=false;
     }
 
-    if ($scope.config.callrecieve) {
+    if ($scope.config.nosms || $scope.config.callrecieve) {
       r='/register/call/'
       c++;
       $scope.config.call = true;
