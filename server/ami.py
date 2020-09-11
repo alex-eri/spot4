@@ -27,11 +27,16 @@ async def newchannel_cb(manager, message, db=None, config=None):
     delta = datetime.timedelta(seconds=config.get('timeout', 120))
     q = dict(phone=phone, seen={'$gt': now - delta})
 
-    device = await db.devices.find_and_modify(q, {
-              '$set': {'checked': True},
-              '$currentDate': {'check_date': True}
-            }, upsert=False,
-                new=True)
+    device = await db.devices.find_and_modify(
+        q,
+        {
+            '$set': {'checked': True},
+            '$currentDate': {'check_date': True}
+        },
+        sort={'$natural': -1},
+        upsert=False,
+        new=True
+    )
 
     logging.debug(repr(device))
 
