@@ -4,7 +4,7 @@ from aiohttp import web
 
 async def get_uam_config(db,profile):
     profile = str(profile)
-    fot c in '-:_':
+    for c in '-:_':
         profile = profile.replace(c,'')
 
     default = await db.uamconfig.find_one({'_id':'default'})
