@@ -1,4 +1,8 @@
-<h1>SMS&nbsp;&nbsp;</h1>
+<h1>SMS&nbsp;&nbsp; <small ng-if=startdate  class="form-inline pull-right">
+       <input class="form-control" type="month" ng-model=startdate ng-change="changestart(startdate,stopdate)" /> &mdash;
+       <input class="form-control" type="month" ng-model=stopdate ng-change="changestop(startdate,stopdate)" />
+
+     </small></h1>
 <ul class="nav nav-tabs" role="tablist" >
 <li role="presentation" ng-class="{active:smstab==0 || ! smstab}">
   <a ng-click="smstab=0">Статистика по отправленным</a></li>
@@ -16,7 +20,7 @@
   <table class="table table-hover table-condensed table-bordered">
     <tr>
       <th>Профиль</th>
-      <th>Месяц</th>
+      <th>За период</th>
       <th>Всего</th>
     </tr>
     <tr ng-repeat="a in sms_stat">
@@ -51,11 +55,13 @@
   <table class="table table-hover table-condensed table-bordered">
     <tr>
       <th>Время</th>
+      <th>Профиль</th>
       <th>Абонент</th>
       <th>Текст</th>
     </tr>
 <tr ng-repeat="a in sms_sent">
 <td>{{a.sent.$date | date: 'medium'}}</td>
+<td>{{a.callee}}</td>
 <td title="To: {{a.to}}">{{a.phone}}</td>
 <td>{{a.text}}</td>
 </tr>

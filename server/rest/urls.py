@@ -21,15 +21,11 @@ def routers(app):
     app.router.add_get('/generate_204', generate_204)
     app.router.add_get('/hotspot-detect.html', hotspot_detect)
 
-    if app['config'].get('SMS'):
-
-        app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
-        app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
-        app.router.add_route('POST', '/register/phone', phone_handler)
-
-        app.router.add_route('POST', '/register/vk', vk_handler)
-
-        app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
+    app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
+    app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
+    app.router.add_route('POST', '/register/phone', phone_handler)
+    app.router.add_route('POST', '/register/vk', vk_handler)
+    app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 
     app.router.add_route('*', '/device/{oid}', device_handler)
 
@@ -52,7 +48,7 @@ def routers(app):
 
     app.router.add_static('/static/', path='../static/', name='static')
     app.router.add_static('/data/exports/', path='../data/exports/', name='exports-data', show_index=True, follow_symlinks=True)
-    app.router.add_static('/data/', path='../data/', name='static-data')
+    app.router.add_static('/data/', path='../data/', name='static-data', follow_symlinks=True)
 
     app.router.add_route('POST', '/billing/voucher', voucher)
 

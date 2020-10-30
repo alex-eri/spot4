@@ -478,14 +478,17 @@ app.controller("Admins", ['$scope','$resource',
 }]);
 
 
-app.controller('Sms',  ['$scope','$resource',
-    function ( $scope, $resource ){
+app.controller('Sms',  ['$scope','$resource','$routeParams',
+    function ( $scope, $resource, $routeParams){
         $scope.label = "в сети"
         $scope.interval = intervalt;
         $scope.t = datefymd;
 
         var monthago =new Date();
         monthago.setMonth(monthago.getMonth() - 1);
+
+
+        function load(startdate,stopdate) {
 
         $resource('/db/sms_sent').save(
             [
@@ -494,11 +497,14 @@ app.controller('Sms',  ['$scope','$resource',
                 {"$project": {
                 item:1,
                 callee:"$callee",
-                month:{"$cond": [{"$gt": ["$sent", {"$date":monthago}]},1,0]
+                month:{"$cond": [ { $and : [{
+                  "$gte": ["$sent", {"$date":startdate.getTime()}]},{
+                  "$lt": ["$sent", {"$date":stopdate.getTime()}]
+                  }]},1,0]
                 }
                 }},
-                {"$group": {_id:"$callee", total: {"$sum":1}, month: {"$sum":"$month"}}}
-
+                {"$group": {_id:"$callee", total: {"$sum":1}, month: {"$sum":"$month"}}},
+                { $sort : { _id: 1 } }
                 ]]
                 }]
 
@@ -507,9 +513,12 @@ app.controller('Sms',  ['$scope','$resource',
         }
         )
 
-        $resource('/db/sms_received/0/23').save(
+        $resource('/db/sms_received/').save(
             [
-            {find:{}},
+            {find:[{'date':{
+                          '$gte': {'$date':startdate.getTime()},
+                          '$lt': {'$date':stopdate.getTime()}
+                      }}]},
             {sort:["_id",-1]}
         ]
         , function(response){
@@ -517,15 +526,25 @@ app.controller('Sms',  ['$scope','$resource',
         }
         );
 
-        $resource('/db/sms_sent/0/23').save(
-            [
-            {find:{}},
-            {sort:["_id",-1]}
-        ]
-        , function(response){
-            $scope.sms_sent = response.response;
+
+
+
+          $resource('/db/sms_sent/').save(
+              [
+              {find:[{'sent':{
+                          '$gte': {'$date':startdate.getTime()},
+                          '$lt': {'$date':stopdate.getTime()}
+                      }}]},
+              {sort:["_id",-1]}
+          ]
+          , function(response){
+              $scope.sms_sent = response.response;
+          }
+          )
+
         }
-        )
+
+        intervalFactory($scope,$routeParams,load)
 
     }]);
 
