@@ -1,21 +1,6 @@
-spot4 (271) stable; urgency=low
+spot4 (309) stable; urgency=low
 
-  * Tarif on start
-  * admin fixes
+  * fix profile
 
- -- Aleksandr Stepanov <sa@eri.su>  Thu, 26 Dec 2019 12:35:32 +0300
-
-
-spot4 (260) stable; urgency=low
-
-  * deb package
-
- -- Aleksandr Stepanov <sa@eri.su>  Tue, 22 May 2018 14:17:11 +0300
-
-
-spot4 (226) stable; urgency=low
-
-  * fix mp.manager
-
- -- Aleksandr Stepanov <sa@eri.su>  Tue, 22 May 2018 14:17:11 +0300
+ -- Aleksandr Stepanov <sa@eri.su>  Fri, 30 Oct 2020 12:40:01 +0000
 
