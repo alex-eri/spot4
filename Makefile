@@ -48,6 +48,9 @@ clean:
 start:
 	cd ./build/bin* ; ./spot4.exe
 
+run:
+	cd ./server/; python3 server.py
+
 
 submodule:
 	git submodule init
@@ -84,7 +87,7 @@ veth:
 
 dhclient1:
 	ip netns exec TESTA ip link set dev ve0b up
-	ip netns exec TESTA dhclient ve0b
+	ip netns exec TESTA dhcpcd ve0b
 	ip netns exec TESTA ip a l
 
 dhclient2:
@@ -101,5 +104,5 @@ opera:
 operaonmikrotik: netns mikrobr dhclient2 opera
 
 IPonAS:
-	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' | aggregate > ./$$AS-ip
+	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' > ./$$AS-ip
 
