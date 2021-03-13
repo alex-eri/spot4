@@ -6,7 +6,8 @@ clean:
 
 build:
 	make -C . all
-	gbp dch  --release --spawn-editor=no
+	git reset -- debian/changelog
+	gbp dch --snapshot --spawn-editor=no --urgency=low -N `git rev-list --all --count`
 
 binary: build
 	mkdir -p debian/spot4
