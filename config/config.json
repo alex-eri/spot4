@@ -9,7 +9,7 @@
 "NETFLOW": [5],
 "NETFLOW_PORT": 2055,
 "#NETFLOW_SIZE": "Выделяется на диске в мегабайтах под подробную статистику",
-"NETFLOW_SIZE": 2100,
+"NETFLOW_SIZE": 20100,
 "DEBUG": true,
 "LOGFILE": null,
 "DB": {
@@ -23,9 +23,9 @@
 	"driver": "ami",
 	"username": "spot",
 	"secret": "somesecret",
-	"address": "127.0.0.1",
+	"host": "127.0.0.1",
 	"port": 5038,
-	"reciever": true,
+	"reciever": false,
 	"numbers": ["0000","1234"]
 	}
 	]
@@ -33,6 +33,27 @@
 "SMS": {
 	"enabled": true,
 	"pool": [
+                        {
+                        "driver":"http",
+                        "method":"post",
+                        "url":"https://sms.beltelecom.by/sites/all/modules/api_sms/xml.php",
+                        "sender": false,
+                        "reciever": false,
+                        "query": "{\"login\":\"1630009214113\",\"password\":\"QweAsd123@\",\"header\":\"WiFi\",\"text\":\"{text}\",\"number\":\"{phone}\"}",
+                        "headers": {"Content-Type": "application/json"},
+                        "encoding":"utf-8",
+                        "strip": true,
+                        "callee": ["beltelekom"]
+                        },
+
+			{
+			"driver":"zte",
+			"url":"http://192.168.0.1",
+			"number": "+7988XXXXXXX",
+			"sender": false,
+			"reciever": false,
+			"notCallback": true
+			},
 			{
 			"driver":"http",
 			"method":"post",

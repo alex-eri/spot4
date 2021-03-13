@@ -237,9 +237,17 @@ app.controller('Exporter',  ['$scope','$resource','$routeParams',
 
               function(response){
 
-                response.response.date = new Date( response.response.date.$date )
 
-                $scope.exporter = response.response;
+                if (response.response){
+
+                  response.response.date = new Date( response.response.date.$date )
+                  $scope.exporter = response.response;
+                } else {
+                
+                  $scope.exporter = { "_id" : "exporter", "enabled" : false, "step" : 120, "date" : ISODate("2020-11-02T06:32:50.100Z"),
+                   "username" : "spot", "password" : "spot", "year" : true, "month" : true, "day" : true, "ftp" : "" }
+                
+                }
             }
       )
 

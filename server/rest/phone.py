@@ -56,6 +56,7 @@ async def phone_handler(request):
     uam = uam or {}
 
     sms_limit = uam.get('sms_limit', -1)
+    sms_redudant = uam.get('sms_redudant', 1)
 
     if uam.get('smssend', False) and sms_limit > 0:
         sms_limit -= await request.app['db'].sms_sent.count(
@@ -153,7 +154,7 @@ async def phone_handler(request):
                     upd['call_waited'] = random.choice(numbers).get('number', '~')
                 if upd['call_waited'].startswith('smsru'):
                     try:
-                        upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'],phone)
+                        upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'], phone)
                     except Exception as e:
                         logger.error('failed to register call')
                         logger.error(e)
@@ -189,6 +190,7 @@ async def phone_handler(request):
                 #request.app['config']['smsq'].put((phone,text))
                 request.app['db'].sms_sent.insert(
                     {
+                        'redudant':sms_redudant,
                         'phone': phone,
                         'text': text,
                         'sent': now,

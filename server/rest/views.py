@@ -81,18 +81,22 @@ async def filter_for_admin(administrator,collection,data,db):
 
     if command in ['find','find_and_modify','remove']:
         opts = data[0][command]
-
-        if not opts:
-            data[0][command] = [ {}]
-            data[0][command][0][field] = {'$in':filters}
-
-        elif type(opts) == dict:
-            if not data[0][command]['query'][field] in filters:
-                data[0][command]['query'][field] = {'$in':filters}
-
-        elif type(opts) == list:
-            if not data[0][command]['query'][field] in filters:
+        try:
+            if not opts:
+                data[0][command] = [{}]
                 data[0][command][0][field] = {'$in':filters}
+
+            elif type(opts) == dict:
+                if not data[0][command]['query'].get(field, None) in filters:
+                    data[0][command]['query'][field] = {'$in':filters}
+
+            elif type(opts) == list:
+                if not data[0][command][0].get(field, None) in filters:
+                    data[0][command][0][field] = {'$in':filters}
+
+        except KeyError:
+            web.HTTPForbidden()
+
 
     elif command == 'distinct':
         data.insert(0,{'find': [{field: {'$in':filters} }]})

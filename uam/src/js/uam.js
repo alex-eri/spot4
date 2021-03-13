@@ -16,6 +16,8 @@ app.directive('phoneValidation', function(){
             .replace(/^89/g,'+79')
             .replace(/^79/g,'+79')
             .replace(/^9/g,'+79')
+
+
             .replace(/^380/g,'+380') // ukr
             .replace(/^(02)([459])/g,'+3752$2') //belarus
             .replace(/^033/g,'+37533')

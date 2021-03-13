@@ -20,6 +20,7 @@ async def config(request):
         return {'response': conf}
 
     conf = request.app['config'].copy()
+    conf["LIC"] = conf.get("LIC", "Not licensed").split("::")[0]
     #conf['numbers'] = [ i for i in request.app['config'].get('numbers',[])]
     #conf['call_numbers'] = [ i for i in request.app['config'].get('call_numbers',[])]
 

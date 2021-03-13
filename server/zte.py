@@ -149,15 +149,17 @@ async def send_loop(clients, db):
         cursor = db.sms_sent.find(q, cursor_type=CursorType.TAILABLE_AWAIT)
         while cursor.alive:
             async for sms in cursor:
-                client = get_gate(sms, len(clients), xclients, roundrobin)
+                redudant = sms.get('redudant', 1)
+                for _ in range(redudant):
+                    client = get_gate(sms, len(clients), xclients, roundrobin)
+                    try:
+                        res = await client.send(**sms)
+                        logger.info(res)
+                    except Exception as e:
+                        logger.error(e)
+
+                await asyncio.sleep(INTERVAL)
                 last = sms.get('_id', last)
-                try:
-                    res = await client.send(**sms)
-                    logger.info(res)
-                except Exception as e:
-                    logger.error(e)
-                else:
-                    await asyncio.sleep(INTERVAL)
             #debug(time.time())
             #
 

@@ -61,6 +61,9 @@ async def init(loop, config):
     numbers = []
 
     for cfg in config.get('CALL',{}).get('pool',[]):
+        if not cfg.get('reciever', False):
+            continue
+        
         if cfg.get('driver', '~').lower() == 'ami':
             managers.append(
                 panoramisk.Manager(
