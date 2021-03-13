@@ -57,7 +57,7 @@ async def device_handler(request):
 
             if uam.get('tarif'):
                 await addinvoice(request.app['db'], device, uam)
-        elif device.get('method','sms') == 'smsru/call':
+        elif device.get('method','sms') == 'call' and device.get('variant') == 'smsru':
             if await smsru_check(device.get('check_id')):
                 device = await coll.find_and_modify(q,{'$set':{'checked': True} }, new=True)
         else:

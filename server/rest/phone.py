@@ -141,7 +141,7 @@ async def phone_handler(request):
         upd['username'] = (await setuser(request.app['db'],phone))
 
 
-    if reg:
+    if reg or method != device.get('method', 'nomethod'):
 
         if uam.get('nosms', False):
             upd['checked'] = True
@@ -159,7 +159,7 @@ async def phone_handler(request):
                         logger.error('failed to register call')
                         logger.error(e)
                     if upd['call_waited']:
-                        upd['method'] = 'smsru/call'
+                        upd['variant'] = 'smsru'
 
             elif uam.get('smsrecieve', False):
                 numberscursor = request.app['db'].numbers.find({'sms_recv': True}) #request.app['config'].get('numbers')
