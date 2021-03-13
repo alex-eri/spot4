@@ -6,6 +6,8 @@ clean:
 
 build:
 	make -C . all
+	git reset -- debian/changelog
+	gbp dch --snapshot --spawn-editor=no -N `git rev-list --all --count`
 
 
 binary: build
