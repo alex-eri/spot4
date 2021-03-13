@@ -1,6 +1,7 @@
-spot4 (309) stable; urgency=low
+spot4 (315) stable; urgency=low
 
-  * fix profile
+  * registration with another method
 
- -- Aleksandr Stepanov <sa@eri.su>  Fri, 30 Oct 2020 12:40:01 +0000
+ -- Aleksandr Stepanov <sa@eri.su> Sat, 13 Mar 2021 13:51:52 -0000
+
 
