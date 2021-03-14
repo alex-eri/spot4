@@ -39,7 +39,7 @@
                         "url":"https://sms.beltelecom.by/sites/all/modules/api_sms/xml.php",
                         "sender": false,
                         "reciever": false,
-                        "query": "{\"login\":\"1630009214113\",\"password\":\"QweAsd123@\",\"header\":\"WiFi\",\"text\":\"{text}\",\"number\":\"{phone}\"}",
+                        "query": "{\"login\":\"XXX\",\"password\":\"XXXXX\",\"header\":\"WiFi\",\"text\":\"{text}\",\"number\":\"{phone}\"}",
                         "headers": {"Content-Type": "application/json"},
                         "encoding":"utf-8",
                         "strip": true,
