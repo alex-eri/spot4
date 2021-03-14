@@ -55,8 +55,10 @@ async def phone_handler(request):
     uam = await get_uam_config(request.app['db'], DATA.get('profile','default'))
     uam = uam or {}
 
-    sms_limit = uam.get('sms_limit', -1)
-    sms_redudant = uam.get('sms_redudant', 1)
+    debug(uam)
+
+    sms_limit = uam.get('sms_limit') or -1
+    sms_redudant = uam.get('sms_redudant') or 1
 
     if uam.get('smssend', False) and (sms_limit > 0):
         sms_limit -= await request.app['db'].sms_sent.count(
@@ -87,7 +89,7 @@ async def phone_handler(request):
 
     upd = {'try': 0, 'method': method}
 
-    rereg = timedelta(days=uam.get('rereg', REREG_DAYS)) or REREG_DAYS
+    rereg = timedelta(days=uam.get('rereg') or REREG_DAYS)
 
     count = await coll.find({
             'mac': q['mac'],
@@ -95,14 +97,14 @@ async def phone_handler(request):
             'checked': {'$ne': True}
         }).count()
 
-    if count >= uam.get('devmax', DEVMAX):
+    if count >= (uam.get('devmax') or DEVMAX):
         uam['smssend'] = False
 
     debug(uam)
     debug(device)
 
 
-    sms_timeout = uam.get('sms_timeout', -1)
+    sms_timeout = uam.get('sms_timeout') or -1
     if sms_timeout == -1:
         sms_timeout = rereg
     elif sms_timeout == -2:
