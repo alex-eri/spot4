@@ -15,7 +15,7 @@ class Client:
             self.anytext = 3600*4
         self.logger.debug(self.reciever)
         self.recieved_cb = kw.pop('recieved_cb', self.__recieved_cb)
-        self.filter = re.compile(kw.pop('sender', '.*'))
+        self.filter = re.compile(kw.pop('filter', '.*'))
 
     def __recieved_cb(self, sms):
         pass
