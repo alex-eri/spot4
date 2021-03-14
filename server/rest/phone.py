@@ -58,7 +58,7 @@ async def phone_handler(request):
     sms_limit = uam.get('sms_limit', -1)
     sms_redudant = uam.get('sms_redudant', 1)
 
-    if uam.get('smssend', False) and sms_limit > 0:
+    if uam.get('smssend', False) and (sms_limit > 0):
         sms_limit -= await request.app['db'].sms_sent.count(
             {
                 'callee': uam.get('_id', 'default'),
@@ -129,7 +129,7 @@ async def phone_handler(request):
                 debug("reg no time")
                 reg = True
             else:
-                if sms_timeout != False and now - device.get('sms_time') > sms_timeout:
+                if (sms_timeout != False) and (now - device.get('sms_time') > sms_timeout):
                     reg = True
                     debug("reg timeout")
 
@@ -141,13 +141,13 @@ async def phone_handler(request):
         upd['username'] = (await setuser(request.app['db'],phone))
 
 
-    if reg or method != device.get('method', 'nomethod'):
+    if reg or (method != device.get('method', 'nomethod')):
 
         if uam.get('nosms', False):
             upd['checked'] = True
         else:
 
-            if uam.get('callrecieve', False) and method == 'call':
+            if uam.get('callrecieve', False) and (method == 'call'):
                 numberscursor = request.app['db'].numbers.find({'call_recv': True})
                 numbers = await numberscursor.to_list(length=1000)
                 if numbers:
@@ -169,7 +169,7 @@ async def phone_handler(request):
                     upd['sms_waited'] = code
                     upd['sms_callie'] = random.choice(numbers).get('number', '~')
 
-            if not (uam.get('smssend', False) and method == 'sms'):
+            if not (uam.get('smssend', False) and (method == 'sms')):
                 debug('not enabled smssend')
             elif sms_limit <= 0:
                 debug('smssend limited')
