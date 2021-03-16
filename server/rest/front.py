@@ -5,7 +5,7 @@ import string
 
 async def get_uam_config(db,profile):
     profile = str(profile)
-    for c in string.punctuation:
+    for c in '!"#$%&\'()*+,/:;<=>?@[\\]^`{|}~':
         profile = profile.replace(c,'')
 
     default = await db.uamconfig.find_one({'_id':'default'})
