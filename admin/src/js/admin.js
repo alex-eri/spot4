@@ -232,6 +232,8 @@ app.controller('FlowSensors',  ['$scope','$resource','$routeParams',
 app.controller('Exporter',  ['$scope','$resource','$routeParams',
     function ( $scope, $resource, $routeParams){
 
+    function exports_load($scope) {
+
       $resource('/db/sheduler').save(
               [{"find_one":[{_id:'exporter'}]}],
 
@@ -243,33 +245,31 @@ app.controller('Exporter',  ['$scope','$resource','$routeParams',
                   response.response.date = new Date( response.response.date.$date )
                   $scope.exporter = response.response;
                 } else {
-                
-                  $scope.exporter = { "_id" : "exporter", "enabled" : false, "step" : 120, "date" : ISODate("2020-11-02T06:32:50.100Z"),
+                  $scope.exporter = { "_id" : "exporter", "enabled" : false, "step" : 120, "date" : new Date(),
                    "username" : "spot", "password" : "spot", "year" : true, "month" : true, "day" : true, "ftp" : "" }
-                
                 }
             }
       )
 
+}
+      exports_load($scope)
+
       $scope.update = function() {
         data = $scope.exporter
         data.date = {$date: data.date.toISOString() }
+        
         $resource('/db/sheduler').save( [{
               find_and_modify:{
                   query:{_id:'exporter'},
-                  update: data,
-                  new:true
-                  }
-              }],  function(response){
-
-                response.response.date = new Date( response.response.date.$date )
-
-                $scope.exporter = response.response;
+                  update:data,
+                   upsert: true,
+                   new:true
+              }}],  function(response){
+                  exports_load($scope)
             } )
-
-      }
-
-        }])
+            
+       }
+       }])
 
 
 
