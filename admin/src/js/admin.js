@@ -521,6 +521,31 @@ app.controller('Sms',  ['$scope','$resource','$routeParams',
         }
         )
 
+
+        $resource('/db/devices').save(
+            [
+
+                {aggregate:[[
+                {"$project": {
+                item:1,
+                callee:"$callee",
+                month:{"$cond": [ { $and : [{
+                  "$gte": ["$registred", {"$date":startdate.getTime()}]},{
+                  "$lt": ["$registred", {"$date":stopdate.getTime()}]
+                  }]},1,0]
+                }
+                }},
+                {"$group": {_id:"$callee", total: {"$sum":1}, month: {"$sum":"$month"}}},
+                { $sort : { _id: 1 } }
+                ]]
+                }]
+
+        , function(response){
+            $scope.sms_stat = response.response;
+        }
+        )
+
+
         $resource('/db/sms_received/').save(
             [
             {find:[{'date':{
