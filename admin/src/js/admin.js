@@ -526,9 +526,11 @@ app.controller('Sms',  ['$scope','$resource','$routeParams',
             [
 
                 {aggregate:[[
+                { $match : { method : "call" } },
                 {"$project": {
                 item:1,
                 callee:"$callee",
+
                 month:{"$cond": [ { $and : [{
                   "$gte": ["$registred", {"$date":startdate.getTime()}]},{
                   "$lt": ["$registred", {"$date":stopdate.getTime()}]
@@ -541,7 +543,7 @@ app.controller('Sms',  ['$scope','$resource','$routeParams',
                 }]
 
         , function(response){
-            $scope.sms_stat = response.response;
+            $scope.call_stat = response.response;
         }
         )
 
