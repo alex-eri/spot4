@@ -180,7 +180,7 @@ def main(args=None,daemon=False):
         wait(10)
         while services:
             del services[-1]
-        setup(services,args=args)
+        services = setup(services,args=args)
         start()
         restart_lock.release()
 
@@ -193,7 +193,8 @@ def main(args=None,daemon=False):
     signal.signal(signal.SIGINT, kill)
     #signal.signal(signal.CTRL_C_EVENT, kill)
 
-    setup(services,args=args)
+    services = setup(services,args=args)
+
     if daemon:
         return (start,stop,wait,kill)
 
