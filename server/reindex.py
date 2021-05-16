@@ -32,10 +32,13 @@ def index(config):
         db.accounting.ensure_index([ ("callee",1) ], unique=False),
         db.voucher.ensure_index( [ ("voucher",1), ("callee",1),("closed",1) ], unique=True, sparse=True ),
         db.voucher.ensure_index( [ ("series",1)], unique=False),
-        db.collector.ensure_index( [ ("first",1),("last",1)], unique=False),
-        db.collector.ensure_index( [ ("dstaddr",1),("srcaddr",1)], unique=False),
-        db.collector.ensure_index( [ ("sensor",1) ], unique=False),
-        db.rad_sessions.ensure_index( [ ("stop",-1)], unique=False),
+
+        db.collector.ensure_index( [ ("first",1) ], unique=False, sparse=True),
+        db.collector.ensure_index( [ ("last",1) ], unique=False, sparse=True),
+        db.collector.ensure_index( [ ("dstaddr",1) ], unique=False, sparse=True),
+        db.collector.ensure_index( [ ("srcaddr",1) ], unique=False, sparse=True),
+        db.collector.ensure_index( [ ("sensor",1) ], unique=False, sparse=True),
+        db.rad_sessions.ensure_index( [ ("stop",-1) ], unique=False),
         db.rad_sessions.ensure_index( [ ("caller",1),("callee",1)], unique=False),
     ]
 
