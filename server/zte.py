@@ -107,11 +107,17 @@ def get_gate(sms, count, xclients, roundrobin):
 
     if callee in xclients.keys():
         client = next(xclients[callee])
-    else:
+    elif roundrobin:
         client = next(roundrobin)
+    else:
+        logger.warning("No SMS gate for %s", callee)
+        return
 
-    if client.filter.match(phone) or count <= 0:
+    if client.filter.match(phone):
         return client
+    elif count <= 0:
+        logger.warning("No SMS filter for %s", phone)
+        return
     else:
         return get_gate(sms, count-1, xclients, roundrobin)
 
@@ -134,7 +140,10 @@ async def send_loop(clients, db):
     for p in xclients.keys():
         xclients[p] = cycle(xclients[p])
 
-    roundrobin = cycle(cclients)
+    if cclients:
+        roundrobin = cycle(cclients)
+    else:
+        roundrobin = None
 
     from pymongo.cursor import CursorType
 
@@ -152,11 +161,14 @@ async def send_loop(clients, db):
                 redudant = sms.get('redudant', 1)
                 for _ in range(redudant):
                     client = get_gate(sms, len(clients), xclients, roundrobin)
-                    try:
-                        res = await client.send(**sms)
-                        logger.info(res)
-                    except Exception as e:
-                        logger.error(e)
+                    if client:
+                        try:
+                            res = await client.send(**sms)
+                            logger.info(res)
+                        except Exception as e:
+                            logger.error(e)
+                    else:
+                        logger.info('SMS not sended')
 
                 await asyncio.sleep(INTERVAL)
                 last = sms.get('_id', last)
