@@ -92,7 +92,8 @@ def setup_log(config):
     #TODO https://docs.python.org/3/howto/logging-cookbook.html#logging-to-a-single-file-from-multiple-processes
 
 
-def setup(services=[],args=None):
+def setup(services=None,args=None):
+    services = []
     import api
     import radius
     import json
@@ -107,10 +108,7 @@ def setup(services=[],args=None):
     if args.noreindex :
         logger.info('no reindexing')
     else:
-        p = reindex.setup(config)
-        p[0].start()
-        p[0].join()
-        logger.info('done')
+        services.extend( reindex.setup(config) )
 
     services.extend( radius.setup(config) )
     services.extend( api.setup(config) )
