@@ -93,7 +93,7 @@ def setup_log(config):
 
 
 def setup(services=None,args=None):
-    services = []
+    services = services or []
     import api
     import radius
     import json
