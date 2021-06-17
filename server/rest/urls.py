@@ -4,7 +4,7 @@ from .decorators import json
 from .admin import list_templates, config,kill,whoami
 from .front import uam_config
 from .billing import voucher, generate
-
+from .redirector import stage1
 from .vk import vk_handler
 
 from .netflow import *
@@ -19,8 +19,9 @@ def index_factory(path,filename):
 
 def routers(app):
     app.router.add_get('/generate_204', generate_204)
-    app.router.add_get('/hotspot-detect.html', hotspot_detect)
-
+    #app.router.add_get('/hotspot-detect.html', hotspot_detect)
+    app.router.add_get('/{tail:.*}hotspot-detect.html', stage1)
+    
     app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
     app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
     app.router.add_route('POST', '/register/phone', phone_handler)
