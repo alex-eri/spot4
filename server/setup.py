@@ -9,7 +9,7 @@ sys.path.insert(1,'lib/python3.6')
 sys.path.insert(1,'lib/python36.zip')
 
 
-packages = ["os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms", "idna", "encodings","logging.handlers", 'utils.ServiceHandler','codecs', 'cachetools'] #,"pandas"]
+packages = ["rest","os","utils","struct","mschap","pytz","motor","aiohttp","asyncio","sms", "idna", "encodings","logging.handlers", 'utils.ServiceHandler','codecs', 'cachetools'] #,"pandas"]
 excludes = ["tkinter","tornado","zope","twisted","xmlrpc","IPython","setuptools","sqlalchemy","curses","Xmultidict._multidict"]
 
 build_exe_options = {
