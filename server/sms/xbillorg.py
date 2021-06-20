@@ -18,7 +18,7 @@ class Client(_httpclient.Client):
         super(Client,self).__init__( *a, **kw)
 
     async def _send_sms(self, phone, text, device):
-        phone = phone.strip('+'),
+        phone = phone.strip('+')
         data = json.dumps({
             'sid': self.sid,
             'phone': phone,
