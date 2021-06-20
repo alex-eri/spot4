@@ -19,15 +19,16 @@ class Client(_httpclient.Client):
 
     async def _send_sms(self, phone, text, device):
         phone = phone.strip('+')
-        data = json.dumps({
+        data = {
             'sid': self.sid,
             'phone': phone,
             'cost': self.cost,
             'hash': hashlib.md5((str(self.sid)+phone+str(self.cost)+self.secret).encode()).hexdigest(),
             'order_id': str(device)
-        })
+        }
         if self.test:
             data['test']='test'
+        data = json.dumps(data)
         self.logger.info(data)
         return await self.request(self.base_url,data)
 
