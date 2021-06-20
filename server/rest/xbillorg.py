@@ -23,3 +23,6 @@ async def xbillorg(request):
         return web.Response(
             body=b"ok",
             content_type='text/html')
+    else:
+        raise web.HTTPNoContent()
+

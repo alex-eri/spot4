@@ -73,7 +73,7 @@ async def stage1(request):
         redir_url = '/uam/?'+request.query_string
     else:
         redir_url = 'http://gstatic.com/generate_204'
-    if 'CaptiveNetworkSupport' in ua:
+    if 'CaptiveNetworkSupport' in ua or 'NetworkCTS' in ua:
         if session and session.get('ready'):
             session['ready'] = 2
             sessions[key] = session
