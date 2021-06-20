@@ -24,6 +24,7 @@ def index_factory(path,filename):
 def routers(app):
     app.router.add_get('/generate_204', generate_204)
     app.router.add_get('/hotspot-detect.html', hotspot_detect)
+    app.router.add_get('/', hotspot_detect)
     #app.router.add_get('/{tail:.*}hotspot-detect.html', stage1)
     
     app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)

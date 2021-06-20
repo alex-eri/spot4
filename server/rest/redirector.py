@@ -101,7 +101,7 @@ async def main(port=8082):
     app.stop = asyncio.Future()
     loop = asyncio.get_running_loop()
     loop.add_signal_handler(signal.SIGINT, app.stop.cancel)
-    app.add_routes([ web.get('/{tail:.*}hotspot-detect.html', stage1), ])
+    app.add_routes([ web.get('/{tail:.*}', stage1), ])
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', port)
