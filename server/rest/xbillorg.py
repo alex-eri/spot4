@@ -8,11 +8,12 @@ async def xbillorg(request):
     ok = False
     coll = request.app['db'].devices
 
-    for sender in   cfg["SMS"]['pool'] if sender['driver'] == 'xbillorg':
-        if hashlib.md5(
-                (params['order']+ params['phone'] +params['merchant_price'] +secret).encode()
-                ).hexdigest() == params['sign']:
-            ok = True
+    for sender in cfg["SMS"]['pool']:
+        if sender['driver'] == 'xbillorg':
+            if hashlib.md5(
+                    (params['order']+ params['phone'] +params['merchant_price'] +secret).encode()
+                    ).hexdigest() == params['sign']:
+                ok = True
 
     if ok:
         if params['order_status'] == "success":
