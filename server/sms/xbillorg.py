@@ -24,7 +24,7 @@ class Client(_httpclient.Client):
             'phone': phone,
             'cost': self.cost,
             'hash': hashlib.md5((str(self.sid)+phone+str(self.cost)+self.secret).encode()).hexdigest(),
-            'order_id': device
+            'order_id': str(device)
         })
         if self.test:
             data['test']='test'

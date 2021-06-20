@@ -1,6 +1,6 @@
 from aiohttp import web
 import hashlib
-
+from bson.objectid import ObjectId
 
 async def xbillorg(request):
     cfg = request.app['config']
@@ -18,7 +18,7 @@ async def xbillorg(request):
     if ok:
         if params['order_status'] == "success":
             device =  params['order_id']
-            await coll.find_and_modify({'_id': device}, {'$set':{'checked': True} }, new=True)
+            await coll.find_and_modify({'_id': ObjectId(device)}, {'$set':{'checked': True} }, new=True)
 
         return web.Response(
             body=b"ok",
