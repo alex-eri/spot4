@@ -30,7 +30,7 @@ class Client(_httpclient.Client):
             data['test']='test'
         data = json.dumps(data)
         self.logger.info(data)
-        return await self.request(self.base_url,data)
+        return await self.request(self.pay_url, data)
 
     async def send(self, phone, text, device, *a, **kw):
         #text = urllib.parse.quote(text)
