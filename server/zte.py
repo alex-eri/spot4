@@ -172,8 +172,6 @@ async def send_loop(clients, db):
 
                 await asyncio.sleep(INTERVAL)
                 last = sms.get('_id', last)
-            #debug(time.time())
-            #
 
 
 async def sms_recv_numbers(db,numbers):

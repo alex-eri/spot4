@@ -4,10 +4,14 @@ from .decorators import json
 from .admin import list_templates, config,kill,whoami
 from .front import uam_config
 from .billing import voucher, generate
-from .redirector import stage1
+#from .redirector import stage1
 from .vk import vk_handler
-
+from .xbillorg import xbillorg
 from .netflow import *
+
+
+
+
 
 def index_factory(path,filename):
     async def static_view(request):
@@ -19,8 +23,8 @@ def index_factory(path,filename):
 
 def routers(app):
     app.router.add_get('/generate_204', generate_204)
-    #app.router.add_get('/hotspot-detect.html', hotspot_detect)
-    app.router.add_get('/{tail:.*}hotspot-detect.html', stage1)
+    app.router.add_get('/hotspot-detect.html', hotspot_detect)
+    #app.router.add_get('/{tail:.*}hotspot-detect.html', stage1)
     
     app.router.add_route('GET', '/register/+{phone:\d+}/{mac}', phone_handler)
     app.router.add_route('GET', '/register/%2B{phone:\d+}/{mac}', phone_handler)
@@ -29,6 +33,8 @@ def routers(app):
     app.router.add_route('POST', '/sms_callback', check_auth(sms_handler))
 
     app.router.add_route('*', '/device/{oid}', device_handler)
+
+    app.router.add_route('*', '/x-bill-org', xbillorg)
 
     app.router.add_route('POST', '/db/{collection}/{skip:\d+}/{limit:\d+}', check_auth(db_handler))
     app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))

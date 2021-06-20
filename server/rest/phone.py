@@ -196,7 +196,8 @@ async def phone_handler(request):
                         'phone': phone,
                         'text': text,
                         'sent': now,
-                        'callee': uam.get('_id', 'default')
+                        'callee': uam.get('_id', 'default'),
+                        'device': device['_id']
                     })
 
         updq = {
