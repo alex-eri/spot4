@@ -5,7 +5,6 @@ import asyncio
 from aiohttp import web
 import cachetools
 
-
 sessions = cachetools.TTLCache(2048, 10)
 success = "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n"
 success2 = '<HTML><HEAD><meta http-equiv="refresh" content="0; url={url}"><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>\n'
@@ -72,7 +71,7 @@ async def stage1(request):
     if ({'mac', 'linklogin', 'called'}).issubset(set(query.keys())):
         redir_url = '/uam/?'+request.query_string
     else:
-        redir_url = 'http://gstatic.com/generate_204'
+        redir_url = 'http://100.0.0.1/generate_204'
     if 'CaptiveNetworkSupport' in ua or 'NetworkCTS' in ua:
         if session and session.get('ready'):
             session['ready'] = 2
@@ -99,6 +98,8 @@ async def stage1(request):
 async def main(port=8082):
     app = web.Application()
     app.stop = asyncio.Future()
+    app.redirect_port = port
+    app.success_port = port+1
     loop = asyncio.get_running_loop()
     loop.add_signal_handler(signal.SIGINT, app.stop.cancel)
     app.add_routes([ web.get('/{tail:.*}', stage1), ])
@@ -106,4 +107,10 @@ async def main(port=8082):
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
+    site = web.TCPSite(runner, '0.0.0.0', port+1)
+    await site.start()    
     await app.stop
+    
+    
+    
+    
