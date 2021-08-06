@@ -41,9 +41,9 @@ class Client(_httpclient.Client):
             return
         if self.loginpassword[2]=="mf920ru":
             data = dict(
-                isTest='false'
+                isTest='false',
                 goformId='LOGIN',
-                password=base64.urlsafe_b64encode(self.loginpassword[1].encode()).decode(),
+                password=base64.urlsafe_b64encode(self.loginpassword[1].encode()).decode()
             )
         else:
             lucknum = random.randrange(1000000)
@@ -54,7 +54,7 @@ class Client(_httpclient.Client):
                 systemDate='',
                 languageSelect='en',
                 user=self.loginpassword[0],
-                psw=self.loginpassword[1],
+                psw=self.loginpassword[1]
             )
 
         uri = "{base}/goform/goform_process".format(
