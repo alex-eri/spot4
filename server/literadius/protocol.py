@@ -32,13 +32,12 @@ class BaseRadius(asyncio.DatagramProtocol):
 
     def connection_made(self, transport):
         self.transport = transport
-        self.start_time = time.time()
 
     def respond(self, resp, nas):
         self.transport.sendto(resp.data(), nas)
 
         logger.info( "Reply {} to {}, user".format(resp.code,nas))
-        logger.info( "Processing time: %s" % (time.time()-self.start_time) )
+        logger.info( "Processing time: %s" % (time.time()-resp.start_time) )
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
@@ -103,7 +102,7 @@ class BaseRadius(asyncio.DatagramProtocol):
 
 class CoA:
     async def handle_coa(self,req,nas):
-        raise NotImplemented('Coa not yet')
+        raise NotImplementedError('Coa not yet')
 
 class Accounting:
     async def handle_acct(self,req,nas):

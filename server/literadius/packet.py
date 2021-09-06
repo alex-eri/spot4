@@ -13,14 +13,14 @@ import threading
 import logging
 logger = logging.getLogger('packet')
 debug = logger.debug
-
+import time 
 import os
 
 class Packet(defaultdict):
     _reply = None
     def __init__(self,data=b'', secret=b'',code=AccessAccept, id=None, authenticator=None):
         super().__init__(bytes)
-
+        self.start_time = time.time()
         self.lock = threading.Lock()
         self.header = bytearray()
         self.body = bytearray()
