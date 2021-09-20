@@ -11,6 +11,7 @@ build:
 	gbp dch --snapshot --spawn-editor=no --create -N `git rev-list --all --count`
 
 
+
 binary: build
 	mkdir -p debian/spot4
 	mkdir -p debian/spot4/opt/spot4/data
@@ -32,6 +33,6 @@ binary: build
 
 binary-arch: binary
 
-#build-arch: build
+build-arch: build
 
 
