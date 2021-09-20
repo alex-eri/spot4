@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 clean:
+        git reset
 	make -C . clean
 	rm -rf debian/spot4
 
