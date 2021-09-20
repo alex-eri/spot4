@@ -60,6 +60,10 @@ class BaseRadius(asyncio.DatagramProtocol):
         debug('Stop: %s', exc)
 
     def datagram_received(self, data, nas):
+        if len(data) < 20:
+            logger.error('From {} Packet is too short'.format(nas))
+            return 
+
         debug('From {} received'.format(nas))
         req = Packet(data, self.radsecret)
 
@@ -70,7 +74,8 @@ class BaseRadius(asyncio.DatagramProtocol):
         elif req.code == rad.CoARequest:
             handler = self.handle_coa
         else:
-            raise Exception('Packet is not request')
+            logger.error('From {} Packet is not request'.format(nas))
+            return
         if logger.isEnabledFor(logging.DEBUG):
             for attr in req.keys():
                 #break
