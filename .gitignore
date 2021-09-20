@@ -21,4 +21,4 @@ package-json.lock
 debian/spot4/*
 debian/*.debhelper.log
 debian/*.substvars
-
+pip-cache/

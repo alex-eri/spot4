@@ -4,7 +4,7 @@ clean:
 	rm -rf build/*
 
 ../build/bin: *.py **/*.py
-    mkdir -p ../pip-cache/
+	mkdir -p ../pip-cache/
 	python3 -m pip install -r ../requrements.txt --cache-dir ../pip-cache/
 	rm -rf ../build/bin
 	python3 setup.py install_exe -d ../build/bin
