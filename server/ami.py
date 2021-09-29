@@ -45,7 +45,8 @@ async def newchannel_cb(manager, message, db=None, config=None):
 
 
 async def init(loop, config):
-
+    import setproctitle
+    setproctitle.setproctitle('ami')
     from server import lic
     lic(config, "ami")
     import storage

@@ -8,7 +8,7 @@ from utils import procutil
 import sys, traceback
 import time
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils.password import SMSLEN
 import hashlib
@@ -210,6 +210,8 @@ def setup_clients(db, config):
     return clients
 
 def setup_loop(config):
+    import setproctitle
+    setproctitle.setproctitle('sms')
     executor = None
     name = current_process().name
     procutil.set_proc_name(name)

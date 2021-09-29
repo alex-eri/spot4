@@ -3,15 +3,16 @@ from multiprocessing import Process, current_process
 
 
 def setup_redirector(config, port=8082):
+    import setproctitle
+    setproctitle.setproctitle('captive')
     from rest.redirector import main
     import asyncio
     asyncio.get_event_loop().run_until_complete(main(port))
 
 
 def setup_web(config, https=False, port=8080):
-    name = current_process().name
-    procutil.set_proc_name(name)
-
+    import setproctitle
+    setproctitle.setproctitle('web')
     from aiohttp import web
 
     import storage

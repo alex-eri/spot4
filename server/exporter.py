@@ -152,6 +152,8 @@ def sheduler_callback(db, loop, name):
 
 
 def run(config):
+    import setproctitle
+    setproctitle.setproctitle('report export')
     import storage
     db = storage.setup(
         config['DB']['SERVER'],

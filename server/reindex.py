@@ -13,6 +13,10 @@ def admins(db,config):
 def index(config):
     import storage
     import asyncio
+    
+    import setproctitle
+    setproctitle.setproctitle('reindex')
+    
     db = storage.setup(
         config['DB']['SERVER'],
         config['DB']['NAME']

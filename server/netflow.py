@@ -156,7 +156,10 @@ class Netflow5(asyncio.DatagramProtocol):
 
 
 def run5(config):
+    import setproctitle
+    setproctitle.setproctitle('netflow5')
     global insert_cb
+    
     import storage
     insert_cb = storage.insert_cb
 

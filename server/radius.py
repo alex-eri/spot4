@@ -20,9 +20,14 @@ async def close_sessions(db):
 
 def setup_radius(config, PORT):
     import asyncio
+    import sys
+
+    import setproctitle
+    setproctitle.setproctitle('radius.'+str(PORT))
+
     import uvloop
     uvloop.install()
-    
+
     from literadius.protocol import RadiusProtocol
 
     from utils import procutil
@@ -49,9 +54,9 @@ def setup_radius(config, PORT):
 
     logger.info('{nModified}/{n} sessions closed'.format(**closed))
 
-    HOST = config.get('RADIUS_IP','0.0.0.0')
+    HOST = config.get('RADIUS_IP', '0.0.0.0')
 
-    RadiusProtocol.radsecret = config.get('RADIUS_SECRET','testing123').encode('ascii')
+    RadiusProtocol.radsecret = config.get('RADIUS_SECRET', 'testing123').encode('ascii')
     RadiusProtocol.db = db
     RadiusProtocol.loop = loop
     RadiusProtocol.session_limit = SESSIONLIMIT
