@@ -16,3 +16,4 @@ panoramisk
 phonenumbers
 cachetools
 uvloop
+setproctitle
