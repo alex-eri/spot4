@@ -18,8 +18,11 @@ async def close_sessions(db):
             )
 
 
-def setup_radius(config,PORT):
+def setup_radius(config, PORT):
     import asyncio
+    import uvloop
+    uvloop.install()
+    
     from literadius.protocol import RadiusProtocol
 
     from utils import procutil
@@ -63,6 +66,10 @@ def setup_radius(config,PORT):
 
     try:
         loop.run_forever()
+    except Exception as e:
+        import traceback
+        logger.critical(e)
+        logger.error(traceback.format_exc())
     finally:
         transport.close()
         loop.close()

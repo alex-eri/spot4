@@ -1,0 +1,35 @@
+Микротик передает редирект вида, для некоторой совместимости с чилли:
+
+http://192.168.10.249:8080/uam/register/?online=$(logged-in)&nasid=$(identity)&called=$(server-name)&domain=$(domain)&mac=$(mac-esc)&linklogin=$(link-login-only-esc)&linkorig=$(link-orig-esc)
+
+отсюда запускается энтрипоинт /static/uam.html - тут можно подменить на Ваше приложение
+
+из ссылки берите параметр called и отправляйте GET http://192.168.10.249:8080/config/uam/$(called).json
+
+Получите настройки для для фронта
+
+{"_id": "server1", "macauth": true, "theme": "default", "password": false, "smsrecieve": true, "nosms": false, "smssend": true, "auto": false, "smstmpl": "\u0412\u0430\u0448 \u043a\u043e\u0434 Wi-Fi \u0430\u0432\u0442\u043e\u0440\u0438\u0437\u0430\u0446\u0438\u0438 {code}", "devmax": 3, "rereg": 1, "vk": false, "loginbtn": false, "callrecieve": false, "sms_timeout": 0}
+
+Получаете у пользователя номер телефона, MAC из первого перехода и передаете в POST JSON
+
+http://192.168.10.249:8080/register/phone
+
+{phone: "+79158327039", mac: "D2:44:F3:BC:A2:29", profile: "server1", method: "sms"}
+
+methodы sms, call, smsrecieve
+
+В ответ получите
+
+{"_id": {"$oid": "61532ac4b956761b37b49be3"}, 
+"mac": "D2:44:F3:BC:A2:29", "phone": "+79158327039", 
+"seen": {"$date": 1632840388843}, 
+"ua": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36 OPR/78.0.4093.184", "seen_callee": "skvajina3", "registred": {"$date": 1632840388843}, "callee": "server1", "try": 0, 
+"method": "sms", "username": "000132", "sms_sent": true, "sms_time": {"$date": 1632840388843}}
+
+
+и нужно дергать oid пока в ответе не появится password http://192.168.10.249:8080/device/61532ac4b956761b37b49be3
+
+
+как получили пароль дергаем метод JSONP (аякс не прокатит) на урл из linklogin c target=jsonp&var=имя_колбэка_jsonp
+
+в ответе chapid и challenge - по ним формируешь chap пароль и посылай на linklogin ещё один jsonp target=jsonp&var=имя_колбэка_jsonp&username=000132&password=chappassword
