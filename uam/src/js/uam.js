@@ -494,6 +494,7 @@ function newloginform(url, username, password, response, dst) {
     tf.value = dst
     f.appendChild(tf)
   }
+  document.getElementsByTagName('body')[0].appendChild(f);
   f.submit()
 }
 
