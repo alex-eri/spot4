@@ -68,7 +68,7 @@ class Packet(defaultdict):
         return self.header[4:20]
 
     def get_message_authenticator(self,cursor):
-        m = hmac.HMAC(key=self.secret)
+        m = hmac.HMAC(key=self.secret, digestmod='md5')
         m.update(self.header)
         m.update(self.body[:cursor])
         m.update(bytes(16))
