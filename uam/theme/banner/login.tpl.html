@@ -12,10 +12,16 @@
     background-position: center;
     background-repeat: no-repeat;
     background-size: {{config.theme_css_bgsize || "contain" }};
-    background-color:#121238;
+    background-color: #121238;
   }
 
-  .pulse {
+
+#placeholder {
+    /*width: 640px;*/
+    max-width: 100vw;
+}
+
+.pulse {
     cursor: pointer;
     -webkit-animation: pulsate 3s ease-out;
     -webkit-animation-iteration-count: infinite;
@@ -42,7 +48,8 @@
   <h1 class="pulse" style="margin:30px"><img src="/static/icons/apple-touch-favicon.png" /></h1>
 </div>
 
-<div ng-if="goform" class="pull-right" id="regwindow">
+<div id=placeholder class="pull-right">
+<div ng-if="goform" id="regwindow">
 <center>
   <h1><img src="{{config.theme_logo|| '/static/icons/favicon.png'}}"  width=64 height=64></h1>
 </center>
@@ -54,6 +61,7 @@
 <p>{{config.theme_text1 || "В соответствии с действующим законодательством Российской Федерации в области связи, при предоставлении услуг передачи данных и доступа к информационно-телекоммуникационной сети «Интернет» Оператором осуществляется идентификация пользователя и используемого им оконечного оборудования."}}</p>
 <p>{{config.theme_text2 || "Просим Вас ввести в специальное поле Ваш мобильный номер (например: +79031234567) и следовать инструкциям."}}</p>
 <label><input type=checkbox ng-model=$root.comfirmed></input> Согласен с правилами предоставления услуг</label>
+</div>
 </div>
 </div>
 

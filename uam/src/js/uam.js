@@ -464,6 +464,40 @@ app.controller('VoucherGTC',  ['$scope','$resource','$cookies','$location','$htt
     }]);
 
 
+function newloginform(url, username, password, response, dst) {
+  var f = document.createElement("form");
+  f.method = "post";
+  f.action = url;
+  var uf = document.createElement('INPUT');
+  uf.type= 'hidden';
+  uf.name = 'username'
+  uf.value = username
+  f.appendChild(uf)
+  if (password) {
+    var pf = document.createElement('INPUT');
+    pf.type= 'hidden';
+    pf.name = 'password'
+    pf.value = password
+    f.appendChild(pf)
+  }
+  if (response) {
+    var pf = document.createElement('INPUT');
+    pf.type= 'hidden';
+    pf.name = 'response'
+    pf.value = response
+    f.appendChild(pf)
+  }
+  if (dst) {
+    var tf = document.createElement('INPUT');
+    tf.type= 'hidden';
+    tf.name = 'dst'
+    tf.value = dst
+    f.appendChild(tf)
+  }
+  f.submit()
+}
+
+
 app.controller('Login',  ['$window','$resource','$cookies','$location','$http','$rootScope',
     function ( $window, $resource, $cookies ,$location, $http, $scope ){
         var username = $location.$$search.username ;
@@ -471,6 +505,8 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http','
         var ischilli = $cookies.get('uamip');
         if (ischilli)
             var chilli = 'http://'+$cookies.get('uamip')+':'+$cookies.get('uamport') +'/json/';
+
+
 
         function onerror(error){
             console.log('login failed');
@@ -550,12 +586,37 @@ app.controller('Login',  ['$window','$resource','$cookies','$location','$http','
               console.log(1)
               if(ischilli) {
                   //chilli
+
+                  var challenge = hex2bin($cookies.get('challenge'));
+                  var chapid = '\x00';
+                  var charpassw = hexMD5(chapid + password + challenge);
+
+                  newloginform(
+                    chilli+'logon',
+                    username,
+                    null,
+                    charpassw
+                  )
                   $resource(chilli+'status', { },
                   {get:{ method: 'JSONP',jsonpCallbackParam:'callback'}}
                   ).get(onchillistatus,onerror)
               } else {
                   //mikrotik
                   console.log(2)
+
+                  if ($cookies.get('challenge')) {
+                    var charpassw = hexMD5(response.chapid + password + response.challenge);
+                  } else {
+                    var charpassw = password;
+                  }
+                  newloginform(
+                    $cookies.get('linklogin'), 
+                    username, 
+                    charpassw,
+                    null,
+                    $cookies.get('linkorig') || null
+                  );
+                  return ;
                   $resource($cookies.get('linklogin'),
                   {
                       target:'jsonp',
@@ -619,7 +680,7 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
                  $resource('/device/:oid').get({
                         'oid': oid
                     },
-                    prelogin,onerror
+                    prelogin, onerror
                  )
             }
 

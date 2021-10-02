@@ -72,8 +72,8 @@ numpy/build: numpy
 
 
 mikrobr:
-	ip link add link bridge0 name bridge0.3 type vlan id 3
-	ip link set dev bridge0.3 netns TESTA
+	ip link add link enp5s0 name enp5s0.3 type vlan id 3
+	ip link set dev enp5s0.3 netns TESTA
 
 
 netns:
@@ -91,8 +91,8 @@ dhclient1:
 	ip netns exec TESTA ip a l
 
 dhclient2:
-	ip netns exec TESTA ip link set dev bridge0.3 up
-	ip netns exec TESTA dhcpcd bridge0.3
+	ip netns exec TESTA ip link set dev enp5s0.3 up
+	ip netns exec TESTA dhcpcd enp5s0.3
 	ip netns exec TESTA ip a l
 
 
