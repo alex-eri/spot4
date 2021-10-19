@@ -209,7 +209,7 @@ def main(args=None,daemon=False):
         try:
             ts = time.time()
             wait()
-            reload_timeout -=  time.time() + ts
+            reload_timeout -=  time.time() - ts
             if reload_timeout < 0:
                 restart()
                 reload_timeout = 86400 - (time.time() % 86400)
