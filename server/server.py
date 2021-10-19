@@ -138,6 +138,7 @@ def main(args=None,daemon=False):
     services = []
 
     def start(*a):
+        nonlocal services
         logger.info('Main at %s starting' % os.getpid())
         sys.running = True
         for proc in services:
@@ -146,6 +147,7 @@ def main(args=None,daemon=False):
             logger.info('Started %s at %s' % (proc.name, proc.pid))
 
     def stop(*a):
+        nonlocal services
         for proc in services:
             if proc.is_alive():
                 debug('stoping %s' % proc.name)
@@ -161,6 +163,7 @@ def main(args=None,daemon=False):
                     os.kill(proc.pid, signal.SIGINT)
 
     def kill(*a):
+        nonlocal services
         debug('kill(%s)'%repr(a))
         sys.running = False
         for proc in services:
@@ -172,10 +175,12 @@ def main(args=None,daemon=False):
                     logger.error('terminate %s' % proc.name)
 
     def wait(n=1):
+        nonlocal services
         for proc in services:
             proc.join(n)
 
     def restart(*a):
+        nonlocal services
         restart_lock.acquire()
         kill()
         wait(10)
