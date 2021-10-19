@@ -165,6 +165,7 @@ app.controller('PreRegister',  ['$rootScope','$resource','$cookies','$location',
     var c=0;
     var r=false;
 
+
     if ($scope.config.external) {
       c++;
       r=false;
@@ -189,6 +190,7 @@ app.controller('PreRegister',  ['$rootScope','$resource','$cookies','$location',
       r='/register/vk/';
       c++;
     }
+
     if (c==1 && r) {
       $location.path(r);
     }
@@ -715,10 +717,35 @@ app.controller('Status',  ['$rootScope','$resource','$cookies',
 
     var ischilli = $cookies.get('uamip');
 
+
+      function onlogin(response) {
+        if ($location.$$search.online == 'yes') {
+            console.log(response)
+            if (response.redir.redirectionURL) {
+                console.log(response.redir.redirectionURL)
+                $window.location.href=response.redir.redirectionURL
+            }
+            else if (response.redir.originalURL) {
+                console.log(response.redir.originalURL)
+                $window.location.href=response.redir.originalURL
+            } else {
+                $location.path('/status/')
+            }
+
+      setTimeout(function(){
+        console.log("originalURL timed out")
+        //$location.path('/status/')
+        window.location.href='/uam/status/?online=already'
+        }, 3000); //generate_204 не закрывает окно
+      }
+    }
+
+
     function onstatus(response){
         $scope.status = response;
         var logoutURL = response.redir.logoutURL ||$cookies.get('linklogout');
         $scope.logoutURL = logoutURL.replace('/jsonp/','/');
+        onlogin(response)
     }
 
     if(ischilli) {
@@ -729,13 +756,11 @@ app.controller('Status',  ['$rootScope','$resource','$cookies',
         ).get(onstatus)
     } else {
         //mikrotik
-
         $resource($cookies.get('linklogin').replace('login','status'),
         {
             target:'jsonp'
         },
         {get:{ method: 'JSONP',jsonpCallbackParam:'var'}}).get(onstatus)
-
     }
 
     }]);
@@ -748,6 +773,7 @@ app.run(['$route','$location','$rootScope','$resource','$cookies','$interval',
 
     $scope.$location = $location;
     $scope.$cookies = $cookies;
+
 
 
     $scope.onlocation = function(location) {
@@ -782,6 +808,11 @@ app.run(['$route','$location','$rootScope','$resource','$cookies','$interval',
     {called:$cookies.get('called')},
     function(response){
         $scope.config = response
+
+        if ($location.$$search.online == 'yes') {
+          $location.path('/status/');
+        }
+
     },
     function(error){
         $scope.config ={

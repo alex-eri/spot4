@@ -44,7 +44,7 @@ class BaseRadius(asyncio.DatagramProtocol):
                 #break
                 debug('{} :\t{}'.format(attr,resp.decode(attr)))
 
-    def respond_cb(self,nas):
+    def respond_cb(self, nas):
         def untask(task):
             if task.done():
                 resp = task.result()
@@ -88,8 +88,10 @@ class BaseRadius(asyncio.DatagramProtocol):
         #f.add_done_callback(self.respond_cb(caller))
 
         #loop=asyncio.get_event_loop()
+       
         f = self.loop.create_task(handler(req, nas))
         f.add_done_callback(self.respond_cb(nas))
+        self.loop.call_later(5, f.cancel(msg='Too long time')
 
 #        try:
 #            resp = f.result(TIMEOUT)

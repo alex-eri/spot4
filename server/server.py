@@ -1,5 +1,6 @@
 import logging,sys
 import reindex
+import time
 
 sys.path.insert(0, '.')
 
@@ -202,9 +203,16 @@ def main(args=None,daemon=False):
 
     sys.running = True
 
+    reload_timeout = 86400 - (time.time() % 86400)
+
     while sys.running:
         try:
+            ts = time.time()
             wait()
+            reload_timeout -=  time.time() + ts
+            if reload_timeout < 0:
+                restart()
+                reload_timeout = 86400 - (time.time() % 86400)
         except Exception as e:
             logger.error(e)
             sys.running = False
