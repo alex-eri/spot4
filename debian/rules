@@ -1,5 +1,11 @@
 #!/usr/bin/make -f
 
+CURRENT_YM := $(shell date +"%y%m")
+CURRENT_COMMIT := $(shell git rev-parse --short HEAD)
+CURRENT_NCMMIT := $(shell git rev-list --all --count)
+EMAIL := "sa@eri.su"
+SNAPSHOTRELEASE := "--snapshot"
+
 clean:
 	git reset
 	make -C . clean
@@ -9,9 +15,7 @@ build:
 	make -C . all
 	git reset -- debian/changelog
 	rm -f debian/changelog.dch
-	gbp dch --snapshot --spawn-editor=no -N `git rev-list --all --count` || true
-
-
+	EMAIL=$(EMAIL) gbp dch $(SNAPSHOTRELEASE) --spawn-editor=no --new-version=$(CURRENT_YM) --snapshot-number=$(CURRENT_NCMMIT) || true
 
 binary: build
 	mkdir -p debian/spot4
@@ -19,6 +23,7 @@ binary: build
 	mkdir -p debian/spot4/etc/systemd/system
 	mkdir -p debian/spot4/etc/firewalld/services
 	mkdir -p debian/spot4/opt/spot4/data/exports
+	ln -s /opt/spot4/config/ debian/spot4/etc/spot4
 	#tar -C debian/spot4 -xf dist/spot4*.tar.gz
 	cp -R build/bin build/config build/mikrotik build/static build/uam debian/spot4/opt/spot4/
 	echo 'Храните картинки и скрипты тут. Они доступны на вэб сервере через URL /static/' > debian/spot4/opt/spot4/static/README

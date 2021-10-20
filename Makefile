@@ -106,3 +106,20 @@ operaonmikrotik: netns mikrobr dhclient2 opera
 IPonAS:
 	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' > ./$$AS-ip
 
+setupNetNS:
+	ip netns add TESTA
+	ip link add name ve0a type veth peer name ve0b
+	ip link set dev ve0b netns TESTA
+	brctl addif bridge2 ve0a
+	ip link set dev ve0a up
+	ip netns exec TESTA ip link set dev ve0b up
+	ip netns exec TESTA dhcpcd ve0b
+	ip netns exec TESTA ip a l
+
+testNetNS:
+	ip netns exec TESTA ip a l
+	ip netns exec TESTA /usr/bin/nslookup ya.ru
+	ip netns exec TESTA curl http://ifconfig.me
+
+chromeNetNS:
+	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) google-chrome --user-data-dir=/home/eri/.config/chromeNetNS --profile-directory=TestProfile  --new-window http://ya.ru"

@@ -1,4 +1,5 @@
 {
+	
 "RADIUS_SECRET" : "testing123",
 "RADIUS_IP" :"0.0.0.0",
 "ACCT_PORT":1813,
@@ -10,25 +11,26 @@
 "NETFLOW_PORT": 2055,
 "#NETFLOW_SIZE": "Выделяется на диске в мегабайтах под подробную статистику",
 "NETFLOW_SIZE": 20100,
-"DEBUG": true,
+"DEBUG": false,
 "LOGFILE": null,
 "DB": {
 	"SERVER": "mongodb://127.0.0.1:27017",
 	"NAME":"spot4"
 },
 "CALL":{
-	"enabled":true,
-	"pool": [
-	{
-	"driver": "ami",
-	"username": "spot",
-	"secret": "somesecret",
-	"host": "127.0.0.1",
-	"port": 5038,
-	"reciever": false,
-	"numbers": ["0000","1234"]
-	}
-	]
+        "enabled":false,
+        "pool": [
+        {
+        "driver":"ami",
+        "numbers": ["+79123456789"],
+        "host": "sip.example.com",
+        "username": "amiuser",
+        "port": 5038,
+        "reciever": false,
+        "secret": "amipassword",
+        "timeout": 120
+        }
+        ]
 },
 "SMS": {
 	"enabled": true,

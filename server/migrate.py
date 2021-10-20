@@ -17,9 +17,9 @@ if __name__ == "__main__":
 
     loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(db.devices.drop_indexes())
-        loop.run_until_complete(db.accounting.drop_indexes())
-        loop.run_until_complete(db.voucher.drop_indexes())
+        loop.run_until_complete(db.get_collection('devices').drop_indexes())
+        loop.run_until_complete(db.get_collection('accounting').drop_indexes())
+        loop.run_until_complete(db.get_collection('voucher').drop_indexes())
     except Exception as e:
         logger.critical(e.__repr__())
         raise e

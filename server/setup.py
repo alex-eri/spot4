@@ -68,7 +68,8 @@ print(build_exe_options['include_files'])
 
 base = None
 base_service = base
-initScript="ConsoleSetLibPath"
+#initScript="ConsoleSetLibPath"
+
 
 if os.name == 'nt':
     packages.append('cx_Logging')
@@ -88,20 +89,20 @@ if os.name == 'nt':
     initScript="Console"
     #base_service = 'Win32Service'
 
-#initScript="Console"
+initScript=None
 
 executables = [Executable(
     script="server.py",
-    initScript=initScript,
+    init_script=initScript,
     base=base_service,
-    targetName='spot4.exe',
+    target_name='spot4.exe',
     copyright='Aleksandr Stepanov, eri.su'
     ),
     Executable(
     "migrate.py",
-    initScript=initScript,
+    init_script=initScript,
     base=base,
-    targetName='migrate.exe'
+    target_name='migrate.exe'
     )
     ]
 

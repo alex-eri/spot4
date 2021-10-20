@@ -139,7 +139,7 @@ class Netflow5(asyncio.DatagramProtocol):
         #debug('colected {}'.format(l))
         if flows:
             flows = aggregate(flows)
-            a = await self.collector.insert(flows)
+            a = await self.collector.insert_many(flows)
             debug('inserted {}'.format(len(a)))
 
     async def store(self):

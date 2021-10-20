@@ -1,4 +1,5 @@
 <p>
+  Интернет подключен с ограничениями.
   <label>Введите код с карточки</label>
 </p>
 <p>
@@ -11,8 +12,8 @@
         type="tel"
         ng-model="gtc"
         required
-        pattern="[0-9\-]+"
-        placeholder="XXXX-XXXX"
+        pattern="([0-9]{4}[\-\s ]?)+"
+        placeholder="XXXX XXXX"
         code-validation
         />
     </div>

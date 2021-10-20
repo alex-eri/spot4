@@ -18,7 +18,7 @@ async def xbillorg(request):
     if ok:
         if params['order_status'] == "success":
             device =  params['order_id']
-            await coll.find_and_modify({'_id': ObjectId(device)}, {'$set':{'checked': True} }, new=True)
+            await coll.find_one_and_update({'_id': ObjectId(device)}, {'$set':{'checked': True} }, return_document=True)
 
         return web.Response(
             body=b"ok",

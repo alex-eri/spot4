@@ -60,7 +60,7 @@ async def filter_for_admin(administrator,collection,data,db):
             filters = [administrator.get('_id')]
             if command == 'find':
                 pass
-            elif command == 'find_and_modify':
+            elif command == 'find_one_and_update':
                 if data[0][command].get('update'):
                     if data[0][command]['update'].get('$set'):
                         data[0][command]['update']['$set'].pop('filters',None)
@@ -79,7 +79,7 @@ async def filter_for_admin(administrator,collection,data,db):
 
     if not field: return
 
-    if command in ['find','find_and_modify','remove']:
+    if command in ['find','find_one_and_update','remove']:
         opts = data[0][command]
         try:
             if not opts:
@@ -87,8 +87,8 @@ async def filter_for_admin(administrator,collection,data,db):
                 data[0][command][0][field] = {'$in':filters}
 
             elif type(opts) == dict:
-                if not data[0][command]['query'].get(field, None) in filters:
-                    data[0][command]['query'][field] = {'$in':filters}
+                if not data[0][command]['filter'].get(field, None) in filters:
+                    data[0][command]['filter'][field] = {'$in':filters}
 
             elif type(opts) == list:
                 if not data[0][command][0].get(field, None) in filters:
@@ -111,7 +111,7 @@ async def filter_for_admin(administrator,collection,data,db):
 
     """
     find
-    find_and_modify
+    find_one_and_update
     distinct
     aggregate
     """
@@ -142,8 +142,8 @@ async def db_handler(request):
 
     c = None
 
-    if hasattr(cursor,'count'):
-        c = await cursor.count()
+    if hasattr(cursor,'estimated_document_count'):
+        c = await cursor.estimated_document_count()
     if hasattr(cursor,'skip'):
         cursor = cursor.skip(skip).limit(limit)
 

@@ -8,6 +8,9 @@ from multiprocessing import Process, current_process
 import os
 import ipaddress
 import concurrent.futures
+from pymongo import ReturnDocument
+
+
 
 logger = logging.getLogger('sheduler')
 debug = logger.debug
@@ -63,7 +66,7 @@ def upload(name, cfg, loop, now):
 
 async def sheduler_callback_async(db, loop):
     while True:
-        cfg = await db.sheduler.find_one({'_id': 'exporter'})
+        cfg = await db.get_collection('sheduler').find_one({'_id': 'exporter'})
 
         if not(cfg and cfg.get('enabled', False)):
             loop.call_later(60, sheduler_callback, db, loop, 'waiting')
@@ -72,10 +75,10 @@ async def sheduler_callback_async(db, loop):
         now = datetime.datetime.utcnow()
         step = datetime.timedelta(seconds=cfg.get('step', 36000))
 
-        cfg = await db.sheduler.find_and_modify(
+        cfg = await db.get_collection('sheduler').find_one_and_update(
                  {'_id': 'exporter'},
                  {'$set': {'date': now}},
-                 new=False
+                 return_document=ReturnDocument.BEFORE
                  )
 
         then = cfg.get('date', now - step)
@@ -84,7 +87,7 @@ async def sheduler_callback_async(db, loop):
 
         ACCOUNTINGfieldnames = ['_id', 'username', 'caller', 'ip', 'callee', 'start_date', 'stop_date']
 
-        accs = db.accounting.find({'$and': [
+        accs = db.get_collection('accounting').find({'$and': [
             {'start_date': {'$lte': now}},
             {'stop_date': {'$gte': then}}
              ]},
@@ -106,7 +109,7 @@ async def sheduler_callback_async(db, loop):
             )
 
         REGfieldnames = ['_id', 'username', 'checked', 'phone', 'mac', 'registred', 'callee', 'seen', 'seen_callee']
-        regs = db.devices.find( { '$or': [
+        regs = db.get_collection('devices').find( { '$or': [
             {'$and': [
                 { 'registred' : {'$gte': then} },
                 { 'registred' : {'$lte': now} }

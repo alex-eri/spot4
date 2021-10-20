@@ -9,3 +9,8 @@ cp systemd/firewalld-services-spot.xml /etc/firewalld/services/spot.xml
 firewall-cmd --permanent --zone=public --add-service=spot
 
 setsebool -P httpd_can_network_connect 1
+
+
+
+
+docker run -it --network host --name  spot4-mongo -d mongo:4

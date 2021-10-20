@@ -30,11 +30,10 @@ def setup_web(config, https=False, port=8080):
         config['DB']['SERVER'],
         config['DB']['NAME']
     )
-    loop = asyncio.get_event_loop()
 
     debug('starting webapp')
 
-    app = web.Application(loop=loop)
+    app = web.Application()
     app['db'] = db
     app['config'] = config
     app.logger = logger

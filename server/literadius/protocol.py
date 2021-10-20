@@ -18,6 +18,7 @@ from rest.front import get_uam_config
 import time
 
 logger = logging.getLogger('protocol')
+logger.setLevel(logging.DEBUG)
 debug = logger.debug
 
 BURST_TIME = 5
@@ -25,9 +26,11 @@ BITMASK32 = 0xFFFFFFFF
 TIMEOUT = 10
 MAX_INT = 0xFFFFFFFF
 
+import motor.motor_asyncio
+
 class BaseRadius(asyncio.DatagramProtocol):
     radsecret = None
-    db = None
+    db: motor.motor_asyncio.AsyncIOMotorDatabase = None
     loop = None
     session_limit = None
 
@@ -182,11 +185,11 @@ class Accounting:
 
 
         elif req.decode(rad.AcctStatusType) in [rad.AccountingOn, rad.AccountingOff]:
-            self.db.accounting.find_and_modify(
+            asyncio.ensure_future(self.db.get_collection('accounting').find_one_and_update(
                 {'nas': req.decode(rad.NASIdentifier),
                 'termination_cause':{'$exists': False}},
                 {'$set':{'termination_cause': rad.TCNASReboot}}
-            )
+            ))
             #TODO accountin on/off
 
         if account :
@@ -201,7 +204,7 @@ class Accounting:
             if unset:
                 upd['$unset'] = unset
 
-            self.db.accounting.find_and_modify(q,upd,upsert=True)
+            asyncio.ensure_future(self.db.get_collection('accounting').find_one_and_update(q,upd,upsert=True))
 
         return req.reply(rad.AccountingResponse)
 
@@ -210,7 +213,7 @@ class Accounting:
 #import eap.session as eap
 from mschap import mschap
 
-class Auth:
+class Auth():
 #    peap = defaultdict(eap.peap_session)
 
     def get_type(self,req):
@@ -228,7 +231,7 @@ class Auth:
 
     async def billing(self,user,callee, climit):
         now = datetime.utcnow()
-        invoice = await self.db.invoice.find_one( {
+        invoice = await self.db.get_collection('invoice').find_one( {
             'callee': callee,
             'username': user.get('_id',None),
             'paid':True,
@@ -264,7 +267,7 @@ class Auth:
 
 
     async def reduce_limits(self,username,callee,limit,start):
-        accs = await self.db.accounting.aggregate([
+        accs = await self.db.get_collection('accounting').aggregate([
             {'$match':{
                     'username': username,
                     'callee': callee,
@@ -302,9 +305,13 @@ class Auth:
             'default',
             callee
             ]
-        limits = await self.db.limit.find( {'_id': {'$in':profiles}}).to_list(3)
+        try:
+            limits = await self.db.get_collection('limit').find( {'_id': {'$in':profiles}}).to_list(3)
+        except Exception as e:
+            logger.critical(repr(e))
+            raise e
         if len(limits) == 0:
-            return reply
+            return {}
         ordered = sorted(limits,key=lambda l:profiles.index(l['_id'])) #TODO: enum style
         limit = {}
         for l in ordered:
@@ -452,7 +459,7 @@ class Auth:
     '''
 
     def mark_device(self,q):
-        return self.db.devices.find_and_modify(
+        return self.db.get_collection('devices').find_one_and_update(
                 q,
                 {'$currentDate':{'seen':True},'$set':{'checked':True}},
                 upsert=True
@@ -496,7 +503,7 @@ class Auth:
         if session:
             user = {'_id':session['username'],'password':session.get('password')}
         else:
-            user = await self.db.users.find_one({'_id':username})
+            user = await self.db.get_collection('users').find_one({'_id':username})
 
         if not user:
             psw = None
@@ -528,7 +535,7 @@ class Auth:
         elif psw:
             success = await self.check_password(req,reply,psw)
             if success:
-                device = self.mark_device(device_q)
+                device = asyncio.ensure_future(self.mark_device(device_q))
                 code = rad.AccessAccept
 
         if user and not success:
@@ -558,16 +565,18 @@ class Auth:
 
 
 
-        device = device or await self.db.devices.find_one(device_q)
+        device = device or await self.db.get_collection('devices').find_one(device_q)
 
         if device:
             reply.code = code
+            debug(repr(limit))
             limit = await self.get_limits(user,req,reply)
+            debug(repr(limit))
             reply = await self.set_limits(limit,req,reply)
-
+            debug(repr(limit))
             expires = limit.get('time',3600)
 
-            await self.db.rad_sessions.insert({
+            doc = {
 
                 'username': user['_id'],
                 'password': psw,
@@ -577,7 +586,10 @@ class Auth:
                 'start': now,
                 'stop': now + timedelta(seconds=expires)
 
-            })
+            }
+            logger.debug('rad_sessions %s', repr(doc))
+
+            await self.db.rad_sessions.insert_one(doc)
 
 
         return reply

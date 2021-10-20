@@ -7,6 +7,6 @@ Package: spot4
 Provides: spot4
 Architecture: amd64
 Section: net
-Depends: libc6 (>= 2.24), mongodb-org-server (>=3.4), awk, mongodb-org-server (<<5.0)
+Depends: libc6 (>= 2.24), mongodb-org-server (>=4), awk, mongodb-org-server (<<8.0)
 Description: Spot4
  Wifi by SMS and call

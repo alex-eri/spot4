@@ -37,7 +37,7 @@ async def vk_handler(request):
         #, "$set" {'sensor': request.ip }
         }
 
-    device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
+    device = await coll.find_one_and_update(q, updq, upsert=True, return_document=True)#,fields=FIELDS)
     debug(device.__repr__())
 
     upd = {}
@@ -62,7 +62,7 @@ async def vk_handler(request):
             '$set': upd,
         }
 
-        device = await coll.find_and_modify({'_id':device['_id']}, updq, new=True)#,fields=FIELDS)
+        device = await coll.find_one_and_update({'_id':device['_id']}, updq, return_document=True)#,fields=FIELDS)
         debug(device.__repr__())
 
     if device:

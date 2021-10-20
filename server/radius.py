@@ -11,11 +11,10 @@ SESSIONLIMIT = False
 
 async def close_sessions(db):
     import literadius.constants as rad
-    return await db.accounting.update(
+    return (await db.get_collection('accounting').update_many(
                 {'termination_cause':{'$exists': False}},
-                {'$set':{'termination_cause': rad.TCAdminReboot}},
-                multi=True
-            )
+                {'$set':{'termination_cause': rad.TCAdminReboot}}
+            )).raw_result
 
 
 def setup_radius(config, PORT):
@@ -39,7 +38,7 @@ def setup_radius(config, PORT):
     procutil.set_proc_name(name)
     debug("{}`s pid is {}".format(name, os.getpid()))
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.new_event_loop()
 
     from server import lic
     lic(config,"radius")
@@ -49,9 +48,8 @@ def setup_radius(config, PORT):
         config['DB']['NAME']
     )
 
-    t = asyncio.Task(close_sessions(db))
+    t = loop.create_task(close_sessions(db))
     closed = loop.run_until_complete(t)
-
     logger.info('{nModified}/{n} sessions closed'.format(**closed))
 
     HOST = config.get('RADIUS_IP', '0.0.0.0')
@@ -61,7 +59,7 @@ def setup_radius(config, PORT):
     RadiusProtocol.loop = loop
     RadiusProtocol.session_limit = SESSIONLIMIT
 
-    t = asyncio.Task(loop.create_datagram_endpoint(
+    t = loop.create_task(loop.create_datagram_endpoint(
         RadiusProtocol, local_addr=(HOST,PORT)))
 
     transport, server = loop.run_until_complete(t)
@@ -106,5 +104,8 @@ def main():
 
 
 if __name__ == "__main__":
+    import os, sys
+    
+    os.chdir(os.path.dirname(__file__) + '/../config/')
     logging.basicConfig(level=logging.DEBUG)
     main()

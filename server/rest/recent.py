@@ -38,7 +38,7 @@ async def recent_handler(request):
             },
         }
 
-    device = await coll.find_and_modify(q, updq, new=True)
+    device = await coll.find_one_and_update(q, updq, return_document=True)
 
     if device:
         device['sms_sent'] = device.get('sms_sent') and True

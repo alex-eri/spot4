@@ -39,7 +39,7 @@ async def handle(m, db, client):
         m['text'] += "// принимаем любой текст //"
 
     if q:
-        device = await db.devices.find_and_modify(q, {
+        device = await db.get_collection('devices').find_one_and_update(q, {
               '$set': {'checked': True},
               '$currentDate': {'check_date': True}
             }, upsert=False)
@@ -56,7 +56,7 @@ async def worker(client, db):
             await handle(m, db, client)
             msgs.append(m)
 
-        if msgs: db.sms_received.insert(msgs)
+        if msgs: asyncio.ensure_future(db.sms_received.insert_many(msgs))
 
         cap = await client.capacity()
         if cap and cap['total'] > (cap['capacity'] * 0.8) :
@@ -176,9 +176,9 @@ async def send_loop(clients, db):
 
 async def sms_recv_numbers(db,numbers):
     debug(numbers)
-    await db.numbers.remove({'sms_recv':True})
+    await db['numbers'].delete_many({'sms_recv':True})
     if numbers:
-        r= await db.numbers.insert_many([{'sms_recv': True, 'number': n} for n in numbers])
+        r= await db['numbers'].insert_many([{'sms_recv': True, 'number': n} for n in numbers])
         debug(r)
 
 

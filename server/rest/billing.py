@@ -6,7 +6,7 @@ import random
 import bson
 from datetime import datetime,timedelta
 
-CHARS = 7
+CHARS = 8
 V_COUNT = 200
 RANDOM_RANGE = 10 ** CHARS
 
@@ -17,7 +17,7 @@ async def addinvoice(db, device, uam):
     now = datetime.utcnow()
     print(now)
 
-    invoice = await db.invoice.find_one( {
+    invoice = await db.get_collection('invoice').find_one( {
             'callee': uam["_id"],
             'username': device['username'],
             'paid': True,
@@ -29,7 +29,7 @@ async def addinvoice(db, device, uam):
         pass
     else:
 
-        tarif = await db.tarif.find_one({'_id': uam['tarif']})
+        tarif = await db.get_collection('tarif').find_one({'_id': uam['tarif']})
         print(tarif)
 
         if tarif.get('duration', 0) > 0:
@@ -37,7 +37,7 @@ async def addinvoice(db, device, uam):
         else:
             stop = 0
 
-        invoice = await db.invoice.insert(
+        invoice = await db.get_collection('invoice').insert_one(
             {
                 'username':  device['username'],
                 'paid': True,
@@ -56,6 +56,7 @@ async def addinvoice(db, device, uam):
 
 @json
 async def voucher(request):
+    # TODO обернуть в транзакцию
     now = datetime.utcnow()
     coll = request.app['db'].voucher
     
@@ -78,12 +79,11 @@ async def voucher(request):
         'nas': DATA.get('nas'),
         'device' : DATA.get('device'),
         'username': DATA.get('username'),
-        'closed': now,
         }
     updq = {
         '$set': upd
         }
-    voucher = await coll.find_and_modify(q, updq, upsert=False, new=True)
+    voucher = await coll.find_one_and_update(q, updq, upsert=False, return_document=True)
     if voucher:
         tarif = await request.app['db'].tarif.find_one({'_id':voucher['tarif']})
         invoices = request.app['db'].invoice
@@ -104,15 +104,15 @@ async def voucher(request):
              }
 
         debug(type(voucher['_id']))
-        invoice = await invoices.insert(q)
+        invoice = await invoices.insert_one(q )
 
-        return invoice
+        return invoice.inserted_id
 
     return {'error':'wrongcode'}
 
 
 async def nextseries(db):
-    n = await db.counters.find_and_modify({'_id':'voucher'},{ '$inc': { 'seq': 1 } }, new=True)
+    n = await db.get_collection('counters').find_one_and_update({'_id':'voucher'},{ '$inc': { 'seq': 1 } }, return_document=True)
     return n.get('seq')
 
 @json
@@ -136,15 +136,19 @@ async def generate(request):
 
     datas = []
 
-    for i in range(V_COUNT):
-        r = random.randrange(RANDOM_RANGE)
+    codes = set()
+
+    while len(codes) < V_COUNT:
+        codes.add(random.randrange(RANDOM_RANGE))
+
+    for r in codes:
         a = {
             'voucher': str(r).zfill(CHARS)
         }
         a.update(q)
         datas.append(a)
 
-    await db.voucher.insert(datas)
+    await db.get_collection('voucher').insert_many(datas)
 
     return q
 
@@ -161,7 +165,7 @@ async def close(request):
         'series': series
         }
 
-    return await db.voucher.update(
+    return await db.get_collection('voucher').update(
                 q,
                 {'$set':{'closed': True}},
                 multi=True

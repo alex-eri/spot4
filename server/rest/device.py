@@ -27,17 +27,17 @@ async def device_handler(request):
     sms = DATA.get('sms_sent')
 
     if sms:
-        trydevice = await coll.find_and_modify(
+        trydevice = await coll.find_one_and_update(
                 {  'sms_sent':sms, '_id':q['_id'] },
                 {'$set':{'checked': True} },
-                new=True)#,fields=FIELDS)
+                return_document=True)#,fields=FIELDS)
 
         if trydevice:
             debug('check success')
             device = trydevice
         else:
             debug(q)
-            device = await coll.find_and_modify(q, {'$inc': {'try': 1}}, new=True) # ,fields=FIELDS)
+            device = await coll.find_one_and_update(q, {'$inc': {'try': 1}}, return_document=True) # ,fields=FIELDS)
             n = device.get('try')
             if n > 7: raise web.HTTPForbidden()
             if n > 3: n*=5
@@ -59,7 +59,7 @@ async def device_handler(request):
                 await addinvoice(request.app['db'], device, uam)
         elif device.get('method','sms') == 'call' and device.get('variant') == 'smsru':
             if await smsru_check(device.get('check_id')):
-                device = await coll.find_and_modify(q,{'$set':{'checked': True} }, new=True)
+                device = await coll.find_one_and_update(q,{'$set':{'checked': True} }, return_document=True)
         else:
             numbers = request.app['config'].get('numbers', [])
             if device.get('sms_callie', None) and device.get('sms_callie', None) in numbers:

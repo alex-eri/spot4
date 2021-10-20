@@ -1,33 +1,49 @@
 <style type="text/css">
 .closed {text-decoration:line-through}
+
+.vcenter {
+    display: block;
+    vertical-align: middle;
+    float: none;
+    margin: 0;
+}
+
+.gtc-print {
+  padding: 3mm;
+  margin: 1px;
+  border: 1px solid black;
+}
+
 .invoiced {
   color:green;
   text-decoration:line-through;
-  }
+  } 
 
   @media print{
   .gtc-print {
-    width:52mm;
+    width:48mm;
   }
   }
   @page :left {
-    margin: 5mm 0 5mm 0; /* Отступы для всех левых страниц */
+    margin: 5mm 5mm 5mm 5mm; /* Отступы для всех левых страниц */
    }
   @page :right {
-    margin: 5mm 0 5mm 0 ; /* Отступы для всех правых страниц */
+    margin: 5mm 5mm 5mm 5mm ; /* Отступы для всех правых страниц */
    }
 
 </style>
 
-<h2 class=page-header> Карточка #{{response._id.series}} / {{response.callee}}  &mdash; {{response.tarif.name}}
-  ({{response.total}}) до {{response.expires.$date| date: 'mediumDate'}}</h2>
-
-<ul class="list-unstyled row">
-	<li ng-class="{invoiced:v.invoiced}"
-		class="col-sm-3 col-xs-4 col-md-2 gtc-print"
+<h2 class=page-header> Карточка #{{response._id.series}} / {{response.callee}} &mdash; {{response.tarif.name}}
+  ({{response.total}}) <p> до {{response.expires.$date| date: 'mediumDate'}}</p></h2>
+  
+<div style="text-align: center;">
+<ul class="list-unstyled row ">
+	<li ng-class="{invoiced:v.invoiced}" 
+		class="col-sm-3 col-xs-4 col-md-2 gtc-print "
 		ng-repeat="v in response.vouchers">
-		<p class="lead text-center" title="{{v.invoiced.$date| date: 'medium'}}">{{v.voucher|dash}}</p>
+		<p class="lead text-center vcenter"   title="{{v.invoiced.$date| date: 'medium'}}">{{v.voucher|space}}</p>
 	</li>
 </ul>
+</div>
 
 

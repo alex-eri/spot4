@@ -22,3 +22,7 @@ debian/spot4/*
 debian/*.debhelper.log
 debian/*.substvars
 pip-cache/
+.venv
+.db
+debian/spot4.debhelper.log
+config/config.json

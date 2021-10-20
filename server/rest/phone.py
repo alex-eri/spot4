@@ -16,18 +16,18 @@ REREG_DAYS = 3
 DEVMAX = 10
 
 async def nextuser(db):
-    n = await db.counters.find_and_modify({'_id':'userid'},{ '$inc': { 'seq': 1 } }, new=True)
+    n = await db.get_collection('counters').find_one_and_update({'_id':'userid'},{ '$inc': { 'seq': 1 } }, return_document=True)
     return str(n.get('seq')).zfill(6)
 
 
 async def setuser(db, reg):
 
     user = \
-        await db.users.find_one({'with': reg})
+        await db.get_collection('users').find_one({'with': reg})
     if user:
         return user['_id']
 
-    return await db.users.insert({'with': reg, '_id': await nextuser(db)})
+    return (await db.get_collection('users').insert_one({'with': reg, '_id': await nextuser(db)})).inserted_id
 
 
 
@@ -61,7 +61,7 @@ async def phone_handler(request):
     sms_redudant = uam.get('sms_redudant') or 1
 
     if uam.get('smssend', False) and (sms_limit > 0):
-        sms_limit -= await request.app['db'].sms_sent.count(
+        sms_limit -= await request.app['db'].sms_sent.count_documents(
             {
                 'callee': uam.get('_id', 'default'),
                 'sent': {'$gt': (now - monthdelta(1))}
@@ -85,17 +85,17 @@ async def phone_handler(request):
         #, "$set" {'sensor': request.ip }
         }
 
-    device = await coll.find_and_modify(q, updq, upsert=True, new=True)#,fields=FIELDS)
+    device = await coll.find_one_and_update(q, updq, upsert=True, return_document=True)#,fields=FIELDS)
 
     upd = {'try': 0, 'method': method}
 
     rereg = timedelta(days=uam.get('rereg') or REREG_DAYS)
 
-    count = await coll.find({
+    count = await coll.count_documents({
             'mac': q['mac'],
             'seen': {'$gt': (now-rereg)},
             'checked': {'$ne': True}
-        }).count()
+        })
 
     if count >= (uam.get('devmax') or DEVMAX):
         uam['smssend'] = False
@@ -154,14 +154,14 @@ async def phone_handler(request):
                 numbers = await numberscursor.to_list(length=1000)
                 if numbers:
                     upd['call_waited'] = random.choice(numbers).get('number', '~')
-                if upd['call_waited'].startswith('smsru'):
-                    try:
-                        upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'], phone)
-                    except Exception as e:
-                        logger.error('failed to register call')
-                        logger.error(e)
-                    if upd['call_waited']:
-                        upd['variant'] = 'smsru'
+                    if upd['call_waited'].startswith('smsru'):
+                        try:
+                            upd['call_waited'], upd['check_id'] = await smsru_call(upd['call_waited'], phone)
+                        except Exception as e:
+                            logger.error('failed to register call')
+                            logger.error(e)
+                        if upd['call_waited']:
+                            upd['variant'] = 'smsru'
 
             elif uam.get('smsrecieve', False):
                 numberscursor = request.app['db'].numbers.find({'sms_recv': True}) #request.app['config'].get('numbers')
@@ -190,7 +190,7 @@ async def phone_handler(request):
                 text = tmpl.format(code=code)
 
                 #request.app['config']['smsq'].put((phone,text))
-                request.app['db'].sms_sent.insert(
+                request.app['db'].sms_sent.insert_one(
                     {
                         'redudant':sms_redudant,
                         'phone': phone,
@@ -205,7 +205,7 @@ async def phone_handler(request):
         }
 
         debug(upd)
-        device = await coll.find_and_modify({'_id': device['_id']}, updq, new=True)#,fields=FIELDS)
+        device = await coll.find_one_and_update({'_id': device['_id']}, updq, return_document=True)#,fields=FIELDS)
         debug(device.__repr__())
 
     if device:

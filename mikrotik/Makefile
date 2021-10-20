@@ -9,12 +9,11 @@ clean:
 build:
 	install -d build
 	install -d build/$(PROTO).$(IP).$(PORT)/
+	cp -R orig/* build/$(PROTO).$(IP).$(PORT)/
 	install src/hotspot.rsc build/$(PROTO).$(IP).$(PORT)/hotspot.rsc
-	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/rlogin.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/login.html
-	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/falogin.html
-	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/fstatus.html
-	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/flogout.html
+	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/status.html
+	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/error.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/logout.html
 	install -d build/$(PROTO).$(IP).$(PORT)/jsonp
 	install src/jsonp/login.html build/$(PROTO).$(IP).$(PORT)/jsonp/login.html

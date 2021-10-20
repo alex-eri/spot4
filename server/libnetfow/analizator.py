@@ -37,7 +37,7 @@ async def aggregate_remoteaddr(db, account):
             }
         ]
         debug(pipe)
-        return db.collector.aggregate( pipe )
+        return db.get_collection('collector').aggregate( pipe )
 
     try:
         rxc = group_remoteaddr(RX)

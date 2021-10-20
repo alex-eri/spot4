@@ -1,5 +1,6 @@
 import asyncio
 import panoramisk
+import motor.motor_asyncio
 #import phonenumbers
 
 import logging
@@ -7,17 +8,19 @@ import datetime
 import functools
 from multiprocessing import Process
 
-debug = logging.debug
+debug = logging.getLogger('AMI').debug
+from pymongo import ReturnDocument
 
 
-async def call_recv_numbers(db, numbers):
-    await db.numbers.remove({'call_recv':True})
+
+async def call_recv_numbers(db: motor.motor_asyncio.AsyncIOMotorDatabase, numbers):
+    await db.get_collection('numbers').delete_many({'call_recv':True})
     if numbers:
-        return await db.numbers.insert_many([{'call_recv': True, 'number': n} for n in numbers])
+        return await db.get_collection('numbers').insert_many([{'call_recv': True, 'number': n} for n in numbers])
 
 
 
-async def newchannel_cb(manager, message, db=None, config=None):
+async def newchannel_cb(manager, message, db:motor.motor_asyncio.AsyncIOMotorDatabase=None, config=None):
     #cid = phonenumbers.parse(message.CallerIDNum, "RU")
     #phone = "+{}{}".format(cid.country_code, cid.national_number)
 
@@ -27,7 +30,7 @@ async def newchannel_cb(manager, message, db=None, config=None):
     delta = datetime.timedelta(seconds=config.get('timeout', 120))
     q = dict(phone=phone, seen={'$gt': now - delta})
 
-    device = await db.devices.find_and_modify(
+    device = await db.get_collection('devices').find_one_and_update(
         q,
         {
             '$set': {'checked': True},
@@ -35,7 +38,7 @@ async def newchannel_cb(manager, message, db=None, config=None):
         },
         sort={'$natural': -1},
         upsert=False,
-        new=True
+        return_document=ReturnDocument.AFTER
     )
 
     logging.debug(repr(device))

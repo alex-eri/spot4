@@ -23,7 +23,7 @@ def insert_cb(result,error):
     if error:
         logger.error(error.__repr__())
 
-def setup(mongo_uri,db_name):
+def setup(mongo_uri,db_name) -> motor.motor_asyncio.AsyncIOMotorDatabase:
     client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
     db = client[db_name]
     return db

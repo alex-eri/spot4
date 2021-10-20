@@ -1,3 +1,17 @@
+spot4 (2602~379.gbp659e3c) UNRELEASED; urgency=medium
+
+  ** SNAPSHOT build @659e3c8bcfb69a664b807b6b3bf59ee123ae326f **
+
+
+  [ Александр Степанов ]
+  * Upgrade and fix for Mongo
+
+  [ eri ]
+  * UNRELEASED
+  * UNRELEASED
+
+ -- eri <sa@eri.su>  Thu, 19 Feb 2026 15:19:51 +0300
+
 spot4 (4) stable; urgency=low
 
   * Release 4

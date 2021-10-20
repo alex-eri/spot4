@@ -8,16 +8,16 @@ async def get_uam_config(db,profile):
     for c in '!"#$%&\'()*+,/:;<=>?@[\\]^`{|}~':
         profile = profile.replace(c,'')
 
-    default = await db.uamconfig.find_one({'_id':'default'})
+    default = await db.get_collection('uamconfig').find_one({'_id':'default'})
     if default:
-        conf = await db.uamconfig.find_and_modify({'_id': profile}, {'$setOnInsert': { 'auto': True }}, upsert=True, new=False)
+        conf = await db.get_collection('uamconfig').find_one_and_update({'_id': profile}, {'$setOnInsert': { 'auto': True }}, upsert=True, return_document=True)
         if conf:
             conf = {k: v for k, v in conf.items() if v or v is False or v == 0 }
             if not conf.get('theme',False):
                 conf = {k: v for k, v in conf.items() if not k.startswith('theme_')}
             default.update(conf)
         else:
-            limit = await db.limit.find_and_modify( {'_id':profile} , {'$setOnInsert': { 'auto': True }}, upsert=True)
+            limit = await db.get_collection('limit').find_one_and_update( {'_id':profile} , {'$setOnInsert': { 'auto': True }}, upsert=True, return_document=True)
         return default
 
 async def uam_config(request):
