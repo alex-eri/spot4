@@ -13,6 +13,8 @@ build:
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/rlogin.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/login.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/falogin.html
+	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/alogin.html
+	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/status.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/fstatus.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/flogout.html
 	install src/rlogin.html build/$(PROTO).$(IP).$(PORT)/logout.html
