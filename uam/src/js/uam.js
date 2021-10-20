@@ -712,8 +712,8 @@ app.controller('Check',  ['$rootScope','$resource','$cookies','$location', '$win
 
     }]);
 
-app.controller('Status',  ['$rootScope','$resource','$cookies',
-    function ( $scope, $resource, $cookies ){
+app.controller('Status',  ['$rootScope','$resource','$cookies', '$location'
+    function ( $scope, $resource, $cookies, $location ){
 
     var ischilli = $cookies.get('uamip');
 
