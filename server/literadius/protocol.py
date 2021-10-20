@@ -11,6 +11,7 @@ from bson.json_util import dumps, loads
 from utils.codecs import ip2int
 import pymongo
 from literadius import decoders
+import functools
 
 from rest.front import get_uam_config
 
@@ -91,7 +92,14 @@ class BaseRadius(asyncio.DatagramProtocol):
        
         f = self.loop.create_task(handler(req, nas))
         f.add_done_callback(self.respond_cb(nas))
-        self.loop.call_later(5, f.cancel(msg='Too long time'))
+
+        
+
+        def cancel_answer(foo):
+            if not foo.done():
+                foo.cancel(msg='Too long time')
+
+        self.loop.call_later(5, functools.partial(cancel_answer, f))
 
 #        try:
 #            resp = f.result(TIMEOUT)
