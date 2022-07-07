@@ -18,7 +18,7 @@
     "angular-sanitize": "^1.7",
     "bootstrap": "3.x.x",
     "jquery": "^2",
-    "moment": "^2.19",
+    "moment": "^2.29",
     "moment-timezone": "0.5.x",
     "ua-parser-js": "0.7.x",
     "nz-toggle": "2.x.x",
