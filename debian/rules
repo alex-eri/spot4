@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-CURRENT_YM := $(shell date +"%y%m")
+CURRENT_YM := $(shell date -d "`git log -1 --format=%ci`" +"%y%m")
 CURRENT_COMMIT := $(shell git rev-parse --short HEAD)
 CURRENT_NCMMIT := $(shell git rev-list --all --count)
 EMAIL := "sa@eri.su"
@@ -15,7 +15,7 @@ build:
 	make -C . all
 	git reset -- debian/changelog
 	rm -f debian/changelog.dch
-	EMAIL=$(EMAIL) gbp dch $(SNAPSHOTRELEASE) --spawn-editor=no --new-version=$(CURRENT_YM) --snapshot-number=$(CURRENT_NCMMIT) || true
+	EMAIL=$(EMAIL) gbp dch $(SNAPSHOTRELEASE) --git-author --spawn-editor=no --new-version=$(CURRENT_YM) --snapshot-number=$(CURRENT_NCMMIT) --commit 
 
 binary: build
 	mkdir -p debian/spot4

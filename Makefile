@@ -69,12 +69,9 @@ numpy/build: numpy
 	cd ./numpy && BLAS=None python setup.py build
 	cd ./numpy && python setup.py install --user
 
-
-
 mikrobr:
 	ip link add link enp5s0 name enp5s0.3 type vlan id 3
 	ip link set dev enp5s0.3 netns TESTA
-
 
 netns:
 	ip netns add TESTA
@@ -95,11 +92,8 @@ dhclient2:
 	ip netns exec TESTA dhcpcd enp5s0.3
 	ip netns exec TESTA ip a l
 
-
-
 opera:
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"
-
 
 operaonmikrotik: netns mikrobr dhclient2 opera
 

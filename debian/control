@@ -1,6 +1,6 @@
 Source: spot4
 Section: net
-Build-Depends: make, awk (>=3.6), npm, git, gzip
+Build-Depends: make, awk (>=3.6), npm, git, gzip, sed, git-buildpackage, git-debrebase, debhelper
 Maintainer: Aleksandr Stepanov <sa@eri.su>
 
 Package: spot4
