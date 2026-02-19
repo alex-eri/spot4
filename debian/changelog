@@ -1,16 +1,15 @@
-spot4 (2602~379.gbp659e3c) UNRELEASED; urgency=medium
+spot4 (2602~380.gbp253bab) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @659e3c8bcfb69a664b807b6b3bf59ee123ae326f **
+  ** SNAPSHOT build @253bab0a116e47d1a7284871ea0df543baf0df86 **
 
 
-  [ Александр Степанов ]
-  * Upgrade and fix for Mongo
+  [ Aleksandr Stepanov ]
+  * Upgrade and FIX for Mongo and Debian release
 
   [ eri ]
   * UNRELEASED
-  * UNRELEASED
 
- -- eri <sa@eri.su>  Thu, 19 Feb 2026 15:19:51 +0300
+ -- Александр Степанов <sa@eri.su>  Thu, 19 Feb 2026 16:01:19 +0300
 
 spot4 (4) stable; urgency=low
 
