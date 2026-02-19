@@ -36,7 +36,7 @@ build/config:
 	install -m 664 ./systemd/spot.service ./build/etc/systemd/
 	ln -s etc/systemd/ ./build/systemd
 	install -m 664 ./systemd/firewalld-services-spot.xml ./build/etc/firewalld/services/
-	install -m 664 ./config/config.json ./build/config/config.json.example
+	install -m 664 ./config/config.json.example ./build/config/config.json.example
 
 
 clean:
