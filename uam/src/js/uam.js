@@ -622,12 +622,12 @@ app.controller('Login', ['$window', '$resource', '$cookies', '$location', '$http
         var chapid = '\x00';
         var charpassw = hexMD5(chapid + password + challenge);
 
-        newloginform(
-          chilli + 'logon',
-          username,
-          null,
-          charpassw
-        )
+        // newloginform(
+        //   chilli + 'logon',
+        //   username,
+        //   null,
+        //   charpassw
+        // )
         $resource(chilli + 'status', {},
           { get: { method: 'JSONP', jsonpCallbackParam: 'callback' } }
         ).get(onchillistatus, onerror)
@@ -840,8 +840,12 @@ app.run(['$route', '$location', '$rootScope', '$resource', '$cookies', '$interva
 
     // console.log($cookies.getAll())
 
-    $resource('/config/uam/:called.json').get(
-      { called: $cookies.get('called') },
+    $resource('/config/uam/settings.json').get(
+      { 
+        called: $cookies.get('called'),
+        nasid:  $cookies.get('nasid'),
+        ischilli : !!($cookies.get('uamip')),
+      },
       function (response) {
         $scope.config = response
       },

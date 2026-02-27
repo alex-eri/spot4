@@ -40,7 +40,7 @@ def routers(app):
     app.router.add_route('POST', '/db/{collection}/{skip:\d+}/{limit:\d+}', check_auth(db_handler))
     app.router.add_route('POST', '/db/{collection}', check_auth(db_handler))
 
-    app.router.add_get('/config/uam/{profile}.json', json(uam_config))
+    app.router.add_get('/config/uam/{what}.json', json(uam_config))
     app.router.add_static('/uam/theme/', path='../uam/theme', name='uam-theme')
     app.router.add_get('/uam/{path:.*}', index_factory("../static/", "uam.html"))
 

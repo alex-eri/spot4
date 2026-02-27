@@ -17,7 +17,7 @@ from rest.front import get_uam_config
 
 import time
 
-logger = logging.getLogger('protocol')
+logger = logging.getLogger("protocol")
 logger.setLevel(logging.DEBUG)
 debug = logger.debug
 
@@ -27,6 +27,7 @@ TIMEOUT = 10
 MAX_INT = 0xFFFFFFFF
 
 import motor.motor_asyncio
+
 
 class BaseRadius(asyncio.DatagramProtocol):
     radsecret = None
@@ -40,35 +41,36 @@ class BaseRadius(asyncio.DatagramProtocol):
     def respond(self, resp, nas):
         self.transport.sendto(resp.data(), nas)
 
-        logger.info( "Reply {} to {}, user".format(resp.code,nas))
-        logger.info( "Processing time: %s" % (time.time()-resp.start_time) )
+        logger.info("Reply {} to {}, user".format(resp.code, nas))
+        logger.info("Processing time: %s" % (time.time() - resp.start_time))
 
         if logger.isEnabledFor(logging.DEBUG):
             for attr in resp.keys():
-                #break
-                debug('{} :\t{}'.format(attr,resp.decode(attr)))
+                # break
+                debug("{} :\t{}".format(attr, resp.decode(attr)))
 
     def respond_cb(self, nas):
         def untask(task):
             if task.done():
                 resp = task.result()
-                self.respond(resp,nas)
+                self.respond(resp, nas)
             else:
-                logger.warning('Droped request %s', task.exception())
+                logger.warning("Droped request %s", task.exception())
+
         return untask
 
     def error_received(self, exc):
-        logger.error('Error received: %s', exc)
+        logger.error("Error received: %s", exc)
 
     def connection_lost(self, exc):
-        debug('Stop: %s', exc)
+        debug("Stop: %s", exc)
 
     def datagram_received(self, data, nas):
         if len(data) < 20:
-            logger.error('From {} Packet is too short'.format(nas))
-            return 
+            logger.error("From {} Packet is too short".format(nas))
+            return
 
-        debug('From {} received'.format(nas))
+        debug("From {} received".format(nas))
         req = Packet(data, self.radsecret)
 
         if req.code == rad.AccessRequest:
@@ -78,288 +80,331 @@ class BaseRadius(asyncio.DatagramProtocol):
         elif req.code == rad.CoARequest:
             handler = self.handle_coa
         else:
-            logger.error('From {} Packet is not request'.format(nas))
+            logger.error("From {} Packet is not request".format(nas))
             return
         if logger.isEnabledFor(logging.DEBUG):
             for attr in req.keys():
-                #break
-                debug('{} :\t{}'.format(attr,req.decode(attr)))
+                # break
+                debug("{} :\t{}".format(attr, req.decode(attr)))
 
-        #f = asyncio.ensure_future(
+        # f = asyncio.ensure_future(
         #    handler(req, caller),
         #    loop=asyncio.get_event_loop()
         #    )
-        #f.add_done_callback(self.respond_cb(caller))
+        # f.add_done_callback(self.respond_cb(caller))
 
-        #loop=asyncio.get_event_loop()
-       
+        # loop=asyncio.get_event_loop()
+
         f = self.loop.create_task(handler(req, nas))
         f.add_done_callback(self.respond_cb(nas))
 
-        
-
         def cancel_answer(foo):
             if not foo.done():
-                foo.cancel(msg='Too long time')
+                foo.cancel(msg="Too long time")
 
         self.loop.call_later(5, functools.partial(cancel_answer, f))
 
-#        try:
-#            resp = f.result(TIMEOUT)
-#        except asyncio.TimeoutError:
-#            logger.warning('Droped request %s', task.exception())
-#            f.cancel()
-#        except Exception as exc:
-#            logger.error('{} raised an exception: {!r}'.format(nas,exc))
-#        else:
-#            self.respond(resp, nas)
+    #        try:
+    #            resp = f.result(TIMEOUT)
+    #        except asyncio.TimeoutError:
+    #            logger.warning('Droped request %s', task.exception())
+    #            f.cancel()
+    #        except Exception as exc:
+    #            logger.error('{} raised an exception: {!r}'.format(nas,exc))
+    #        else:
+    #            self.respond(resp, nas)
 
-    def db_cb(self,r,e,*a,**kw):
+    def db_cb(self, r, e, *a, **kw):
         if e:
             logger.error(e.__repr__())
 
+
 class CoA:
-    async def handle_coa(self,req,nas):
-        raise NotImplementedError('Coa not yet')
+    async def handle_coa(self, req, nas):
+        raise NotImplementedError("Coa not yet")
+
 
 class Accounting:
-    async def handle_acct(self,req,nas):
+    async def handle_acct(self, req, nas):
         q = {
-                'auth_class': req.decode(rad.Class),
-                'session_id': req.decode(rad.AcctSessionId)
-            }
+            "auth_class": req.decode(rad.Class),
+            "session_id": req.decode(rad.AcctSessionId),
+        }
         account = {}
         unset = {}
 
         username = req.decode(rad.UserName)
 
+        called = req.decode(rad.CalledStationId)
+        nasid = req.decode(rad.NASIdentifier)
+
+        if req.decode(rad.CoovaChilliAcctViewPoint):
+            called, nasid = nasid, called
+
         if req.get(rad.CallingStationId) == req.get(rad.UserName):
             session = await self.db.rad_sessions.find_one(
-            {
-                'caller': req.decode(rad.CallingStationId),
-                'callee': req.decode(rad.CalledStationId),
-            },
-                 sort=[("$natural", pymongo.DESCENDING)]
+                {
+                    "caller": req.decode(rad.CallingStationId),
+                    "callee": called,
+                },
+                sort=[("$natural", pymongo.DESCENDING)],
             )
             if session:
-                username = session['username']
-
+                username = session["username"]
 
         if req.decode(rad.AcctStatusType) == rad.AccountingStart:
-            account={
-                    'ip': req.decode(rad.FramedIPAddress),
-                    'nas': req.decode(rad.NASIdentifier),
-                    'callee': req.decode(rad.CalledStationId),
-                    'caller': req.decode(rad.CallingStationId),
-                    'username': username,
-                    'start_time': req.decode(rad.EventTimestamp)
-                }
+            account = {
+                "ip": req.decode(rad.FramedIPAddress),
+                "nas": nasid,
+                "callee": called,
+                "caller": req.decode(rad.CallingStationId),
+                "username": username,
+                "start_time": req.decode(rad.EventTimestamp),
+            }
 
+        elif req.decode(rad.AcctStatusType) in [
+            rad.AccountingUpdate,
+            rad.AccountingStop,
+        ]:
 
-        elif req.decode(rad.AcctStatusType) in [rad.AccountingUpdate, rad.AccountingStop] :
-
-            input_bytes = req.decode(rad.AcctInputGigawords) or 0 << 32 | req.decode(rad.AcctInputOctets)
-            output_bytes = req.decode(rad.AcctOutputGigawords) or 0 << 32 | req.decode(rad.AcctOutputOctets)
+            input_bytes = req.decode(rad.AcctInputGigawords) or 0 << 32 | req.decode(
+                rad.AcctInputOctets
+            )
+            output_bytes = req.decode(rad.AcctOutputGigawords) or 0 << 32 | req.decode(
+                rad.AcctOutputOctets
+            )
 
             input_packets = req.decode(rad.AcctInputPackets)
             output_packets = req.decode(rad.AcctOutputPackets)
 
-            if req.decode(rad.CoovaChilliAcctViewPoint) == rad.CoovaChilliClientViewPoint:
+            if (
+                req.decode(rad.CoovaChilliAcctViewPoint)
+                == rad.CoovaChilliClientViewPoint
+            ):
                 input_bytes, output_bytes = output_bytes, input_bytes
                 input_packets, output_packets = output_packets, input_packets
 
             account = {
-                'session_time': req.decode(rad.AcctSessionTime),
-                'input_bytes': input_bytes,
-                'input_packets': input_packets,
-                'output_bytes': output_bytes,
-                'output_packets': output_packets,
-                'delay':req.decode(rad.AcctDelayTime),
-                'event_time': req.decode(rad.EventTimestamp)
+                "session_time": req.decode(rad.AcctSessionTime),
+                "input_bytes": input_bytes,
+                "input_packets": input_packets,
+                "output_bytes": output_bytes,
+                "output_packets": output_packets,
+                "delay": req.decode(rad.AcctDelayTime),
+                "event_time": req.decode(rad.EventTimestamp),
             }
 
             if req.decode(rad.AcctStatusType) == rad.AccountingStop:
-                account['termination_cause'] =  req.decode(rad.AcctTerminateCause)
+                account["termination_cause"] = req.decode(rad.AcctTerminateCause)
             else:
-                unset['termination_cause']=""
-
+                unset["termination_cause"] = ""
 
         elif req.decode(rad.AcctStatusType) in [rad.AccountingOn, rad.AccountingOff]:
-            asyncio.ensure_future(self.db.get_collection('accounting').find_one_and_update(
-                {'nas': req.decode(rad.NASIdentifier),
-                'termination_cause':{'$exists': False}},
-                {'$set':{'termination_cause': rad.TCNASReboot}}
-            ))
-            #TODO accountin on/off
+            asyncio.ensure_future(
+                self.db.get_collection("accounting").find_one_and_update(
+                    {
+                        "nas": req.decode(rad.NASIdentifier),
+                        "termination_cause": {"$exists": False},
+                    },
+                    {"$set": {"termination_cause": rad.TCNASReboot}},
+                )
+            )
+            # TODO accountin on/off
 
-        if account :
-            account.update({
-                'stop_date':datetime.utcnow(),
-                'sensor':ip2int(nas[0])
-                })
-            upd={
-            '$setOnInsert':{'start_date':datetime.utcnow()},
-            '$set':account,
+        if account:
+            account.update({"stop_date": datetime.utcnow(), "sensor": ip2int(nas[0])})
+            upd = {
+                "$setOnInsert": {"start_date": datetime.utcnow()},
+                "$set": account,
             }
             if unset:
-                upd['$unset'] = unset
+                upd["$unset"] = unset
 
-            asyncio.ensure_future(self.db.get_collection('accounting').find_one_and_update(q,upd,upsert=True))
+            asyncio.ensure_future(
+                self.db.get_collection("accounting").find_one_and_update(
+                    q, upd, upsert=True
+                )
+            )
 
         return req.reply(rad.AccountingResponse)
 
-#from collections import defaultdict
-#from eap.session import peap_session
-#import eap.session as eap
+
+# from collections import defaultdict
+# from eap.session import peap_session
+# import eap.session as eap
 from mschap import mschap
 
-class Auth():
-#    peap = defaultdict(eap.peap_session)
 
-    def get_type(self,req):
+class Auth:
+    #    peap = defaultdict(eap.peap_session)
+
+    def get_type(self, req):
         nas = 0
-        vendors = set(x for x,y in filter( lambda x: isinstance(x, tuple) ,req.keys()))
+        vendors = set(x for x, y in filter(lambda x: isinstance(x, tuple), req.keys()))
         for x in vendors:
             if x == rad.Mikrotik:
                 nas |= typeofNAS.mikrotik
-            elif x == rad.ChilliSpot :
-                 nas |= typeofNAS.chilli
+            elif x == rad.ChilliSpot:
+                nas |= typeofNAS.chilli
             elif x == rad.WISPr:
                 nas |= typeofNAS.wispr
         return nas
 
-
-    async def billing(self,user,callee, climit):
+    async def billing(self, user, callee, climit):
         now = datetime.utcnow()
-        invoice = await self.db.get_collection('invoice').find_one( {
-            'callee': callee,
-            'username': user.get('_id',None),
-            'paid':True,
-            'start':{'$lte':now},
-            'stop':{'$gt':now},
-            })
+        invoice = await self.db.get_collection("invoice").find_one(
+            {
+                "callee": callee,
+                "username": user.get("_id", None),
+                "paid": True,
+                "start": {"$lte": now},
+                "stop": {"$gt": now},
+            }
+        )
 
         if invoice:
-            tarif = invoice.get('limit', {})
+            tarif = invoice.get("limit", {})
 
-            for k,v in tarif.items():
+            for k, v in tarif.items():
                 if v in [0, "0"]:
-                    climit.pop(k,None)
+                    climit.pop(k, None)
 
-            tarif = await self.reduce_limits(user['_id'],callee,tarif,invoice.get('start'))
+            tarif = await self.reduce_limits(
+                user["_id"], callee, tarif, invoice.get("start")
+            )
 
-            if invoice.get('stop'):
-                t = round((invoice['stop'] - now).total_seconds())+28
-                if tarif.get('time', None) is None:
-                    tarif['time'] = t
+            if invoice.get("stop"):
+                t = round((invoice["stop"] - now).total_seconds()) + 28
+                if tarif.get("time", None) is None:
+                    tarif["time"] = t
                 else:
-                    tarif['time'] = min(tarif.get('time'), t)
+                    tarif["time"] = min(tarif.get("time"), t)
 
-            for k,v in tarif.items():
+            for k, v in tarif.items():
                 if type(v) == int and v <= 0:
                     return climit
 
-            for k,v in tarif.items():
+            for k, v in tarif.items():
                 climit[k] = v
-
 
         return climit
 
-
-    async def reduce_limits(self,username,callee,limit,start):
-        accs = await self.db.get_collection('accounting').aggregate([
-            {'$match':{
-                    'username': username,
-                    'callee': callee,
-                    'start_date' : {'$gte': start}
-            }},
-            {'$group': {
-                '_id': None,
-                'time': {'$sum': "$session_time"},
-                'input_bytes':  {'$sum': "$input_bytes"},
-                'output_bytes': {'$sum': "$output_bytes"},
-                'count': {'$sum': 1},
-                'closed': { '$push': '$termination_cause'}
-            }},
-            {'$project':{
-                'count':1,
-                'time':1,
-                'bytes': { '$sum': ['$output_bytes',"$input_bytes"]},
-                'closed':{ '$size': "$closed" }
-            }}
-        ]).to_list(1)
+    async def reduce_limits(self, username, callee, limit, start):
+        accs = (
+            await self.db.get_collection("accounting")
+            .aggregate(
+                [
+                    {
+                        "$match": {
+                            "username": username,
+                            "callee": callee,
+                            "start_date": {"$gte": start},
+                        }
+                    },
+                    {
+                        "$group": {
+                            "_id": None,
+                            "time": {"$sum": "$session_time"},
+                            "input_bytes": {"$sum": "$input_bytes"},
+                            "output_bytes": {"$sum": "$output_bytes"},
+                            "count": {"$sum": 1},
+                            "closed": {"$push": "$termination_cause"},
+                        }
+                    },
+                    {
+                        "$project": {
+                            "count": 1,
+                            "time": 1,
+                            "bytes": {"$sum": ["$output_bytes", "$input_bytes"]},
+                            "closed": {"$size": "$closed"},
+                        }
+                    },
+                ]
+            )
+            .to_list(1)
+        )
 
         if accs:
-            if limit.get('time'):
-                limit['time'] -= accs[0]['time']
-            if limit.get('bytes'):
-                limit['bytes'] -= accs[0]['bytes'] >> 20
-            if limit.get('ports'):
-                limit['ports'] -= accs[0]['count'] - accs[0]['closed']
+            if limit.get("time"):
+                limit["time"] -= accs[0]["time"]
+            if limit.get("bytes"):
+                limit["bytes"] -= accs[0]["bytes"] >> 20
+            if limit.get("ports"):
+                limit["ports"] -= accs[0]["count"] - accs[0]["closed"]
         return limit
 
+    async def get_limits(self, user, req, reply):
 
-    async def get_limits(self,user,req,reply):
-        callee = req.decode(rad.CalledStationId)
-        profiles = [
-            'default',
-            callee
-            ]
+        called = req.decode(rad.CalledStationId)
+        nasid = req.decode(rad.NASIdentifier)
+
+        if req.decode(rad.CoovaChilliAcctViewPoint):
+            called, nasid = nasid, called
+        profiles = ["default", called]
         try:
-            limits = await self.db.get_collection('limit').find( {'_id': {'$in':profiles}}).to_list(3)
+            limits = (
+                await self.db.get_collection("limit")
+                .find({"_id": {"$in": profiles}})
+                .to_list(3)
+            )
         except Exception as e:
             logger.critical(repr(e))
             raise e
         if len(limits) == 0:
             return {}
-        ordered = sorted(limits,key=lambda l:profiles.index(l['_id'])) #TODO: enum style
+        ordered = sorted(
+            limits, key=lambda l: profiles.index(l["_id"])
+        )  # TODO: enum style
         limit = {}
         for l in ordered:
-            for k,v in l.items():
-                if v in [0,"0"]:
-                    limit.pop(k,None)
+            for k, v in l.items():
+                if v in [0, "0"]:
+                    limit.pop(k, None)
                 elif v:
                     limit[k] = v
-        limit.pop('_id',None)
+        limit.pop("_id", None)
 
-        if limit.pop('payable',False):
-            limit = await self.billing(user,callee,limit)
+        if limit.pop("payable", False):
+            limit = await self.billing(user, called, limit)
 
         if self.session_limit:
-            limit['time'] = self.session_limit
+            limit["time"] = self.session_limit
 
         return limit
 
-    async def set_limits(self,limit,req,reply):
+    async def set_limits(self, limit, req, reply):
         nas = self.get_type(req)
         with reply.lock:
             k = None
             try:
-                for k,v in limit.items():
-                    if k == 'rate':
+                for k, v in limit.items():
+                    if k == "rate":
                         v = int(v * 1024)
                         if nas & typeofNAS.mikrotik:
                             b = int(v * 1.3)
                             r = int(v * 0.9)
-                            reply[rad.MikrotikRateLimit] = \
-                                "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(v,b,r, BURST_TIME)
+                            reply[rad.MikrotikRateLimit] = (
+                                "{0}k/{0}k {1}k/{1}k {2}k/{2}k {3}/{3}".format(
+                                    v, b, r, BURST_TIME
+                                )
+                            )
                         else:
                             bps = v << 10
-                            if nas & (typeofNAS.wispr | typeofNAS.chilli) :
+                            if nas & (typeofNAS.wispr | typeofNAS.chilli):
                                 reply[rad.WISPrBandwidthMaxDown] = bps
                                 reply[rad.WISPrBandwidthMaxUp] = bps
                             else:
                                 reply[rad.AscendDataRate] = bps
                                 reply[rad.AscendXmitRate] = bps
 
-                    elif k == 'time':
-                        assert v>0, 'E=691 {} limit exceed'.format(k)
+                    elif k == "time":
+                        assert v > 0, "E=691 {} limit exceed".format(k)
                         reply[rad.SessionTimeout] = v
-                    elif k == 'ports':
-                        assert v>0, 'E=691 {} limit exceed'.format(k)
+                    elif k == "ports":
+                        assert v > 0, "E=691 {} limit exceed".format(k)
                         reply[rad.PortLimit] = v
-                    elif k == 'bytes':
-                        assert v>0, 'E=691 {} limit exceed'.format(k)
+                    elif k == "bytes":
+                        assert v > 0, "E=691 {} limit exceed".format(k)
                         v = v << 20
                         g = v >> 32
                         b = v & BITMASK32
@@ -377,25 +422,26 @@ class Auth():
                                 reply[rad.ChilliSpotMaxInputOctets] = b
                                 reply[rad.ChilliSpotMaxOutputOctets] = b
 
-                    elif k == 'redir':
-                        reply[rad.WISPrRedirectionURL] = v.replace('rel://','')
-                    elif k == 'filter':
+                    elif k == "redir":
+                        reply[rad.WISPrRedirectionURL] = v.replace("rel://", "")
+                    elif k == "filter":
                         reply[rad.FilterId] = v
                     else:
                         try:
                             jk = loads(k)
                         except Exception:
-                            logger.warning("Bad limit: %s",k)
+                            logger.warning("Bad limit: %s", k)
                         else:
-                            if isinstance(jk,int):
+                            if isinstance(jk, int):
                                 reply[jk] = v
-                            elif isinstance(jk,list):
+                            elif isinstance(jk, list):
                                 reply[tuple(jk)] = v
             except AssertionError as e:
                 reply.code = rad.AccessReject
                 reply[rad.ReplyMessage] = e.args[0]
         return reply
-    '''
+
+    """
     async def handle_eap(self,req,reply,psw):
         state = req.get(rad.State,uuid4().bytes)
 
@@ -456,16 +502,14 @@ class Auth():
             reply[rad.MessageAuthenticator] = True
 
         return reply.code
-    '''
+    """
 
-    def mark_device(self,q):
-        return self.db.get_collection('devices').find_one_and_update(
-                q,
-                {'$currentDate':{'seen':True},'$set':{'checked':True}},
-                upsert=True
-            )
+    def mark_device(self, q):
+        return self.db.get_collection("devices").find_one_and_update(
+            q, {"$currentDate": {"seen": True}, "$set": {"checked": True}}, upsert=True
+        )
 
-    async def check_password(self,req,reply,psw):
+    async def check_password(self, req, reply, psw):
         if rad.MSCHAP2Response in req.keys():
             success = req.check_password(psw)
             if success:
@@ -475,8 +519,7 @@ class Auth():
         elif req.check_password(psw):
             return True
 
-
-    async def handle_auth(self,req,nas):
+    async def handle_auth(self, req, nas):
         now = datetime.utcnow()
         code = rad.AccessReject
         reply = req.reply(code)
@@ -486,117 +529,111 @@ class Auth():
         limit = False
         uam = None
 
-        callee = req.decode(rad.CalledStationId)
+        called = req.decode(rad.CalledStationId)
+        nasid = req.decode(rad.NASIdentifier)
+
+        if req.decode(rad.CoovaChilliAcctViewPoint):
+            called, nasid = nasid, called
+
         username = req.decode(rad.UserName)
         mac = req.decode(rad.CallingStationId)
 
         session = await self.db.rad_sessions.find_one(
             {
-                'username':username,
-                'callee': callee,
-                'caller':mac,
-                'stop':{'$gt':now}
+                "username": username,
+                "callee": called,
+                "caller": mac,
+                "stop": {"$gt": now},
             },
-                 sort=[("$natural", pymongo.DESCENDING)]
+            sort=[("$natural", pymongo.DESCENDING)],
         )
 
         if session:
-            user = {'_id':session['username'],'password':session.get('password')}
+            user = {"_id": session["username"], "password": session.get("password")}
         else:
-            user = await self.db.get_collection('users').find_one({'_id':username})
+            user = await self.db.get_collection("users").find_one({"_id": username})
 
         if not user:
             psw = None
-            device_q = {
-                'mac': mac,
-                'checked': True
-            }
+            device_q = {"mac": mac, "checked": True}
         else:
-            device_q = {
-                'username':user.get('_id'),
-                'mac':mac
-                 }
-            psw = user.get('password')
+            device_q = {"username": user.get("_id"), "mac": mac}
+            psw = user.get("password")
 
         if req.get(rad.CallingStationId) == req.get(rad.UserName):
-            uam = await get_uam_config(self.db, callee)
-            if uam and uam.get('macauth',False):
+            uam = await get_uam_config(self.db, called)
+            if uam and uam.get("macauth", False):
                 session = await self.db.rad_sessions.find_one(
-                    { 'caller':mac, 'callee': callee, 'stop':{'$gt':now} },
-                    sort=[("$natural", pymongo.DESCENDING)]
-                    )
+                    {"caller": mac, "callee": called, "stop": {"$gt": now}},
+                    sort=[("$natural", pymongo.DESCENDING)],
+                )
 
                 if session:
                     success = session
-                    limit = session['limit']
+                    limit = session["limit"]
                     code = rad.AccessAccept
-                    user = {'_id':success['username']}
+                    user = {"_id": success["username"]}
 
         elif psw:
-            success = await self.check_password(req,reply,psw)
+            success = await self.check_password(req, reply, psw)
             if success:
                 device = asyncio.ensure_future(self.mark_device(device_q))
                 code = rad.AccessAccept
 
         if user and not success:
-            for n in [0,-1]:
+            for n in [0, -1]:
                 psw = getpassw(n=n, **device_q)
-                if await self.check_password(req,reply,psw):
+                if await self.check_password(req, reply, psw):
                     code = rad.AccessAccept
                     break
-
 
         if code == rad.AccessReject:
             await asyncio.sleep(1)
             return reply
 
         elif code == rad.AccessAccept:
-            reply[rad.Class]=uuid4().bytes
-            device_q['checked'] = True
+            reply[rad.Class] = uuid4().bytes
+            device_q["checked"] = True
         else:
             return reply
 
         if limit and session:
             reply.code = code
-            limit = await self.reduce_limits(session['username'],session['callee'],limit,session['start'])
-            reply = await self.set_limits(limit,req,reply)
+            limit = await self.reduce_limits(
+                session["username"], session["callee"], limit, session["start"]
+            )
+            reply = await self.set_limits(limit, req, reply)
             if reply.code == rad.AccessAccept:
                 return reply
 
-
-
-        device = device or await self.db.get_collection('devices').find_one(device_q)
+        device = device or await self.db.get_collection("devices").find_one(device_q)
 
         if device:
             reply.code = code
             debug(repr(limit))
-            limit = await self.get_limits(user,req,reply)
+            limit = await self.get_limits(user, req, reply)
             debug(repr(limit))
-            reply = await self.set_limits(limit,req,reply)
+            reply = await self.set_limits(limit, req, reply)
             debug(repr(limit))
-            expires = limit.get('time',3600)
+            expires = limit.get("time", 3600)
 
             doc = {
-
-                'username': user['_id'],
-                'password': psw,
-                'caller': mac,
-                'callee': req.decode(rad.CalledStationId),
-                'limit': limit,
-                'start': now,
-                'stop': now + timedelta(seconds=expires)
-
+                "username": user["_id"],
+                "password": psw,
+                "caller": mac,
+                "callee": called,
+                "limit": limit,
+                "start": now,
+                "stop": now + timedelta(seconds=expires),
             }
-            logger.debug('rad_sessions %s', repr(doc))
+            logger.debug("rad_sessions %s", repr(doc))
 
             await self.db.rad_sessions.insert_one(doc)
-
 
         return reply
 
 
-class RadiusProtocol(Accounting,Auth,CoA,BaseRadius):
+class RadiusProtocol(Accounting, Auth, CoA, BaseRadius):
     """
     Implementation with Auth and Accounting
     """
-

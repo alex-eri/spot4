@@ -137,7 +137,8 @@ async def phone_handler(request):
 
                 debug(now - device.get('sms_time'))
                 debug(sms_timeout)
-
+        elif uam.get('callrecieve', False) and (method == 'call'):
+            reg = True
     else:
         reg = True
         upd['username'] = (await setuser(request.app['db'],phone))

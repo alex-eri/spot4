@@ -84,13 +84,10 @@ veth:
 
 dhclient1:
 	ip netns exec TESTA ip link set dev ve0b up
-	ip netns exec TESTA dhcpcd ve0b
+	ip netns exec TESTA dhcpcd -n ve0b
 	ip netns exec TESTA ip a l
 
-dhclient2:
-	ip netns exec TESTA ip link set dev enp5s0.3 up
-	ip netns exec TESTA dhcpcd enp5s0.3
-	ip netns exec TESTA ip a l
+
 
 opera:
 	ip netns exec TESTA su eri -c "DISPLAY=$(DISPLAY) opera --user-data-dir=/home/eri/.opera_test/"
@@ -100,11 +97,14 @@ operaonmikrotik: netns mikrobr dhclient2 opera
 IPonAS:
 	whois -h whois.radb.net -i origin -T route `cat $$AS-asn` | grep route: | awk '{print $2}' > ./$$AS-ip
 
+
+BRIDGE := "bridge2"
+
 setupNetNS:
 	ip netns add TESTA
 	ip link add name ve0a type veth peer name ve0b
 	ip link set dev ve0b netns TESTA
-	brctl addif bridge2 ve0a
+	brctl addif $(BRIDGE) ve0a
 	ip link set dev ve0a up
 	ip netns exec TESTA ip link set dev ve0b up
 	ip netns exec TESTA dhcpcd ve0b

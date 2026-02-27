@@ -126,9 +126,10 @@
     <!--li ng-class="menuClass('sms/spam/')"><a href="sms/spam/">Рассылка</a></li-->
 
 
-      <li >
-    <code>{{commit}}</code>
-    <p>{{selfuser.name}} // {{selfuser.label}}</p>
+      <li class=""><a href="#top">
+        <code>{{commit}}</code>
+        <span>{{selfuser.name}} {{selfuser.label ? '//' + selfuser.label : ''}}</span>
+        </a>
       </li>
     
 

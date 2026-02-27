@@ -24,8 +24,12 @@ def insert_cb(result,error):
         logger.error(error.__repr__())
 
 def setup(mongo_uri,db_name) -> motor.motor_asyncio.AsyncIOMotorDatabase:
+    for l in ['pymongo.serverSelection', 'pymongo.topology', 'pymongo.connection']:
+        mongologger = logging.getLogger(l)
+        mongologger.setLevel(logging.WARNING)
     client = motor.motor_asyncio.AsyncIOMotorClient(mongo_uri)
     db = client[db_name]
+
     return db
 
 
