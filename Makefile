@@ -1,4 +1,17 @@
+CURRENT_YM := $(shell date -d "`git log -1 --format=%ci`" +"%y%m")
+CURRENT_COMMIT := $(shell git rev-parse --short HEAD)
+CURRENT_NCMMIT := $(shell git rev-list --all --count)
+EMAIL := "sa@eri.su"
+SNAPSHOTRELEASE := "--snapshot"
+
+
 all: clean build build/config build/bin
+
+doker-deb:
+	EMAIL=$(EMAIL) gbp dch $(SNAPSHOTRELEASE) --git-author --spawn-editor=no --new-version=$(CURRENT_YM) --snapshot-number=$(CURRENT_NCMMIT) 
+	mkdir -p dist/
+	DOCKER_BUILDKIT=1 docker build -t spot4:build -f docker-builder/Dockerfile .
+	DOCKER_BUILDKIT=1 docker run -v $(CURDIR)/dist/:/app/out spot4:build
 
 deb:
 	dpkg-buildpackage -B -d --no-sign
@@ -7,7 +20,7 @@ dist: build/bin
 	mkdir -p ./dist/
 	cd ./build; tar cz  --transform "flags=r;s|^|opt/spot4/|"  -f ../dist/spot4-$(shell git rev-list --all --count).tar.gz ./
 
-build/bin: build server
+build/bin: server
 	make -C ./server
 
 build/data: build

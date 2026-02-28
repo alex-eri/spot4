@@ -1,12 +1,25 @@
 Source: spot4
 Section: net
-Build-Depends: make, awk (>=3.6), npm, git, gzip, sed, git-buildpackage, git-debrebase, debhelper
+Build-Depends: make, git, gzip, sed, git-buildpackage, debhelper
 Maintainer: Aleksandr Stepanov <sa@eri.su>
 
 Package: spot4
 Provides: spot4
 Architecture: amd64
 Section: net
-Depends: libc6 (>= 2.24), mongodb-org-server (>=4), awk, mongodb-org-server (<<8.0)
+Depends: ${shlibs:Depends}, spot4-static
 Description: Spot4
- Wifi by SMS and call
+ Wifi by SMS or call
+
+Package: spot4-static
+Architecture: all
+Section: net
+Description: Spot4 Static files
+ Wifi by SMS or call
+
+Package: spot4-mikrotik-builder
+Architecture: all
+Section: net
+Depends: make, awk
+Description: Spot4 Mikrotik profile builder
+ Wifi by SMS or call

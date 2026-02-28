@@ -1,9 +1,19 @@
-import Crypto.Cipher.DES
+# import Crypto.Cipher.DES
 
-def DES(key):
-    key = key56_to_key64(str_to_key56(key))
-    return Crypto.Cipher.DES.new(key, Crypto.Cipher.DES.MODE_ECB)
+# def DES(key):
+#     key = key56_to_key64(str_to_key56(key))
+#     return Crypto.Cipher.DES.new(key, Crypto.Cipher.DES.MODE_ECB)
 
+import ctypescrypto.cipher
+class DES:
+    des = None
+    def __init__(self, key):
+        ""
+        key = key56_to_key64(str_to_key56(key))
+        self.des = ctypescrypto.cipher.new(b'DES',bytes(key))
+    def encrypt(self, data):
+        ""
+        return self.des.update(data)
 
 def str_to_key56(key_str):
     ""

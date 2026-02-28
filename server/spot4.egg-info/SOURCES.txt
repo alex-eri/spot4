@@ -1,0 +1,5 @@
+setup.py
+spot4.egg-info/PKG-INFO
+spot4.egg-info/SOURCES.txt
+spot4.egg-info/dependency_links.txt
+spot4.egg-info/top_level.txt

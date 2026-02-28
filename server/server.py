@@ -48,6 +48,9 @@ c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
         if verifier.verify(digest,signature):
             logger.info('Lic ok')
             return
+        else:
+            logger.error('BAD Lic')
+            sys.exit(1)
 
     if module == "radius":
         import radius
@@ -64,9 +67,9 @@ c/Xp/QAhzxT35SPhzNQRxLls33pelKY/8L0oxpnGiRin1FKVEn0orQfW06ox87TF
 def setup_log(config):
     import logging.handlers
     if config.get('LOGFILE'):
-        FORMAT = '%(asctime)s %(processName)s\%(name)-8s %(levelname)s: %(message)s'
+        FORMAT = '%(asctime)s %(processName)s/%(name)-8s %(levelname)s: %(message)s'
     else:
-        FORMAT = '%(processName)s\%(name)-8s %(levelname)s: %(message)s'
+        FORMAT = '%(processName)s/%(name)-8s %(levelname)s: %(message)s'
 
     level = logging.INFO
 

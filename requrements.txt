@@ -7,9 +7,7 @@ motor
 pymongo
 pyotp>=2.1.1
 pytz
-#git+https://github.com/alex-eri/ctypescrypto.git@py3#egg=ctypescrypto
-#git+https://github.com/vbwagner/ctypescrypto.git#egg=ctypescrypto
-https://github.com/vbwagner/ctypescrypto/archive/master.zip#egg=ctypescrypto
+ctypescrypto
 lxml
 monthdelta
 panoramisk
@@ -17,4 +15,3 @@ phonenumbers
 cachetools
 uvloop
 setproctitle
-pycrypto

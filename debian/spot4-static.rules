@@ -1,0 +1,31 @@
+#!/usr/bin/make -f
+
+CURRENT_YM := $(shell date -d "`git log -1 --format=%ci`" +"%y%m")
+CURRENT_COMMIT := $(shell git rev-parse --short HEAD)
+CURRENT_NCMMIT := $(shell git rev-list --all --count)
+EMAIL := "sa@eri.su"
+SNAPSHOTRELEASE := "--snapshot"
+
+clean:
+	git reset
+	make -C . clean
+	rm -rf debian/spot4
+
+build-indep:
+	make -C . build
+	rm -f debian/changelog.dch
+	EMAIL=$(EMAIL) gbp dch $(SNAPSHOTRELEASE) --git-author --spawn-editor=no --new-version=$(CURRENT_YM) --snapshot-number=$(CURRENT_NCMMIT) 
+	#--commit 
+
+binary-indep: build-indep
+	mkdir -p debian/spot4-mikrotik-builder/opt/spot4/
+	mkdir -p debian/spot4-static/opt/spot4/data/exports
+	cp -R build/mikrotik debian/spot4-mikrotik-builder/opt/spot4/
+	cp -R build/static build/uam debian/spot4-static/opt/spot4/
+	echo 'Храните картинки и скрипты тут. Они доступны на вэб сервере через URL /static/' > debian/spot4-static/opt/spot4/static/README
+	dh_gencontrol
+	dh_builddeb
+
+
+
+

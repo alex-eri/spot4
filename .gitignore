@@ -18,7 +18,7 @@ tests/*
 .~*
 *.pem
 package-json.lock
-debian/spot4/*
+debian/spot*/*
 debian/*.debhelper.log
 debian/*.substvars
 pip-cache/

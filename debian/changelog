@@ -1,15 +1,31 @@
-spot4 (2602~380.gbp253bab) UNRELEASED; urgency=medium
+spot4 (2602~387.gbp2473ac) UNRELEASED; urgency=medium
 
-  ** SNAPSHOT build @253bab0a116e47d1a7284871ea0df543baf0df86 **
+  ** SNAPSHOT build @2473ac48ce2e0290c7b0b12299d41d5ea1373029 **
 
 
   [ Aleksandr Stepanov ]
   * Upgrade and FIX for Mongo and Debian release
 
+  [ Александр Степанов ]
+  * Контроль версии
+  * Для кинетика/чили меняем местами nasid/called для сопоставления с профилем.
+  * Для кинетика/чили меняем местами nasid/called для сопоставления с профилем.
+  * Docker builder
+  * Docker Build
+  * Python 3.13, Docker
+
   [ eri ]
   * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
+  * UNRELEASED
 
- -- Александр Степанов <sa@eri.su>  Thu, 19 Feb 2026 16:01:19 +0300
+ -- Александр Степанов <sa@eri.su>  Sat, 28 Feb 2026 11:13:12 +0300
 
 spot4 (4) stable; urgency=low
 
